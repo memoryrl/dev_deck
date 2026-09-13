@@ -1,0 +1,43 @@
+name: Strip AppleDouble
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  strip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove tracked AppleDouble files
+        id: strip
+        run: |
+          mapfile -t junk < <(git ls-files | grep -E '(^|/)\._|\.DS_Store$' || true)
+          if [ ${#junk[@]} -eq 0 ]; then
+            echo "removed=false" >> "$GITHUB_OUTPUT"
+            echo "No AppleDouble files in the tree."
+            exit 0
+          fi
+          git rm -f -- "${junk[@]}"
+          echo "removed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fail pull request if junk was committed
+        if: steps.strip.outputs.removed == 'true' && github.event_name == 'pull_request'
+        run: |
+          echo "AppleDouble (._*) 또는 .DS_Store가 커밋에 포함되어 있습니다."
+          exit 1
+
+      - name: Commit and push
+        if: steps.strip.outputs.removed == 'true' && github.event_name == 'push' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: remove AppleDouble (._*) files"
+          git push

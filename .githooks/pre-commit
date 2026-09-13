@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+bash "$ROOT/scripts/clean-appledouble.sh"
+
+# 이미 스테이징된 AppleDouble이 있으면 커밋에서 뺀다.
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  git rm -f --cached -- "$file" >/dev/null 2>&1 || true
+done < <(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)\._|\.DS_Store$' || true)

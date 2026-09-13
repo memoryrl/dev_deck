@@ -1,0 +1,10 @@
+# AppleDouble — Vercel 업로드에서 제외
+._*
+.DS_Store
+.AppleDouble
+
+docs
+.git
+.githooks
+.github
+.cursor

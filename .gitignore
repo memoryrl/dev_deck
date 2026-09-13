@@ -1,0 +1,20 @@
+# macOS AppleDouble / Finder (exFAT, 외장 디스크)
+._*
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next (Phase 1+)
+node_modules/
+.next/
+out/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
