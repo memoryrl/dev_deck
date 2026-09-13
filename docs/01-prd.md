@@ -24,8 +24,8 @@
 
 ### 2.1 목표 (MVP)
 
-1. GitHub / Google OAuth로 로그인한다.
-2. 프롬프트를 Markdown으로 CRUD하고, 원클릭 복사한다.
+1. Google OAuth로 로그인한다.
+2. 프롬프트를 CKEditor 5로 CRUD하고, 원클릭 복사한다.
 3. `is_public = true` 프롬프트는 비로그인 방문자도 **전문을 읽는다.** 랜딩 목록만 **최근 6개**. 공유 링크(`/p/[id]`)는 공개 글이면 언제든 열림.
 4. Steam 보유 게임·플레이타임을 서버 프록시로 불러온다.
 5. 게임별 리뷰, 평점, UMPC 프리셋을 저장한다.
@@ -53,26 +53,27 @@
 | Owner (본인) | 로그인하는 유일한 작성자 | 프롬프트/커리어 글·스킬/리뷰 CRUD, Steam 동기화 |
 | Visitor | 포트폴리오 방문자 | 랜딩, `/work` 게시판, 공개 상세(`/p`, `/work/[id]`) 열람 |
 
-Owner가 아닌 로그인 유저가 생기더라도 RLS로 **자기 행만** 쓰고, 공개 행만 읽는다. 다만 MVP UX는 Owner 1인 기준으로 짠다.
+Owner가 아닌 로그인 유저(회원)는 대시보드·게시물 쓰기가 막힌다. RLS 쓰기도 관리자 이메일만 허용한다.
 
 ## 4. 사용자 스토리
 
 ### Auth
 
-- Owner로서 GitHub 또는 Google로 로그인하고 대시보드에 들어간다.
+- Owner(`memoryrl@gmail.com`)만 Google 로그인 후 대시보드에서 글을 편집한다.
+- 그 외 로그인 사용자는 회원이다. `/account`로 가며 게시물 편집 UI·액션·RLS 쓰기가 막힌다.
 - 세션이 없으면 `/promptkit`, `/career`, `/steam`은 `/login`으로 보낸다.
 
 ### PromptKit
 
 - 프롬프트 제목, 본문, 카테고리(자유 문자열), 태그를 저장한다.
-- Markdown 미리보기로 본문을 확인한다.
+- 본문은 CKEditor 5(`RichEditor`)로 편집하고, 상세는 `RichContent`로 본다.
 - 원클릭으로 클립보드에 복사한다.
 - 공개 여부를 토글한다.
 - 상세 페이지에서 수정·삭제한다.
 
 ### CareerLog
 
-- 참여 프로젝트·회고를 게시판 목록과 블로그 본문(Markdown)으로 저장한다.
+- 참여 프로젝트·회고를 게시판 목록과 블로그 본문(CKEditor HTML)으로 저장한다.
 - 글 종류는 `project` / `skill` / `note` 중 하나다.
 - 프로젝트 글에는 회사, 역할, 기간을 붙일 수 있다.
 - 스킬 인벤토리(이름, 숙련도, 연차, 한 줄 요약)를 따로 정리한다.
@@ -81,13 +82,23 @@ Owner가 아닌 로그인 유저가 생기더라도 RLS로 **자기 행만** 쓰
 
 ### Steam Tracker
 
-- 보유 게임 목록, 플레이타임, 헤더 이미지를 본다.
+- 방문자는 로그인 없이 `/games`에서 보유 게임·리뷰를 본다.
+- Owner는 `/steam`에서 리뷰를 편집한다 (로그인 필요).
 - 게임 상세에서 리뷰, 평점(0.0–5.0), UMPC 프리셋, 즐겨찾기를 저장한다.
 - 같은 게임을 두 번 리뷰하지 않는다 (`user_id + app_id` 유니크).
 
+### Boards & Menus
+
+- 관리자가 `boards`로 범용 게시판을 추가한다. 공개 URL은 `/b/{slug}`.
+- PromptKit·CareerLog·Steam은 시스템 게시판으로 `/site/boards`에서 이름·읽기 권한·활성만 제어한다. 글은 전용 대시보드에서 편집한다.
+- 시스템 게시판이 비활성이거나 view_role 미달이면 랜딩 티저·`/p`·`/work`·공개 리뷰가 숨겨진다.
+- 읽기/쓰기 최소 권한: 방문객 / 회원 / 관리자.
+- `menus`로 헤더·푸터를 관리하고, 메뉴에 게시판을 연결할 수 있다.
+- DB 메뉴가 없으면 헤더는 기본 메가메뉴를 쓴다.
+
 ### Public
 
-- 랜딩에서 세 모듈과 **최근 공개 프롬프트 6개**, **최근 공개 커리어 글 6개**, 공개 스킬 칩을 본다.
+- 랜딩에서 세 모듈과 **최근 공개 프롬프트·개발업무 각 최대 4개**(좌우), Steam 탭(누적 시간 순위 / 최신 리뷰), 공개 스킬 칩을 본다.
 - 로그인하지 않고 `/p/[id]`, `/work`, `/work/[id]`를 읽는다. 쓰기 UI는 숨김.
 - 프롬프트 랜딩 6개 밖 공개 글은 URL이면 열린다. 커리어는 `/work`에 **공개 글 전부**가 게시판으로 올라간다. 랜딩만 6개 티저.
 - 비공개·없는 id만 `notFound()`.
@@ -96,17 +107,18 @@ Owner가 아닌 로그인 유저가 생기더라도 RLS로 **자기 행만** 쓰
 
 ### 5.1 Common & Auth
 
-- Provider: GitHub, Google (Supabase OAuth)
+- Provider: Google (Supabase OAuth)
+- 관리자: `memoryrl@gmail.com`. 그 외 로그인은 회원(편집 없음)
 - 로그인 성공 시 `profiles` 행이 없으면 트리거로 생성
 - RLS: 본인 데이터 CRUD. `prompts` / `career_posts` / `career_skills` 의 `is_public = true` 는 SELECT 공개
-- `game_reviews` 공개 여부는 MVP에서 **비공개** (Owner만). v2에서 `is_public` 검토
+- `game_reviews`는 포트폴리오용으로 **공개 읽기**. 쓰기(리뷰 편집)만 로그인
 
 ### 5.2 PromptKit (Dev)
 
 | ID | 기능 | MVP |
 | --- | --- | --- |
 | PK-01 | 목록: 제목, 카테고리, 태그, 공개 배지, 검색/필터 | Yes |
-| PK-02 | 생성/수정 폼 + Markdown 미리보기 | Yes |
+| PK-02 | 생성/수정 폼 + CKEditor 5 본문 | Yes |
 | PK-03 | 원클릭 복사 | Yes |
 | PK-04 | 삭제 (확인 다이얼로그) | Yes |
 | PK-05 | 공개 토글 | Yes |
@@ -115,12 +127,12 @@ Owner가 아닌 로그인 유저가 생기더라도 RLS로 **자기 행만** 쓰
 
 ### 5.3 CareerLog (Career)
 
-게시판(목록·필터) + 블로그(Markdown 상세). 이력서 PDF가 아니다.
+게시판(목록·필터) + 블로그(CKEditor 본문 상세). 이력서 PDF가 아니다.
 
 | ID | 기능 | MVP |
 | --- | --- | --- |
 | CL-01 | 대시보드 게시판 `/career`: 제목, 종류, 회사, 태그, 공개 배지, 검색/필터 | Yes |
-| CL-02 | 글 CRUD + Markdown 미리보기 | Yes |
+| CL-02 | 글 CRUD + CKEditor 5 본문 | Yes |
 | CL-03 | `post_type`: `project` / `skill` / `note` | Yes |
 | CL-04 | 프로젝트 메타: 회사, 역할, 시작일, 종료일(빈 값 = 진행 중) | Yes |
 | CL-05 | 글 태그·관련 스킬 이름 배열 | Yes |
@@ -145,10 +157,11 @@ Owner가 아닌 로그인 유저가 생기더라도 RLS로 **자기 행만** 쓰
 
 ### 5.5 Landing
 
-- 히어로: 제품명, 한 줄 가치, CTA (`로그인` / 공개 콘텐츠 앵커)
-- 모듈 카드 **3장** (PromptKit, CareerLog, Steam Tracker)
-- 공개 프롬프트 최근 6개 → `/p/[id]`
-- 공개 커리어 글 최근 6개 → `/work/[id]`. 더 보기 → `/work`
+- 공개 헤더: `lg+` 메가메뉴(하단 포인트색), `lg` 미만 햄버거·우측 슬라이드 메뉴
+- 히어로: 제품명, 한 줄 가치, CTA (`로그인` / 공개 콘텐츠 앵커), 메쉬 그라데이션, 우측 하단 상징 비주얼
+- 모듈 카드 PromptKit / CareerLog / Steam Tracker — 좌우 자동 스크롤
+- Steam 위: AI Prompt / 개발업무 최신 각 최대 4개 (좌우). 시스템 게시판 권한 적용
+- Steam 탭: 누적 시간 순위(1위 2행 + 우측 4장) / 최신 리뷰 게시물 목록. 리뷰는 steam 시스템 게시판 권한 적용
 - 공개 스킬 칩 (개수 제한 없음, `sort_order`)
 - 푸터: 기술 스택 표기
 - 헤더: 테마 토글 (기본 라이트, 다크 허용), `커리어` → `/work`
@@ -180,5 +193,6 @@ MVP는 아래가 모두 되면 완료다.
 
 - 1인 개발. 운영 복잡도보다 명확한 모듈 경계가 우선이다.
 - Steam Web API 호출은 **서버에서만**. 브라우저에 API 키를 넣지 않는다.
-- 프롬프트·커리어 본문은 사용자 입력이므로 XSS를 막기 위해 Markdown 렌더는 sanitize 한다.
+- 프롬프트·커리어·게시판 본문은 CKEditor HTML이다. 보기 모드는 sanitize 후 렌더하고, 예전 Markdown 글은 그대로 Markdown으로 보여 준다.
 - `steam_api_key` 컬럼은 **스키마에 만들지 않는다.** (원본 초안의 변경점. [03-database.md](./03-database.md) 참고)
+- DB는 기존 Supabase 프로젝트에 `devdeck` 스키마만 추가한다. 기존 `public` 객체를 바꾸지 않는다.

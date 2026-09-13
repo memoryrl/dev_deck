@@ -92,7 +92,7 @@ type AiRunResponse = {
 
 ## 2. Server Actions
 
-위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts` (구현 시 파일명은 이 문서를 따른다).
+위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts`, `app/(dashboard)/site/actions.ts`, `app/b/actions.ts`.
 
 공통:
 
@@ -110,7 +110,7 @@ type AiRunResponse = {
 | `deletePrompt` | id | 소유 행만 |
 | `togglePromptPublic` | id, is_public | boolean |
 
-Markdown sanitize는 **렌더 시점**에서 한다. DB에는 원문을 저장한다.
+본문은 CKEditor HTML을 저장한다. 보기 모드 sanitize는 **렌더 시점**(`RichContent`)에서 한다. 태그가 없는 예전 Markdown 글은 Markdown으로 렌더한다.
 
 ### 2.2 CareerLog
 
@@ -124,7 +124,19 @@ Markdown sanitize는 **렌더 시점**에서 한다. DB에는 원문을 저장�
 | `deleteCareerSkill` | id | 소유 행만 |
 | `reorderCareerSkills` | `{ id, sort_order }[]` | 본인 스킬만 |
 
-### 2.3 Steam Reviews
+### 2.3 Site boards & menus
+
+| Action | 입력 | 검증 |
+| --- | --- | --- |
+| `upsertBoard` | name, slug, view_role, write_role, … | owner. slug 형식. 시스템 게시판은 slug/write_role 고정 |
+| `deleteBoard` | id | owner. 시스템 kind는 거부. 범용 글 CASCADE |
+| `ensureSystemBoards` | — | owner 페이지에서 prompts/career/steam 시드 |
+| `upsertMenu` | label, location, parent_id?, board_id?, href?, view_role | owner |
+| `deleteMenu` | id | owner. 하위 CASCADE |
+| `upsertBoardPost` / `deleteBoardPost` | 대시보드 글 | owner |
+| `savePublicPost` / `removePublicPost` | 공개 게시판 글쓰기 | write_role 충족 회원/관리자 |
+
+### 2.4 Steam Reviews
 
 | Action | 입력 | 검증 |
 | --- | --- | --- |
@@ -139,7 +151,7 @@ Markdown sanitize는 **렌더 시점**에서 한다. DB에는 원문을 저장�
 | --- | --- |
 | `signOut` | 세션 종료 후 `/` |
 
-OAuth 시작은 클라이언트 `supabase.auth.signInWithOAuth({ provider, redirectTo })`.
+OAuth 시작은 클라이언트 `supabase.auth.signInWithOAuth`. Google은 `prompt=select_account`로 계정 선택 화면을 연다.
 
 ## 3. Steam 유틸 (`lib/steam`)
 
@@ -164,14 +176,24 @@ function fetchOwnedGames(): Promise<SteamGamesResponse>
 
 `@supabase/ssr` 쿠키 어댑터를 쓴다. 구 `auth-helpers`는 쓰지 않는다.
 
-공개 조회는 **서버 컴포넌트 + anon 세션**으로 `is_public = true`만 읽는다. **6개 한도는 랜딩 목록에만** 적용한다.
+세 클라이언트 모두 기본 스키마를 `devdeck`으로 둔다. `from('prompts')`가 `public.prompts`가 아니라 `devdeck.prompts`를 보게 한다.
+
+```ts
+{
+  db: { schema: "devdeck" },
+}
+```
+
+Auth는 스키마와 무관하다 (`auth.getUser()` 그대로). `public` 테이블은 DevDeck 코드에서 조회하지 않는다.
+
+공개 조회는 **서버 컴포넌트 + anon 세션**으로 `is_public = true`만 읽는다. **랜딩 티저는 각 최대 4개**.
 
 ```ts
 const PUBLIC_PROMPT_LIMIT = 6
 
 // lib/prompts/public.ts
-function listRecentPublicPrompts(): Promise<Prompt[]>
-  // .eq('is_public', true).order('created_at', { ascending: false }).limit(6)
+function listRecentPublicPrompts(limit = 6): Promise<Prompt[]>
+  // 랜딩은 limit 4. is_public + 시스템 게시판(prompts) 활성·view_role
 
 function getPublicPromptById(id: string): Promise<Prompt | null>
   // .eq('id', id).eq('is_public', true) — 목록 한도와 무관. 없으면 null → notFound()
@@ -179,17 +201,20 @@ function getPublicPromptById(id: string): Promise<Prompt | null>
 const PUBLIC_CAREER_TEASER_LIMIT = 6
 
 // lib/career/public.ts
-function listRecentPublicCareerPosts(): Promise<CareerPost[]>
-  // 랜딩: is_public, created_at DESC, limit 6
+function listRecentPublicCareerPosts(limit = 6): Promise<CareerPost[]>
+  // 랜딩: is_public + 시스템 게시판(career) 활성·view_role, limit 4
 
 function listPublicCareerPosts(): Promise<CareerPost[]>
-  // /work 게시판: is_public, created_at DESC (한도 없음)
+  // /work: is_public + 시스템 게시판(career) 활성·view_role
 
 function getPublicCareerPostById(id: string): Promise<CareerPost | null>
-  // id + is_public. 없으면 null → notFound()
+  // id + is_public + 시스템 게시판 권한. 없으면 null → notFound()
 
 function listPublicCareerSkills(): Promise<CareerSkill[]>
-  // is_public, sort_order ASC, name ASC
+  // is_public + 시스템 게시판(career) 활성·view_role
+
+function listPublicGameReviews(): Promise<GameReview[]>
+  // 시스템 게시판(steam) 활성·view_role
 ```
 
 RLS는 모든 `is_public` SELECT를 허용한다. 프롬프트·커리어 **랜딩** `LIMIT 6`만 쿼리 한도다. `/work`는 공개 글 전부. Owner 대시보드는 limit 없이 본인 행 전부.

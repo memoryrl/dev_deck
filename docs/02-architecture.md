@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Framework | Next.js 14+ App Router | Server Components, Server Actions, Route Handler |
 | Language | TypeScript | 스키마·API 타입을 문서와 맞추기 쉽음 |
-| UI | Tailwind CSS, shadcn/ui, Lucide | 빠른 대시보드 UI, 일관된 토큰 |
+| UI | Tailwind CSS, Lucide, shadcn/ui | New York + Neutral. Tailwind 3 + Radix |
 | Backend | Supabase Auth + Postgres + RLS | 별도 API 서버 없이 권한 경계 |
 | Hosting | Vercel | App Router / Serverless와 맞음 |
 | Steam | Web API `IPlayerService/GetOwnedGames` | 보유 게임·플레이타임 |
@@ -83,12 +83,13 @@ devdeck/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
-│   ├── ui/                       # shadcn
+│   ├── ui/                       # shadcn/ui 프리미티브
 │   ├── layout/                   # Sidebar, TopNav
 │   ├── promptkit/
 │   ├── career/
 │   └── steam/
 ├── lib/
+│   ├── auth/                     # Owner 이메일, 회원 리다이렉트
 │   ├── supabase/
 │   │   ├── client.ts             # 브라우저
 │   │   ├── server.ts             # 서버 컴포넌트 / actions
@@ -112,12 +113,12 @@ devdeck/
 
 ## 4. 인증 흐름
 
-1. 사용자가 `/login`에서 GitHub 또는 Google을 고른다.
+1. 사용자가 `/login`에서 Google로 로그인한다.
 2. Supabase OAuth → 제공자 동의 → `/auth/callback?code=...`
-3. Route Handler가 `exchangeCodeForSession` 후 `/promptkit`으로 리다이렉트.
+3. Route Handler가 `exchangeCodeForSession` 후 Owner는 `/promptkit`, 회원은 `/account`로 보낸다.
 4. `middleware.ts`가 쿠키 세션을 갱신한다.
 5. `(dashboard)/*` 는 세션 없으면 `/login`으로 보낸다. `/`, `/p/[id]`, `/work`, `/work/[id]` 는 가드하지 않는다.
-6. `auth.users` INSERT 시 트리거가 `public.profiles` 행을 만든다.
+6. `auth.users` INSERT 시 **추가** 트리거 `devdeck_on_auth_user_created`가 `devdeck.profiles`를 만든다. 기존 public 트리거는 그대로 둔다. 기존 유저는 첫 세션 `ensureProfile` upsert.
 
 로그아웃은 Server Action 또는 클라이언트 `signOut` 후 `/`로 이동.
 
@@ -184,9 +185,9 @@ Owner ── Server Action upsert game_reviews
 `.env.example`에 이름만 두고 값은 커밋하지 않는다.
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=          # 마이그레이션/어드민 스크립트 전용. 클라이언트·일반 RSC 금지
+NEXT_PUBLIC_SUPABASE_URL=https://tcmtqfpkyojqypbfnpgb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=      # Dashboard에서 복사. 커밋 금지
+SUPABASE_SERVICE_ROLE_KEY=          # 마이그레이션 전용. 앱 런타임·커밋 금지
 
 STEAM_API_KEY=
 STEAM_ID=                           # SteamID64, 17자리
@@ -196,9 +197,11 @@ OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 ```
 
-- `NEXT_PUBLIC_*` 만 브라우저에 노출된다.
+- 프로젝트: [tcmtqfpkyojqypbfnpgb](https://supabase.com/dashboard/project/tcmtqfpkyojqypbfnpgb). 신규 프로젝트 없음.
+- 앱 테이블은 `devdeck` 스키마. 클라이언트는 `db: { schema: 'devdeck' }`.
+- `NEXT_PUBLIC_*` 만 브라우저에 노출된다. URL은 공개되어도 되고, anon/service 키는 `.env.local`만.
 - Steam / AI 키는 서버 전용.
-- `profiles.steam_id`는 UI에 “연결된 ID”를 보여 줄 때 쓰는 **공개 가능한 ID**다. API 키가 아니다.
+- `devdeck.profiles.steam_id`는 표시용 ID다. API 키가 아니다.
 
 ## 7. 보안 경계
 
@@ -213,6 +216,6 @@ ANTHROPIC_API_KEY=
 
 ## 8. 배포
 
-- Preview / Production 모두 Vercel
-- Supabase 프로젝트는 환경(dev/prod)을 나누는 것을 권장
-- OAuth redirect URL: `https://<domain>/auth/callback` 및 로컬 `http://localhost:3000/auth/callback`
+- Preview / Production 모두 Vercel. DB는 기존 프로젝트의 `devdeck` 스키마를 공유한다.
+- 기존 앱의 `public` 스키마와 키를 같이 쓰므로, DevDeck RLS가 다른 스키마를 열지 않게 클라이언트를 `devdeck`으로 고정한다.
+- OAuth redirect URL을 **기존 목록에 추가**한다: `http://localhost:3000/auth/callback`, `https://<domain>/auth/callback`. 기존 앱 URL은 삭제하지 않는다.

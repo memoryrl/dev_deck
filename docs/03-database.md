@@ -2,18 +2,47 @@
 
 Supabase PostgreSQL. 소스 오브 트루스는 구현 시 `supabase/schema.sql` 한 파일이다. 이 문서와 SQL이 어긋나면 문서를 먼저 고친다.
 
+## 0. 기존 프로젝트 + 전용 스키마
+
+새 프로젝트를 만들지 않는다. 이미 쓰는 프로젝트에 **Postgres 스키마 `devdeck`** 만 추가한다.
+
+| 항목 | 값 |
+| --- | --- |
+| Project | [tcmtqfpkyojqypbfnpgb](https://supabase.com/dashboard/project/tcmtqfpkyojqypbfnpgb) |
+| API URL | `https://tcmtqfpkyojqypbfnpgb.supabase.co` |
+| App tables | `devdeck.*` |
+| Auth / 기존 앱 | `auth.*`, 기존 `public.*` — **읽거나 수정하지 않는다** |
+
+이유: `profiles`, `prompts` 같은 이름이 기존 `public`과 겹칠 수 있다. 스키마로 격리하면 테이블을 건드리지 않고 DevDeck만 올린다.
+
+Auth는 프로젝트당 하나다. DevDeck 로그인은 **같은 `auth.users` 풀**을 쓴다. 기존 앱 가입자가 DevDeck에도 같은 uid로 들어온다.
+
+가드:
+
+1. 기존 `public` 트리거·함수·테이블을 DROP / REPLACE 하지 않는다.
+2. 신규 트리거는 `devdeck.handle_new_user`처럼 **스키마·이름 접두**를 쓴다. `on_auth_user_created` 같은 기존 이름을 덮지 않는다.
+3. 이미 있는 유저는 INSERT 트리거가 안 돈다. 첫 DevDeck 세션에서 `devdeck.profiles`를 upsert 한다.
+4. Dashboard → Settings → API → **Exposed schemas**에 `devdeck`을 추가한다. (`public`, `storage`는 그대로)
+5. `anon` / `authenticated`에 `USAGE` + 테이블 권한을 준다. RLS가 최종 권한이다.
+6. SQL Editor에서 `schema.sql`을 적용하기 전에 기존 객체 목록을 확인한다.
+
 ## 1. ERD
 
 ```text
-auth.users
+auth.users                         -- 기존. 공유
     │ 1:1
     ▼
-public.profiles
+devdeck.profiles
     │
-    ├── 1:N  public.prompts
-    ├── 1:N  public.career_posts
-    ├── 1:N  public.career_skills
-    └── 1:N  public.game_reviews   UNIQUE (user_id, app_id)
+    ├── 1:N  devdeck.prompts
+    ├── 1:N  devdeck.career_posts
+    ├── 1:N  devdeck.career_skills
+    ├── 1:N  devdeck.game_reviews   UNIQUE (user_id, app_id)
+    └── 1:N  devdeck.board_posts
+
+devdeck.boards 1:N board_posts
+devdeck.boards 1:N menus (optional board_id)
+devdeck.menus parent_id → menus (트리)
 ```
 
 Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로 저장한다. `career_posts.skills`와 `career_skills.name`은 MVP에서 FK로 묶지 않는다.
@@ -42,7 +71,7 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 | id | UUID | PK, `gen_random_uuid()` | |
 | user_id | UUID | NOT NULL, FK → profiles(id) CASCADE | |
 | title | TEXT | NOT NULL | |
-| content | TEXT | NOT NULL | Markdown |
+| content | TEXT | NOT NULL | CKEditor HTML. 예전 Markdown 호환 |
 | category | TEXT | DEFAULT `'General'` | 자유 문자열. enum 아님. 예: `React`, `바이브코딩` |
 | tags | TEXT[] | | 예: `{AX,Claude,Refactoring}` |
 | is_public | BOOLEAN | DEFAULT false | 공개 읽기 |
@@ -63,7 +92,7 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 | user_id | UUID | NOT NULL, FK → profiles(id) CASCADE | |
 | title | TEXT | NOT NULL | |
 | excerpt | TEXT | | 목록·랜딩 요약. 비면 본문 앞부분으로 대체 가능 |
-| content | TEXT | NOT NULL | Markdown |
+| content | TEXT | NOT NULL | CKEditor HTML. 예전 Markdown 호환 |
 | post_type | TEXT | NOT NULL, DEFAULT `'project'` | `project` / `skill` / `note` |
 | company | TEXT | | 프로젝트 글용. 예: `삼성SDS` |
 | role | TEXT | | 예: `Tech Lead`, `백엔드` |
@@ -120,49 +149,101 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 - `UNIQUE (user_id, app_id)`
 - `CHECK (rating >= 0 AND rating <= 5)`
 
+### 2.6 `boards`
+
+범용 게시판 마스터. 관리자가 추가한다. PromptKit·CareerLog·Steam은 `kind` 시스템 게시판으로 시드되며 삭제·슬러그 변경이 불가하다. 글은 전용 테이블에 남는다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| slug | TEXT | UNIQUE, `^[a-z0-9]+(?:-[a-z0-9]+)*$` | 공개 URL `/b/{slug}` |
+| name | TEXT | NOT NULL | |
+| description | TEXT | | |
+| kind | TEXT | `generic` / `prompts` / `career` / `steam` | 시스템 kind는 행 1개 |
+| view_role | TEXT | `visitor` / `member` / `owner` | 읽기 최소 권한 |
+| write_role | TEXT | `member` / `owner` | 쓰기 최소 권한. 시스템은 owner 고정 |
+| is_active | BOOLEAN | DEFAULT true | |
+| sort_order | INT | DEFAULT 0 | |
+| created_at / updated_at | timestamptz | | |
+
+### 2.7 `board_posts`
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| board_id | UUID | FK → boards CASCADE | |
+| user_id | UUID | FK → profiles CASCADE | 작성자 |
+| title / excerpt / content | TEXT | title·content NOT NULL | CKEditor HTML |
+| is_published | BOOLEAN | DEFAULT false | 공개 글 |
+
+### 2.8 `menus`
+
+헤더·푸터 메뉴. `board_id`가 있으면 href 대신 `/b/{slug}`.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| parent_id | UUID | FK → menus CASCADE, nullable | 하위 메뉴 |
+| board_id | UUID | FK → boards SET NULL | 게시판 연결 |
+| label | TEXT | NOT NULL | |
+| href | TEXT | | 직접 링크. 게시판 연결 시 비움 |
+| location | TEXT | `header` / `footer` | |
+| view_role | TEXT | `visitor` / `member` / `owner` | 보이는 최소 권한 |
+| is_active | BOOLEAN | DEFAULT true | |
+| sort_order | INT | DEFAULT 0 | |
+
+기존 DB는 `supabase/patch-boards-menus.sql`을 SQL Editor에서 실행한다. `kind` 컬럼과 시스템 게시판 시드가 포함된다.
+
 ## 3. 인덱스
 
 ```sql
-CREATE INDEX prompts_user_id_idx ON public.prompts (user_id);
-CREATE INDEX prompts_is_public_idx ON public.prompts (is_public) WHERE is_public = true;
-CREATE INDEX prompts_category_idx ON public.prompts (category);
-CREATE INDEX prompts_tags_idx ON public.prompts USING GIN (tags);
+CREATE INDEX prompts_user_id_idx ON devdeck.prompts (user_id);
+CREATE INDEX prompts_is_public_idx ON devdeck.prompts (is_public) WHERE is_public = true;
+CREATE INDEX prompts_category_idx ON devdeck.prompts (category);
+CREATE INDEX prompts_tags_idx ON devdeck.prompts USING GIN (tags);
 
-CREATE INDEX career_posts_user_id_idx ON public.career_posts (user_id);
-CREATE INDEX career_posts_is_public_idx ON public.career_posts (is_public) WHERE is_public = true;
-CREATE INDEX career_posts_type_idx ON public.career_posts (post_type);
-CREATE INDEX career_posts_company_idx ON public.career_posts (company);
-CREATE INDEX career_posts_tags_idx ON public.career_posts USING GIN (tags);
-CREATE INDEX career_posts_skills_idx ON public.career_posts USING GIN (skills);
+CREATE INDEX career_posts_user_id_idx ON devdeck.career_posts (user_id);
+CREATE INDEX career_posts_is_public_idx ON devdeck.career_posts (is_public) WHERE is_public = true;
+CREATE INDEX career_posts_type_idx ON devdeck.career_posts (post_type);
+CREATE INDEX career_posts_company_idx ON devdeck.career_posts (company);
+CREATE INDEX career_posts_tags_idx ON devdeck.career_posts USING GIN (tags);
+CREATE INDEX career_posts_skills_idx ON devdeck.career_posts USING GIN (skills);
 
-CREATE INDEX career_skills_user_id_idx ON public.career_skills (user_id);
-CREATE INDEX career_skills_is_public_idx ON public.career_skills (is_public) WHERE is_public = true;
-CREATE INDEX career_skills_sort_idx ON public.career_skills (user_id, sort_order);
+CREATE INDEX career_skills_user_id_idx ON devdeck.career_skills (user_id);
+CREATE INDEX career_skills_is_public_idx ON devdeck.career_skills (is_public) WHERE is_public = true;
+CREATE INDEX career_skills_sort_idx ON devdeck.career_skills (user_id, sort_order);
 
-CREATE INDEX game_reviews_user_id_idx ON public.game_reviews (user_id);
-CREATE INDEX game_reviews_app_id_idx ON public.game_reviews (app_id);
-CREATE INDEX game_reviews_favorite_idx ON public.game_reviews (user_id) WHERE is_favorite = true;
+CREATE INDEX game_reviews_user_id_idx ON devdeck.game_reviews (user_id);
+CREATE INDEX game_reviews_app_id_idx ON devdeck.game_reviews (app_id);
+CREATE INDEX game_reviews_favorite_idx ON devdeck.game_reviews (user_id) WHERE is_favorite = true;
+
+CREATE UNIQUE INDEX boards_system_kind_uidx ON devdeck.boards (kind) WHERE kind <> 'generic';
 ```
 
 ## 4. 트리거
 
 ### 4.1 `updated_at`
 
-`prompts`, `career_posts`, `career_skills`, `game_reviews`, `profiles` 모두 `BEFORE UPDATE`에서 `updated_at = now()`.
+`prompts`, `career_posts`, `career_skills`, `game_reviews`, `profiles`, `boards`, `board_posts`, `menus` 모두 `BEFORE UPDATE`에서 `updated_at = now()`.
 
 ### 4.2 회원가입 시 프로필
 
 ```text
 ON auth.users INSERT
-  → INSERT public.profiles (id, full_name, avatar_url, username)
+  → INSERT devdeck.profiles (id, full_name, avatar_url, username)
     raw_user_meta_data에서 가능한 필드만
 ```
 
-함수는 `SECURITY DEFINER`, search_path는 `public`으로 고정한다.
+함수 이름: `devdeck.handle_new_user`. 트리거 이름: `devdeck_on_auth_user_created`.
+기존 `public.handle_new_user` / `on_auth_user_created`를 덮거나 삭제하지 않는다.
+`SECURITY DEFINER`, `search_path = devdeck, public`.
+이미 있는 유저는 앱의 `ensureProfile` upsert가 `devdeck.profiles`를 만든다.
 
 ## 5. RLS
 
 모든 테이블 RLS ENABLE. 앱은 anon/authenticated 키만 쓴다.
+
+`devdeck.is_owner()` 는 JWT 이메일이 `memoryrl@gmail.com` 인지 본다. 콘텐츠 쓰기는 이 함수가 true일 때만 허용한다. 이미 적용한 DB는 `supabase/patch-owner-writes.sql`을 SQL Editor에서 실행한다.
 
 ### 5.1 `profiles`
 
@@ -170,7 +251,7 @@ ON auth.users INSERT
 | --- | --- | --- | --- |
 | profiles_select_own | authenticated | SELECT | `id = auth.uid()` |
 | profiles_update_own | authenticated | UPDATE | `id = auth.uid()` |
-| INSERT | — | — | 트리거만. 클라이언트 INSERT 없음 |
+| profiles_insert_own | authenticated | INSERT | `id = auth.uid()` (기존 유저 첫 로그인 upsert) |
 
 방문자에게 프로필을 공개할 필요는 MVP에 없다.
 
@@ -180,34 +261,55 @@ ON auth.users INSERT
 | --- | --- | --- | --- |
 | prompts_select_own | authenticated | SELECT | `user_id = auth.uid()` |
 | prompts_select_public | anon, authenticated | SELECT | `is_public = true` |
-| prompts_insert_own | authenticated | INSERT | `user_id = auth.uid()` |
-| prompts_update_own | authenticated | UPDATE | `user_id = auth.uid()` |
-| prompts_delete_own | authenticated | DELETE | `user_id = auth.uid()` |
+| prompts_insert_own | authenticated | INSERT | `user_id = auth.uid() AND devdeck.is_owner()` |
+| prompts_update_own | authenticated | UPDATE | `user_id = auth.uid() AND devdeck.is_owner()` |
+| prompts_delete_own | authenticated | DELETE | `user_id = auth.uid() AND devdeck.is_owner()` |
 
-공개 행은 로그인 없이 읽힌다. 쓰기는 본인만.
+공개 행은 로그인 없이 읽힌다. 쓰기는 관리자(`memoryrl@gmail.com`, `devdeck.is_owner()`)만.
 
 ### 5.3 `career_posts` / `career_skills`
 
-`prompts`와 동일 패턴. 본인 CRUD + `is_public = true` SELECT (anon, authenticated).
+`prompts`와 동일 패턴. 공개 SELECT + 관리자만 INSERT/UPDATE/DELETE.
 
 ### 5.4 `game_reviews`
 
 | Policy | 역할 | 명령 | 조건 |
 | --- | --- | --- | --- |
 | reviews_select_own | authenticated | SELECT | `user_id = auth.uid()` |
-| reviews_insert_own | authenticated | INSERT | `user_id = auth.uid()` |
-| reviews_update_own | authenticated | UPDATE | `user_id = auth.uid()` |
-| reviews_delete_own | authenticated | DELETE | `user_id = auth.uid()` |
+| reviews_select_public | anon, authenticated | SELECT | `true` (포트폴리오 공개) |
+| reviews_insert_own | authenticated | INSERT | `user_id = auth.uid() AND devdeck.is_owner()` |
+| reviews_update_own | authenticated | UPDATE | `user_id = auth.uid() AND devdeck.is_owner()` |
+| reviews_delete_own | authenticated | DELETE | `user_id = auth.uid() AND devdeck.is_owner()` |
 
-MVP에서 리뷰는 비공개. 랜딩 쇼케이스가 필요해지면 `is_public` 컬럼을 추가하는 마이그레이션으로 연다.
+리뷰는 포트폴리오용으로 공개 SELECT. INSERT/UPDATE/DELETE는 본인만.
+
+### 5.5 `boards` / `board_posts` / `menus`
+
+권한 함수: `devdeck.current_access_role()`, `devdeck.role_at_least(required)`.
+
+| 대상 | SELECT | 쓰기 |
+| --- | --- | --- |
+| boards | owner 또는 (활성 + view_role 충족) | owner |
+| board_posts | owner / 작성자 / (공개 + 게시판 읽기 권한) | owner 또는 (작성자 + write_role 충족) |
+| menus | owner 또는 (활성 + view_role 충족) | owner |
 
 ## 6. 목표 SQL 스케치
 
 구현 단계의 `schema.sql`은 아래를 빠짐없이 포함한다. 아래는 설계 스케치이며, 적용 전 Supabase SQL Editor에서 한 번 더 검증한다.
 
 ```sql
+CREATE SCHEMA IF NOT EXISTS devdeck;
+
+GRANT USAGE ON SCHEMA devdeck TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA devdeck TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA devdeck TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA devdeck
+  GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA devdeck
+  GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
 -- profiles
-CREATE TABLE public.profiles (
+CREATE TABLE devdeck.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   updated_at TIMESTAMPTZ DEFAULT now(),
   username TEXT UNIQUE,
@@ -217,9 +319,9 @@ CREATE TABLE public.profiles (
 );
 
 -- prompts
-CREATE TABLE public.prompts (
+CREATE TABLE devdeck.prompts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES devdeck.profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   category TEXT DEFAULT 'General',
@@ -230,9 +332,9 @@ CREATE TABLE public.prompts (
 );
 
 -- career_posts
-CREATE TABLE public.career_posts (
+CREATE TABLE devdeck.career_posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES devdeck.profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   excerpt TEXT,
   content TEXT NOT NULL,
@@ -253,9 +355,9 @@ CREATE TABLE public.career_posts (
 );
 
 -- career_skills
-CREATE TABLE public.career_skills (
+CREATE TABLE devdeck.career_skills (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES devdeck.profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   category TEXT DEFAULT 'General',
   proficiency TEXT,
@@ -269,9 +371,9 @@ CREATE TABLE public.career_skills (
 );
 
 -- game_reviews
-CREATE TABLE public.game_reviews (
+CREATE TABLE devdeck.game_reviews (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES devdeck.profiles(id) ON DELETE CASCADE NOT NULL,
   app_id INT NOT NULL,
   game_title TEXT NOT NULL,
   review_text TEXT,

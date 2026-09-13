@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Coolors 5-swatch → shadcn tokens
+   https://coolors.co/1a1614-6b4f3a-c4a574-e8dfd2-f6f1e9
+   Ink #1A1614 · Umber #6B4F3A · Gold #C4A574 · Stone #E8DFD2 · Parchment #F6F1E9 */
+@layer base {
+  :root {
+    --background: 37 42% 94%;
+    --foreground: 20 13% 9%;
+    --card: 40 50% 97%;
+    --card-foreground: 20 13% 9%;
+    --popover: 40 50% 97%;
+    --popover-foreground: 20 13% 9%;
+    --primary: 20 13% 9%;
+    --primary-foreground: 37 42% 94%;
+    --secondary: 35 32% 87%;
+    --secondary-foreground: 20 13% 9%;
+    --muted: 35 28% 90%;
+    --muted-foreground: 24 10% 36%;
+    --accent: 35 32% 87%;
+    --accent-foreground: 20 13% 9%;
+    --destructive: 8 54% 42%;
+    --destructive-foreground: 37 42% 94%;
+    --border: 36 20% 81%;
+    --input: 36 20% 81%;
+    --ring: 37 40% 61%;
+    --radius: 0.5rem;
+    --lux-champagne: 37 40% 61%;
+    --lux-cognac: 26 30% 32%;
+    --lux-espresso: 20 13% 9%;
+    --lux-sand: 35 32% 87%;
+  }
+
+  .dark {
+    --background: 24 14% 7%;
+    --foreground: 37 42% 94%;
+    --card: 24 10% 10%;
+    --card-foreground: 37 42% 94%;
+    --popover: 24 10% 10%;
+    --popover-foreground: 37 42% 94%;
+    --primary: 37 42% 94%;
+    --primary-foreground: 20 13% 9%;
+    --secondary: 27 14% 14%;
+    --secondary-foreground: 37 42% 94%;
+    --muted: 27 14% 14%;
+    --muted-foreground: 30 16% 66%;
+    --accent: 27 14% 16%;
+    --accent-foreground: 37 42% 94%;
+    --destructive: 8 48% 48%;
+    --destructive-foreground: 37 42% 94%;
+    --border: 28 14% 21%;
+    --input: 28 14% 21%;
+    --ring: 37 40% 61%;
+    --lux-champagne: 37 36% 56%;
+    --lux-cognac: 26 28% 48%;
+    --lux-espresso: 37 42% 94%;
+    --lux-sand: 27 14% 16%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    @apply antialiased;
+  }
+}
+
+.prose-deck :where(h1, h2, h3) {
+  @apply font-display font-bold tracking-tight;
+}
+
+.prose-deck :where(p, li) {
+  @apply leading-relaxed;
+}
+
+.prose-deck :where(a) {
+  @apply text-primary underline-offset-2 hover:underline;
+}
+
+.prose-deck :where(pre, code) {
+  @apply rounded-md bg-muted;
+}
+
+.prose-deck :where(pre) {
+  @apply overflow-x-auto p-4 text-sm;
+}
+
+.prose-deck :where(code) {
+  @apply px-1 py-0.5 text-sm;
+}
+
+.prose-deck.rich-content :where(ul) {
+  @apply list-disc pl-5;
+}
+
+.prose-deck.rich-content :where(ol) {
+  @apply list-decimal pl-5;
+}
+
+.prose-deck.rich-content :where(blockquote) {
+  @apply border-l-2 border-foreground/20 pl-4 text-muted-foreground;
+}
+
+.prose-deck.rich-content :where(pre) {
+  @apply my-3 overflow-x-auto rounded-lg bg-muted p-4 text-sm;
+}
+
+.prose-deck.rich-content :where(pre code) {
+  @apply bg-transparent p-0;
+}
+
+.rich-editor .ck.ck-editor {
+  @apply w-full;
+}
+
+.rich-editor .ck.ck-toolbar {
+  @apply !rounded-t-xl !border-border !bg-muted/40;
+}
+
+.rich-editor .ck.ck-editor__main > .ck-editor__editable {
+  min-height: 16rem;
+  @apply !rounded-b-xl !border-border !bg-background px-4 py-3 text-[15px] leading-relaxed;
+}
+
+.rich-editor .ck.ck-editor__editable.ck-focused {
+  @apply !shadow-none !ring-2 !ring-ring;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "bash scripts/clean-appledouble.sh && if [ -f package.json ]; then npm install; fi"
+  "framework": "nextjs",
+  "installCommand": "bash scripts/clean-appledouble.sh && npm install"
 }
