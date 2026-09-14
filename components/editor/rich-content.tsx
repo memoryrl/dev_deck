@@ -7,7 +7,7 @@ export function RichContent({ content }: { content: string }) {
   if (looksLikeHtml(content)) {
     return (
       <div
-        className="prose-deck rich-content space-y-3 text-[15px]"
+        className="prose-deck rich-content space-y-3"
         dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(content) }}
       />
     )

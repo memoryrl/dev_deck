@@ -1,5 +1,7 @@
+import { PostPager } from "@/components/board/post-pager"
 import { GameCatalog } from "@/components/steam/game-catalog"
 import { fetchGamePageData } from "@/lib/steam/client"
+import { ownedGameNeighbors } from "@/lib/steam/neighbors"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
@@ -14,11 +16,7 @@ export default async function SteamDetailPage({
   let review: GameReview | null = null
   if (isSupabaseConfigured() && appId) {
     const supabase = createClient()
-    const { data } = await supabase
-      .from("game_reviews")
-      .select("*")
-      .eq("app_id", appId)
-      .maybeSingle()
+    const { data } = await supabase.from("game_reviews").select("*").eq("app_id", appId).maybeSingle()
     review = (data as GameReview | null) ?? null
   }
 
@@ -26,9 +24,11 @@ export default async function SteamDetailPage({
     ? await fetchGamePageData(appId)
     : { game: null, catalog: null, achievements: null }
   const title = game?.name ?? catalog?.name ?? review?.game_title ?? `App ${appId}`
+  const neighbors = await ownedGameNeighbors(String(appId), "/steam")
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
+      <PostPager listHref="/steam" {...neighbors} />
       <GameCatalog
         appId={appId}
         title={title}
@@ -37,6 +37,7 @@ export default async function SteamDetailPage({
         achievements={achievements}
       />
       <ReviewForm appId={appId} gameTitle={title} review={review} />
+      <PostPager listHref="/steam" {...neighbors} />
     </div>
   )
 }

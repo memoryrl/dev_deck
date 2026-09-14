@@ -1,12 +1,14 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
+import { ArticleReader } from "@/components/board/article-reader"
+import { PostPager } from "@/components/board/post-pager"
 import { PublicPostForm } from "@/components/board/public-post-form"
 import { PublicContainer } from "@/components/layout/public-container"
 import { Card } from "@/components/ui/card"
 import { RichContent } from "@/components/editor/rich-content"
 import { accessRoleOf, boardPath, roleAtLeast } from "@/lib/access"
-import { getBoardBySlug, getBoardPost } from "@/lib/boards/public"
+import { getBoardBySlug, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
+import { findNeighbors } from "@/lib/posts/neighbors"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
@@ -34,13 +36,20 @@ export default async function PublicBoardPostPage({
 
   const canWrite =
     roleAtLeast(role, board.write_role) && (role === "owner" || post.user_id === userId)
+  const listHref = boardPath(board.slug)
+  const neighbors = findNeighbors(
+    await listBoardPosts(board.id),
+    post.id,
+    (item) => item.id,
+    (item) => `${listHref}/${item.id}`,
+    (item) => item.title
+  )
 
   return (
     <PublicContainer as="article">
-        <Link href={boardPath(board.slug)} className="text-sm font-semibold underline">
-          {board.name}
-        </Link>
-        <h1 className="mt-4 font-display text-4xl font-extrabold">{post.title}</h1>
+      <ArticleReader>
+        <PostPager listHref={listHref} {...neighbors} />
+        <h1 className="mt-6 font-display text-4xl font-extrabold">{post.title}</h1>
         <div className="mt-8">
           <RichContent content={post.content} />
         </div>
@@ -50,6 +59,8 @@ export default async function PublicBoardPostPage({
             <PublicPostForm boardId={board.id} slug={board.slug} post={post} />
           </Card>
         ) : null}
+        <PostPager className="mt-10" listHref={listHref} {...neighbors} />
+      </ArticleReader>
     </PublicContainer>
   )
 }
