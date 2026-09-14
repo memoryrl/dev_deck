@@ -194,7 +194,8 @@ Owner ── Server Action upsert game_reviews
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://tcmtqfpkyojqypbfnpgb.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=      # Dashboard에서 복사. 커밋 금지
-SUPABASE_SERVICE_ROLE_KEY=          # 마이그레이션 전용. 앱 런타임·커밋 금지
+SUPABASE_SERVICE_ROLE_KEY=          # 마이그레이션 + keep-alive 로그 저장. 커밋 금지
+CRON_SECRET=                        # Vercel Cron Authorization. 커밋 금지
 
 STEAM_API_KEY=
 STEAM_ID=                           # SteamID64, 17자리
@@ -217,7 +218,9 @@ ANTHROPIC_API_KEY=
 | 브라우저 | anon key + 사용자 JWT만. Steam/AI 시크릿 없음 |
 | RSC / Server Action | 사용자 세션 클라이언트. RLS가 최종 권한 |
 | Route Handler `/api/steam/*` | 세션 확인 후 env 키로 서버 fetch |
-| service_role | `schema.sql` 적용 등 로컬/CI만. 앱 런타임 경로에 넣지 않음 |
+| Route Handler `/api/health` | 공개. Cron 로그 또는 `?live=1` ping |
+| Route Handler `/api/cron/keep-alive` | `CRON_SECRET`. service_role로 로그만 insert |
+| service_role | `schema.sql` 적용, keep-alive 로그 저장. 브라우저·일반 CRUD 경로에 넣지 않음 |
 
 원본 초안의 `profiles.steam_api_key`는 제거한다. 키가 Postgres와 클라이언트 번들에 남을 위험이 크기 때문이다.
 

@@ -1,7 +1,11 @@
-import { type NextRequest } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
 
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname
+  if (path === "/api/health" || path.startsWith("/api/cron/")) {
+    return NextResponse.next()
+  }
   return updateSession(request)
 }
 

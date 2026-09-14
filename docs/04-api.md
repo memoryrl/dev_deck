@@ -91,7 +91,50 @@ https://media.steampowered.com/steamcommunity/public/images/apps/{app_id}/{img_i
 
 상세 페이지는 `fetchGamePageData(appId)`가 라이브러리 + Store `appdetails` + (스탯 공개 시) `GetPlayerAchievements`를 모은다. 상점 API가 막혀도 플레이타임·리뷰는 그대로 보여 준다.
 
-### 1.2 `POST /api/ai/run` (v2)
+### 1.2 `GET /api/health`
+
+mt_dashboard·외부 모니터링용. 인증 없음. `Cache-Control: no-store`.
+
+| 쿼리 | 동작 |
+| --- | --- |
+| (없음) | 최근 Cron 로그 (`source: log`). 로그 없거나 26시간 초과면 `503` |
+| `live=1` | Auth `/auth/v1/health` + `devdeck.profiles` ping. 로그 저장 없음 |
+
+**응답 본문 (sales-book과 동일 형태, `service: "devdeck"`):**
+
+```ts
+{
+  ok: boolean
+  service: "devdeck"
+  checkedAt: string
+  site: { status: "up" | "degraded" | "down" }
+  supabase: {
+    status: "healthy" | "unhealthy" | "unknown" | "stale"
+    auth: boolean | null
+    db: boolean | null
+    lastCheckAt: string | null
+    lastCheckDurationMs: number | null
+    cronSchedule: "0 3 * * *"
+    cronScheduleNote: string
+    stale: boolean
+    source: "live" | "log"
+  }
+  error?: string
+}
+```
+
+### 1.3 `GET /api/cron/keep-alive`
+
+Vercel Cron. `Authorization: Bearer CRON_SECRET`. Auth·DB ping 후 `devdeck.supabase_health_checks`에 저장.
+
+### 1.4 관리자 헬스체크
+
+세션 + Owner만.
+
+- `GET /api/admin/health-checks?limit=90`
+- `POST /api/admin/trigger-health-check`
+
+### 1.5 `POST /api/ai/run` (v2)
 
 MVP: 파일만 생성하고 `501` + `{ "error": "Not implemented" }`.
 

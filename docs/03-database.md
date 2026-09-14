@@ -194,6 +194,23 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 
 기존 DB는 `supabase/patch-boards-menus.sql`을 SQL Editor에서 실행한다. `kind` 컬럼과 시스템 게시판 시드가 포함된다.
 
+### 2.9 `supabase_health_checks`
+
+Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| checked_at | timestamptz | NOT NULL | ping 시각 |
+| ok | BOOLEAN | NOT NULL | Auth+DB 모두 도달 |
+| duration_ms | INTEGER | | |
+| auth_ok / auth_status | BOOLEAN / INT | | `/auth/v1/health` |
+| db_ok | BOOLEAN | | `devdeck.profiles` limit 1 (RLS 거절도 도달로 봄) |
+| error_message | TEXT | | |
+| details | JSONB | DEFAULT `{}` | |
+
+기존 DB는 `supabase/patch-health-checks.sql`을 SQL Editor에서 실행한다.
+
 ## 3. 인덱스
 
 ```sql
@@ -292,6 +309,15 @@ ON auth.users INSERT
 | boards | owner 또는 (활성 + view_role 충족) | owner |
 | board_posts | owner / 작성자 / (공개 + 게시판 읽기 권한) | owner 또는 (작성자 + write_role 충족) |
 | menus | owner 또는 (활성 + view_role 충족) | owner |
+
+### 5.6 `supabase_health_checks`
+
+| Policy | 역할 | 명령 | 조건 |
+| --- | --- | --- | --- |
+| owner_read | authenticated | SELECT | `devdeck.is_owner()` |
+| service_role_manage | service_role | ALL | true |
+
+anon INSERT 없음. Cron이 service_role 키로만 쓴다.
 
 ## 6. 목표 SQL 스케치
 

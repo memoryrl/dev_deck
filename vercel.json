@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "bash scripts/clean-appledouble.sh && npm install"
+  "installCommand": "bash scripts/clean-appledouble.sh && npm install",
+  "crons": [
+    {
+      "path": "/api/cron/keep-alive",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

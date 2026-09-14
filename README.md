@@ -107,9 +107,12 @@ npm run dev
 
 `.env.local`에 Supabase anon 키와 Steam 값을 채웁니다. 시크릿은 커밋하지 않습니다.
 
-1. Supabase SQL Editor에 [`supabase/schema.sql`](./supabase/schema.sql)을 적용합니다. 이미 있는 DB는 [`supabase/patch-boards-menus.sql`](./supabase/patch-boards-menus.sql)을 재실행합니다.
+1. Supabase SQL Editor에 [`supabase/schema.sql`](./supabase/schema.sql)을 적용합니다. 이미 있는 DB는 [`supabase/patch-boards-menus.sql`](./supabase/patch-boards-menus.sql)과 [`supabase/patch-health-checks.sql`](./supabase/patch-health-checks.sql)을 재실행합니다.
 2. API **Exposed schemas**에 `devdeck`을 추가합니다.
 3. Auth Redirect URL에 `http://localhost:3000/auth/callback`을 넣습니다.
+4. 프로덕션 Vercel에 `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`를 넣습니다. Cron은 매일 03:00 UTC에 `GET /api/cron/keep-alive`를 호출합니다.
+
+공개 모니터링: `GET /api/health` (Cron 로그), `GET /api/health?live=1` (실시간 ping). mt_dashboard는 이 응답을 sales-book과 같은 형태로 읽습니다.
 
 ```bash
 npm run lint
