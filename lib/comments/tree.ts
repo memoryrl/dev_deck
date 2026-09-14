@@ -6,7 +6,7 @@ export function nestComments(rows: Comment[]): CommentNode[] {
     map.set(row.id, { ...row, children: [] })
   }
   const roots: CommentNode[] = []
-  for (const node of map.values()) {
+  for (const node of Array.from(map.values())) {
     if (node.parent_id && map.has(node.parent_id)) {
       map.get(node.parent_id)!.children.push(node)
     } else {

@@ -47,10 +47,10 @@ export function withMemoryCache<T>(key: string, ttlMs: number, fn: () => Promise
 }
 
 export function forgetMemoryCache(prefix: string) {
-  for (const key of values.keys()) {
+  for (const key of Array.from(values.keys())) {
     if (key === prefix || key.startsWith(prefix)) values.delete(key)
   }
-  for (const key of pending.keys()) {
+  for (const key of Array.from(pending.keys())) {
     if (key === prefix || key.startsWith(prefix)) pending.delete(key)
   }
 }
