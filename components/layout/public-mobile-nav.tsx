@@ -46,13 +46,13 @@ export function PublicMobileNav({
   }, [open, onClose])
 
   return (
-    <div className={cn("fixed inset-0 z-50 lg:hidden", !open && "pointer-events-none")}>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 top-14 z-50 lg:hidden">
       <button
         type="button"
         aria-label="메뉴 닫기"
         className={cn(
-          "absolute inset-x-0 bottom-0 top-14 bg-foreground/35 backdrop-blur-[2px] transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0"
+          "absolute inset-0 bg-foreground/35 backdrop-blur-[2px] transition-opacity duration-300",
+          open ? "pointer-events-auto opacity-100" : "opacity-0"
         )}
         onClick={onClose}
       />
@@ -62,8 +62,8 @@ export function PublicMobileNav({
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          "absolute bottom-0 right-0 top-14 flex w-[min(22rem,88vw)] flex-col border-l bg-background shadow-2xl transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "translate-x-full"
+          "absolute inset-y-0 right-0 flex w-[min(22rem,88vw)] flex-col border-l bg-background shadow-2xl transition-transform duration-300 ease-out",
+          open ? "pointer-events-auto translate-x-0" : "translate-x-full"
         )}
       >
         <h2 id={titleId} className="sr-only">

@@ -5,7 +5,7 @@ import { PublicHeader } from "@/components/layout/public-header"
 
 function HeaderFallback() {
   return (
-    <header className="sticky top-0 z-30 h-14 border-b bg-background/80 backdrop-blur" />
+    <header className="sticky top-0 z-50 h-14 border-b bg-background/80 backdrop-blur" />
   )
 }
 

@@ -9,7 +9,7 @@ export async function PublicHeader() {
   const navNodes = await listNavMenus("header")
 
   return (
-    <header className="sticky top-0 z-30 overflow-visible">
+    <header className="sticky top-0 z-50 overflow-visible">
       <PublicHeaderNav account={account} navNodes={navNodes} />
     </header>
   )

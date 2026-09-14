@@ -221,11 +221,12 @@ export function PublicHeaderNav({
       <div
         className={cn(
           "relative",
-          activeNode && "absolute inset-x-0 top-0 z-40"
+          activeNode && "absolute inset-x-0 top-0 z-40",
+          drawer && "z-[60]"
         )}
       >
         <PhotoSkin src={photo} scene={scene} />
-        <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
+        <div className="relative z-10 mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
           <Link href="/" onClick={() => setOpen(null)}>
             <BrandMark />
           </Link>
@@ -307,7 +308,7 @@ export function PublicHeaderNav({
             )}
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-foreground/[0.06]"
+              className="relative z-[70] inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-foreground/[0.06]"
               aria-expanded={drawer}
               aria-controls="public-mobile-nav"
               aria-label={drawer ? "메뉴 닫기" : "메뉴 열기"}
