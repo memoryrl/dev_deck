@@ -11,6 +11,7 @@ import { SteamSection } from "@/components/landing/steam-section"
 import { UmpcActivity } from "@/components/landing/umpc-activity"
 import { HomeLandingSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
+import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
 
 export default function HomePage() {
@@ -41,9 +42,9 @@ export default function HomePage() {
             <Button asChild variant="outline">
               <Link href="/games">게임 보기</Link>
             </Button>
-            <Button asChild variant="ghost">
-              <Link href="/login">로그인</Link>
-            </Button>
+            <Suspense>
+              <HeroLoginLink />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -85,4 +86,14 @@ async function HomeLanding() {
 function takeLatest<T>(items: T[], featuredHref: string | undefined, hrefOf: (item: T) => string) {
   const rest = featuredHref ? items.filter((item) => hrefOf(item) !== featuredHref) : items
   return (rest.length > 0 ? rest : items).slice(0, 4)
+}
+
+async function HeroLoginLink() {
+  const viewer = await currentViewer()
+  if (viewer.user) return null
+  return (
+    <Button asChild variant="ghost">
+      <Link href="/login">로그인</Link>
+    </Button>
+  )
 }
