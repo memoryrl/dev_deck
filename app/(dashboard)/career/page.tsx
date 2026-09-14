@@ -1,21 +1,18 @@
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
+import { CareerForm } from "./career-form"
+import { PostList } from "@/components/board/post-list"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
-import { formatPeriod, isSupabaseConfigured } from "@/lib/utils"
+import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerPost } from "@/types/career"
-import { CareerForm } from "./career-form"
 
 export default async function CareerPage() {
   let posts: CareerPost[] = []
   if (isSupabaseConfigured()) {
     await ensureProfile()
     const supabase = createClient()
-    const { data } = await supabase
-      .from("career_posts")
-      .select("*")
-      .order("created_at", { ascending: false })
+    const { data } = await supabase.from("career_posts").select("*").order("created_at", { ascending: false })
     posts = (data as CareerPost[]) ?? []
   }
 
@@ -31,27 +28,17 @@ export default async function CareerPage() {
         <h2 className="mb-4 font-display text-xl font-bold">새 글</h2>
         <CareerForm />
       </Card>
-      {posts.length === 0 ? (
-        <p className="text-sm text-muted-foreground">참여했던 프로젝트를 글로 남겨 보세요.</p>
-      ) : (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <Link key={post.id} href={`/career/${post.id}`}>
-              <Card>
-                <div className="flex flex-wrap gap-2">
-                  <Badge>{post.post_type}</Badge>
-                  {post.is_public ? <Badge variant="secondary">공개</Badge> : null}
-                  {post.company ? <Badge>{post.company}</Badge> : null}
-                </div>
-                <h3 className="mt-3 font-display text-xl font-bold">{post.title}</h3>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {formatPeriod(post.period_start, post.period_end)}
-                </p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      <PostList
+        searchable
+        empty="참여했던 프로젝트를 글로 남겨 보세요."
+        items={posts.map((post) => ({
+          href: `/career/${post.id}`,
+          title: post.title,
+          createdAt: post.created_at,
+          author: post.company,
+          meta: [post.post_type, post.is_public ? "공개" : "비공개"].filter(Boolean).join(" · "),
+        }))}
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { BoardForm } from "@/app/(dashboard)/site/boards/board-form"
 import { BoardPostAdminForm } from "@/app/(dashboard)/site/boards/[id]/post-form"
+import { PostList } from "@/components/board/post-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -47,21 +48,16 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
           <p className="text-sm text-muted-foreground">
             이 게시판의 글은 {kindLabel(board.kind)} 전용 테이블에 있습니다. 범용 글쓰기는 쓰지 않습니다.
           </p>
-          {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">글이 없습니다.</p>
-          ) : (
-            entries.map((entry) => (
-              <Link key={entry.id} href={entry.href}>
-                <Card>
-                  <div className="flex flex-wrap gap-2">
-                    {entry.published ? <Badge variant="secondary">공개</Badge> : <Badge>비공개</Badge>}
-                    {entry.note ? <Badge variant="secondary">{entry.note}</Badge> : null}
-                  </div>
-                  <h3 className="mt-3 font-display text-xl font-bold">{entry.title}</h3>
-                </Card>
-              </Link>
-            ))
-          )}
+          <PostList
+            searchable
+            empty="글이 없습니다."
+            items={entries.map((entry) => ({
+              href: entry.href,
+              title: entry.title,
+              createdAt: entry.createdAt,
+              meta: [entry.note, entry.published ? "공개" : "비공개"].filter(Boolean).join(" · "),
+            }))}
+          />
         </div>
       ) : (
         <>
@@ -69,22 +65,16 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
             <h2 className="mb-4 font-display text-xl font-bold">새 글</h2>
             <BoardPostAdminForm boardId={board.id} />
           </Card>
-          {posts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">글이 없습니다.</p>
-          ) : (
-            <div className="space-y-3">
-              {posts.map((post) => (
-                <Link key={post.id} href={`/site/boards/${board.id}/${post.id}`}>
-                  <Card>
-                    <div className="flex flex-wrap gap-2">
-                      {post.is_published ? <Badge variant="secondary">공개</Badge> : <Badge>비공개</Badge>}
-                    </div>
-                    <h3 className="mt-3 font-display text-xl font-bold">{post.title}</h3>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
+          <PostList
+            searchable
+            empty="글이 없습니다."
+            items={posts.map((post) => ({
+              href: `/site/boards/${board.id}/${post.id}`,
+              title: post.title,
+              createdAt: post.created_at,
+              meta: post.is_published ? "공개" : "비공개",
+            }))}
+          />
         </>
       )}
     </div>

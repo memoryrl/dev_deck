@@ -49,6 +49,7 @@ export type ModuleEntry = {
   href: string
   published: boolean
   note?: string
+  createdAt: string
 }
 
 export async function listModuleEntries(kind: SystemBoardKind): Promise<ModuleEntry[]> {
@@ -56,22 +57,26 @@ export async function listModuleEntries(kind: SystemBoardKind): Promise<ModuleEn
   const supabase = createClient()
 
   if (kind === "prompts") {
-    const { data } = await supabase.from("prompts").select("id, title, is_public, category").order("created_at", {
-      ascending: false,
-    })
+    const { data } = await supabase
+      .from("prompts")
+      .select("id, title, is_public, category, created_at")
+      .order("created_at", {
+        ascending: false,
+      })
     return (data ?? []).map((row) => ({
       id: row.id,
       title: row.title,
       href: systemEntryHref(kind, row.id),
       published: Boolean(row.is_public),
       note: row.category,
+      createdAt: row.created_at,
     }))
   }
 
   if (kind === "career") {
     const { data } = await supabase
       .from("career_posts")
-      .select("id, title, is_public, post_type")
+      .select("id, title, is_public, post_type, created_at")
       .order("created_at", { ascending: false })
     return (data ?? []).map((row) => ({
       id: row.id,
@@ -79,12 +84,13 @@ export async function listModuleEntries(kind: SystemBoardKind): Promise<ModuleEn
       href: systemEntryHref(kind, row.id),
       published: Boolean(row.is_public),
       note: row.post_type,
+      createdAt: row.created_at,
     }))
   }
 
   const { data } = await supabase
     .from("game_reviews")
-    .select("id, app_id, game_title, review_text, rating")
+    .select("id, app_id, game_title, review_text, rating, created_at")
     .order("updated_at", { ascending: false })
   return (data ?? []).map((row) => ({
     id: row.id,
@@ -92,5 +98,6 @@ export async function listModuleEntries(kind: SystemBoardKind): Promise<ModuleEn
     href: systemEntryHref(kind, row.id, row.app_id),
     published: Boolean(row.review_text?.trim()),
     note: `평점 ${row.rating}`,
+    createdAt: row.created_at,
   }))
 }

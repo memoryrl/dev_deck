@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import { Briefcase, Gamepad2, Sparkles } from "lucide-react"
+import { usePageActivity } from "@/components/landing/use-page-activity"
 import { Card } from "@/components/ui/card"
 
 const modules = [
@@ -46,13 +49,17 @@ function ModuleCard({
 
 export function ModuleMarquee() {
   const loop = [...modules, ...modules]
+  const pageActive = usePageActivity()
 
   return (
     <section className="relative overflow-hidden py-14">
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent" />
       <div className="group">
-        <div className="flex w-max gap-4 pr-4 motion-safe:animate-marquee motion-safe:group-hover:[animation-play-state:paused]">
+        <div
+          className="flex w-max gap-4 pr-4 motion-safe:animate-marquee motion-safe:group-hover:[animation-play-state:paused]"
+          style={{ animationPlayState: pageActive ? undefined : "paused" }}
+        >
           {loop.map((mod, index) => (
             <ModuleCard key={`${mod.title}-${index}`} {...mod} />
           ))}

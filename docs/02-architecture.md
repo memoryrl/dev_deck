@@ -9,7 +9,7 @@
 | UI | Tailwind CSS, Lucide, shadcn/ui | New York + Neutral. Tailwind 3 + Radix |
 | Backend | Supabase Auth + Postgres + RLS | 별도 API 서버 없이 권한 경계 |
 | Hosting | Vercel | App Router / Serverless와 맞음 |
-| Steam | Web API `IPlayerService/GetOwnedGames` | 보유 게임·플레이타임 |
+| Steam | Web API `GetOwnedGames` + `GetPlayerSummaries` + `GetPlayerAchievements`, Store `appdetails` | 라이브러리·프로필·업적·상점 메타 |
 | AI (v2) | OpenAI / Claude | Prompt Runner 예약 |
 
 런타임: Node.js 서버 함수. Steam/AI 프록시는 Edge보다 Node를 기본으로 한다 (외부 fetch + 시크릿).
@@ -157,10 +157,17 @@ Visitor ── RSC (`/` , `/work` , `/work/[id]`)
 ### 5.3 Steam Tracker
 
 ```text
-Owner ── GET /api/steam/games  (세션 필수)
+Owner ── GET /api/steam/games
          └── lib/steam/client.ts
              └── STEAM_API_KEY, STEAM_ID (process.env)
-                 └── GetOwnedGames/v1
+                 ├── GetOwnedGames/v1
+                 └── GetPlayerSummaries/v2
+
+상세 `/steam/[appid]`, `/games/[appid]`
+         └── fetchGamePageData
+             ├── GetOwnedGames (캐시)
+             ├── Store appdetails (하루 캐시, 실패해도 페이지는 유지)
+             └── GetPlayerAchievements (스탯 공개 게임만)
 
 Owner ── Server Action upsert game_reviews
          └── user_id + app_id UNIQUE
@@ -174,7 +181,7 @@ Owner ── Server Action upsert game_reviews
 | --- | --- |
 | env 누락 | 500, 키 값은 로그/응답에 넣지 않음 |
 | Steam 4xx/5xx | 502 + 짧은 메시지 |
-| 세션 없음 | 401 |
+| Store appdetails 실패 | 소개·스크린샷만 생략, 페이지는 유지 |
 
 ### 5.4 AI Runner (v2, 예약)
 

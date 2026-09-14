@@ -21,7 +21,7 @@ Steam CORS를 피하고 API 키를 숨긴다.
 
 1. `createServerClient`로 세션 확인
 2. `STEAM_API_KEY`, `STEAM_ID` 없으면 `500` (`Steam is not configured`)
-3. 아래 URL로 fetch
+3. 아래 URL로 fetch (프로필은 병렬)
 
 ```text
 https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/
@@ -29,6 +29,11 @@ https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/
   &steamid={STEAM_ID}
   &include_appinfo=1
   &include_played_free_games=1
+  &include_extended_appinfo=1
+
+https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/
+  ?key={STEAM_API_KEY}
+  &steamids={STEAM_ID}
 ```
 
 4. 실패 시 `502`
@@ -37,9 +42,16 @@ https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/
 **응답 200:**
 
 ```ts
+type SteamProfile = {
+  persona_name: string
+  avatar_url: string | null
+  profile_url: string | null
+}
+
 type SteamGamesResponse = {
   steam_id: string
   game_count: number
+  profile: SteamProfile | null
   games: SteamGame[]
 }
 
@@ -48,6 +60,12 @@ type SteamGame = {
   name: string
   playtime_forever_minutes: number
   playtime_2weeks_minutes: number | null
+  playtime_windows_minutes: number
+  playtime_mac_minutes: number
+  playtime_linux_minutes: number
+  playtime_deck_minutes: number
+  last_played_at: string | null
+  has_community_visible_stats: boolean
   img_icon_url: string | null
   header_image_url: string
 }
@@ -59,6 +77,8 @@ type SteamGame = {
 https://cdn.akamai.steamstatic.com/steam/apps/{app_id}/header.jpg
 ```
 
+상세 히어로는 `library_hero.jpg`를 먼저 쓰고, 없으면 header로 내린다.
+
 아이콘 (Steam이 hash를 줄 때):
 
 ```text
@@ -67,7 +87,9 @@ https://media.steampowered.com/steamcommunity/public/images/apps/{app_id}/{img_i
 
 **에러 본문:** `{ "error": string }` — 키·스팀 ID 원문 금지.
 
-**캐시:** MVP는 매 요청 fetch. v2에서 `Cache-Control` 또는 Supabase 스냅샷 테이블을 검토.
+**캐시:** GetOwnedGames / 프로필 `revalidate: 300`. 상점 `appdetails` 하루, 업적 1시간.
+
+상세 페이지는 `fetchGamePageData(appId)`가 라이브러리 + Store `appdetails` + (스탯 공개 시) `GetPlayerAchievements`를 모은다. 상점 API가 막혀도 플레이타임·리뷰는 그대로 보여 준다.
 
 ### 1.2 `POST /api/ai/run` (v2)
 
@@ -158,10 +180,17 @@ OAuth 시작은 클라이언트 `supabase.auth.signInWithOAuth`. Google은 `prom
 ```ts
 // images.ts
 function steamHeaderUrl(appId: number): string
+function steamLibraryHeroUrl(appId: number): string
+function steamHeroSources(appId: number, extra?: string | null): string[]
 function steamIconUrl(appId: number, hash: string | null): string | null
 
 // client.ts
 function fetchOwnedGames(): Promise<SteamGamesResponse>
+function fetchGamePageData(appId: number): Promise<SteamGamePageData>
+
+// store.ts
+function fetchAppCatalog(appId: number): Promise<SteamAppCatalog | null>
+function fetchAchievementSummary(appId: number): Promise<SteamAchievementSummary | null>
 ```
 
 `fetchOwnedGames`는 Route Handler와 테스트만 호출한다. 클라이언트 컴포넌트에서 import하지 않는다.

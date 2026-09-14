@@ -49,9 +49,9 @@ DevDeck은 이를 **공개 쇼케이스 + 소유자 전용 CMS**로 묶습니다
 
 ### Steam Tracker — 라이브러리와 포트폴리오 리뷰
 
-서버 프록시(`/api/steam/games`)가 Steam Web API `GetOwnedGames`를 호출합니다. API 키는 **브라우저와 DB에 두지 않고** 서버 env만 사용합니다.
+서버 프록시(`/api/steam/games`)가 Steam Web API `GetOwnedGames`와 `GetPlayerSummaries`를 호출합니다. 상세에서는 상점 소개·장르·Deck 호환과 업적 진행을 붙입니다. API 키는 **브라우저와 DB에 두지 않고** 서버 env만 사용합니다.
 
-리뷰·별점(0.5 단위)·UMPC 프리셋·즐겨찾기는 DevDeck의 `game_reviews`에 저장됩니다. Steam 상점 리뷰를 대신 올리는 기능은 아닙니다. 커버 이미지는 Steam CDN `header.jpg`를 사용합니다.
+리뷰·별점(0.5 단위)·UMPC 프리셋·즐겨찾기는 DevDeck의 `game_reviews`에 저장됩니다. Steam 상점 리뷰를 대신 올리는 기능은 아닙니다. 커버는 Steam CDN `header.jpg`와 `library_hero.jpg`를 사용합니다.
 
 ---
 

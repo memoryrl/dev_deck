@@ -103,6 +103,7 @@ export function PublicHeaderNav({
   const activeNode = nodes.find((menu) => menu.id === open)
   const staticMega = publicMenus.find((menu) => menu.id === open)
   const scene: SceneId = (open as SceneId) && PHOTO_POOLS[open as SceneId] ? (open as SceneId) : "default"
+  const ActiveIcon = MENU_ICON[open as MegaId]
   const photo = photos[scene]
   const accountLabel = signedIn ? (accountHref === "/promptkit" ? "대시보드" : "내 계정") : "로그인"
   const closeDrawer = useCallback(() => setDrawer(false), [])
@@ -220,70 +221,83 @@ export function PublicHeaderNav({
             role="region"
             aria-label={activeNode.label}
           >
-            <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-8 pt-1 md:grid-cols-[minmax(0,1.15fr)_repeat(2,minmax(0,1fr))]">
-              <Link
-                href={staticMega ? staticMega.highlight.href : activeNode.children[0]?.href ?? "/"}
-                className="group rounded-2xl bg-background/70 p-5 ring-1 ring-foreground/8 transition hover:bg-background/85 hover:ring-foreground/12"
-                onClick={() => setOpen(null)}
-              >
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  {activeNode.label}
-                </p>
-                <h2 className="mt-3 font-display text-2xl font-bold tracking-tight">
-                  {staticMega ? staticMega.highlight.title : activeNode.label}
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {staticMega ? staticMega.highlight.body : "연결된 페이지와 게시판으로 이동합니다."}
-                </p>
-                <p className="mt-5 inline-flex items-center gap-1 text-sm font-medium">
-                  {staticMega ? staticMega.highlight.cta : activeNode.children[0]?.label ?? "바로가기"}
-                  <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </p>
-              </Link>
-              {staticMega
-                ? staticMega.groups.map((group) => (
-                    <div key={group.title} className="pt-1">
-                      <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        {group.title}
-                      </p>
-                      <ul className="mt-2 space-y-0.5">
-                        {group.links.map((link) => (
-                          <li key={link.href + link.label}>
-                            <Link
-                              href={edit[link.href as keyof typeof edit] ?? link.href}
-                              className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
-                              onClick={() => setOpen(null)}
-                            >
-                              <span className="text-sm font-medium">{link.label}</span>
-                              {link.note ? (
-                                <span className="mt-0.5 block text-xs text-muted-foreground">{link.note}</span>
-                              ) : null}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))
-                : (
-                    <div className="pt-1 md:col-span-2">
-                      <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        바로가기
-                      </p>
-                      <ul className="mt-2 space-y-0.5">
-                        {activeNode.children.map((link) => (
-                          <li key={link.id}>
-                            <Link
-                              href={link.href}
-                              className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
-                              onClick={() => setOpen(null)}
-                            >
-                              <span className="text-sm font-medium">{link.label}</span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+            <div className="mx-auto max-w-6xl px-5 pb-8 pt-2">
+              <div className="grid overflow-hidden rounded-2xl bg-background/70 ring-1 ring-foreground/10 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.65fr)]">
+                <Link
+                  href={staticMega ? staticMega.highlight.href : activeNode.children[0]?.href ?? "/"}
+                  className={cn(
+                    "group flex flex-col justify-between border-foreground/8 p-6 transition-colors md:border-r",
+                    scene === "prompt" && "bg-[hsl(var(--lux-champagne)/0.14)] hover:bg-[hsl(var(--lux-champagne)/0.2)]",
+                    scene === "career" && "bg-[hsl(var(--lux-cognac)/0.1)] hover:bg-[hsl(var(--lux-cognac)/0.16)]",
+                    scene === "games" && "bg-[hsl(var(--lux-espresso)/0.07)] hover:bg-[hsl(var(--lux-espresso)/0.12)]",
+                    scene === "default" && "bg-foreground/[0.03] hover:bg-foreground/[0.05]"
                   )}
+                  onClick={() => setOpen(null)}
+                >
+                  <div>
+                    <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      {ActiveIcon ? <ActiveIcon className="size-3.5 opacity-70" /> : null}
+                      {activeNode.label}
+                    </p>
+                    <h2 className="mt-4 font-display text-2xl font-bold tracking-tight">
+                      {staticMega ? staticMega.highlight.title : activeNode.label}
+                    </h2>
+                    <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                      {staticMega ? staticMega.highlight.body : "연결된 페이지와 게시판으로 이동합니다."}
+                    </p>
+                  </div>
+                  <p className="mt-8 inline-flex items-center gap-1 text-sm font-semibold">
+                    {staticMega ? staticMega.highlight.cta : activeNode.children[0]?.label ?? "바로가기"}
+                    <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </p>
+                </Link>
+                <div className="grid gap-1 p-3 sm:grid-cols-2 sm:p-4">
+                  {staticMega
+                    ? staticMega.groups.map((group) => (
+                        <div key={group.title} className="px-2 py-2">
+                          <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                            {group.title}
+                          </p>
+                          <ul className="mt-2 space-y-0.5">
+                            {group.links.map((link) => (
+                              <li key={link.href + link.label}>
+                                <Link
+                                  href={edit[link.href as keyof typeof edit] ?? link.href}
+                                  className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
+                                  onClick={() => setOpen(null)}
+                                >
+                                  <span className="text-sm font-medium">{link.label}</span>
+                                  {link.note ? (
+                                    <span className="mt-0.5 block text-xs text-muted-foreground">{link.note}</span>
+                                  ) : null}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))
+                    : (
+                        <div className="px-2 py-2 sm:col-span-2">
+                          <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                            바로가기
+                          </p>
+                          <ul className="mt-2 space-y-0.5">
+                            {activeNode.children.map((link) => (
+                              <li key={link.id}>
+                                <Link
+                                  href={link.href}
+                                  className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
+                                  onClick={() => setOpen(null)}
+                                >
+                                  <span className="text-sm font-medium">{link.label}</span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

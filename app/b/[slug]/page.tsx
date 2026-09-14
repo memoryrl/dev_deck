@@ -1,9 +1,7 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
+import { PostList } from "@/components/board/post-list"
 import { PublicPostForm } from "@/components/board/public-post-form"
-import { PublicFooter } from "@/components/layout/public-footer"
-import { PublicHeader } from "@/components/layout/public-header"
-import { Badge } from "@/components/ui/badge"
+import { PublicContainer } from "@/components/layout/public-container"
 import { Card } from "@/components/ui/card"
 import { boardPath, roleAtLeast } from "@/lib/access"
 import { currentAccessRole } from "@/lib/boards/access"
@@ -25,64 +23,29 @@ export default async function PublicBoardPage({ params }: { params: { slug: stri
   const items = system ? await listSystemPublicItems(board.kind) : []
   const canWrite = !system && roleAtLeast(role, board.write_role)
 
+  const listItems = system
+    ? items
+    : genericPosts.map((post) => ({
+        href: `${boardPath(board.slug)}/${post.id}`,
+        title: post.title,
+        createdAt: post.created_at,
+        meta: post.is_published ? null : "비공개",
+      }))
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <PublicHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12">
-        <h1 className="font-display text-4xl font-extrabold">{board.name}</h1>
-        {board.description ? <p className="mt-2 text-muted-foreground">{board.description}</p> : null}
+    <PublicContainer>
+      <h1 className="font-display text-4xl font-extrabold">{board.name}</h1>
+      {board.description ? <p className="mt-2 text-muted-foreground">{board.description}</p> : null}
 
-        {system ? (
-          items.length === 0 ? (
-            <p className="mt-10 text-sm">아직 글이 없습니다.</p>
-          ) : (
-            <div className="mt-8 space-y-4">
-              {items.map((item) => (
-                <Link key={item.id} href={item.href}>
-                  <Card>
-                    {item.badge ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Badge>{item.badge}</Badge>
-                      </div>
-                    ) : null}
-                    <h2 className="mt-1 font-display text-2xl font-bold">{item.title}</h2>
-                    {item.excerpt ? (
-                      <p className="mt-2 text-sm text-muted-foreground">{item.excerpt}</p>
-                    ) : null}
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )
-        ) : genericPosts.length === 0 ? (
-          <p className="mt-10 text-sm">아직 글이 없습니다.</p>
-        ) : (
-          <div className="mt-8 space-y-4">
-            {genericPosts.map((post) => (
-              <Link key={post.id} href={`${boardPath(board.slug)}/${post.id}`}>
-                <Card>
-                  <div className="flex flex-wrap gap-2">
-                    {post.is_published ? null : <Badge>비공개</Badge>}
-                  </div>
-                  <h2 className="mt-1 font-display text-2xl font-bold">{post.title}</h2>
-                  {post.excerpt ? (
-                    <p className="mt-2 text-sm text-muted-foreground">{post.excerpt}</p>
-                  ) : null}
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
+      <PostList className="mt-8" searchable empty="아직 글이 없습니다." items={listItems} />
 
-        {canWrite ? (
-          <Card className="mt-10">
-            <h2 className="mb-4 font-display text-xl font-bold">글쓰기</h2>
-            <PublicPostForm boardId={board.id} slug={board.slug} />
-          </Card>
-        ) : null}
-      </main>
-      <PublicFooter />
-    </div>
+      {canWrite ? (
+        <Card className="mt-10">
+          <h2 className="mb-4 font-display text-xl font-bold">글쓰기</h2>
+          <PublicPostForm boardId={board.id} slug={board.slug} />
+        </Card>
+      ) : null}
+    </PublicContainer>
   )
 }
 
@@ -90,29 +53,27 @@ async function listSystemPublicItems(kind: "prompts" | "career" | "steam") {
   if (kind === "prompts") {
     const prompts = await listPublicPrompts()
     return prompts.map((prompt) => ({
-      id: prompt.id,
       href: systemPublicHref(kind, prompt.id),
       title: prompt.title,
-      excerpt: null as string | null,
-      badge: prompt.category,
+      createdAt: prompt.created_at,
+      meta: prompt.category,
     }))
   }
   if (kind === "career") {
     const posts = await listPublicCareerPosts()
     return posts.map((post) => ({
-      id: post.id,
       href: systemPublicHref(kind, post.id),
       title: post.title,
-      excerpt: post.excerpt,
-      badge: post.post_type,
+      createdAt: post.created_at,
+      author: post.company,
+      meta: post.post_type,
     }))
   }
   const reviews = await listPublicGameReviews()
   return reviews.map((review) => ({
-    id: review.id,
     href: systemPublicHref(kind, review.id, review.app_id),
     title: review.game_title,
-    excerpt: review.review_text,
-    badge: `평점 ${review.rating}`,
+    createdAt: review.created_at,
+    meta: `평점 ${review.rating}`,
   }))
 }

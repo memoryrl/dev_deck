@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 function SteamMark({ className }: { className?: string }) {
@@ -16,30 +16,63 @@ function SteamMark({ className }: { className?: string }) {
 
 export function SteamCover({
   src,
+  appId,
   alt = "",
   className,
 }: {
-  src: string
+  src: string | string[]
+  appId?: number
   alt?: string
   className?: string
 }) {
+  const sourceKey = Array.isArray(src) ? src.filter(Boolean).join("|") : src
+  const [sources, setSources] = useState(() => (Array.isArray(src) ? src : [src]).filter(Boolean))
+  const [index, setIndex] = useState(0)
   const [ok, setOk] = useState(false)
+  const lookupRef = useRef(false)
+  const current = sources[index] ?? ""
 
   useEffect(() => {
+    lookupRef.current = false
+    setSources((Array.isArray(src) ? src : [src]).filter(Boolean))
+    setIndex(0)
+    setOk(false)
+    // src is represented by sourceKey
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appId, sourceKey])
+
+  useEffect(() => {
+    if (!current) return
     let cancelled = false
     const probe = new Image()
     probe.onload = () => {
       if (!cancelled && probe.naturalWidth > 0) setOk(true)
     }
     probe.onerror = () => {
-      if (!cancelled) setOk(false)
+      if (cancelled) return
+      setOk(false)
+      if (index + 1 < sources.length) {
+        setIndex(index + 1)
+        return
+      }
+      if (!appId || lookupRef.current) return
+      lookupRef.current = true
+      fetch(`/api/steam/cover/${appId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json: { url?: string } | null) => {
+          if (cancelled) return
+          const url = json?.url
+          if (typeof url !== "string" || !url || sources.includes(url)) return
+          setSources((prev) => (prev.includes(url) ? prev : [...prev, url]))
+          setIndex((prev) => prev + 1)
+        })
+        .catch(() => {})
     }
-    setOk(false)
-    probe.src = src
+    probe.src = current
     return () => {
       cancelled = true
     }
-  }, [src])
+  }, [appId, current, index, sources])
 
   return (
     <div className={cn("relative overflow-hidden bg-[#171a21]", className)}>
@@ -48,7 +81,7 @@ export function SteamCover({
       </div>
       {ok ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="relative h-full w-full object-cover" />
+        <img src={current} alt={alt} className="absolute inset-0 h-full w-full object-cover object-center" />
       ) : null}
     </div>
   )

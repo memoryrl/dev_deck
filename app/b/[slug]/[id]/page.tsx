@@ -1,8 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PublicPostForm } from "@/components/board/public-post-form"
-import { PublicFooter } from "@/components/layout/public-footer"
-import { PublicHeader } from "@/components/layout/public-header"
+import { PublicContainer } from "@/components/layout/public-container"
 import { Card } from "@/components/ui/card"
 import { RichContent } from "@/components/editor/rich-content"
 import { accessRoleOf, boardPath, roleAtLeast } from "@/lib/access"
@@ -37,9 +36,7 @@ export default async function PublicBoardPostPage({
     roleAtLeast(role, board.write_role) && (role === "owner" || post.user_id === userId)
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <PublicHeader />
-      <article className="mx-auto w-full max-w-3xl flex-1 px-5 py-12">
+    <PublicContainer as="article">
         <Link href={boardPath(board.slug)} className="text-sm font-semibold underline">
           {board.name}
         </Link>
@@ -53,8 +50,6 @@ export default async function PublicBoardPostPage({
             <PublicPostForm boardId={board.id} slug={board.slug} post={post} />
           </Card>
         ) : null}
-      </article>
-      <PublicFooter />
-    </div>
+    </PublicContainer>
   )
 }
