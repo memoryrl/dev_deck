@@ -30,7 +30,7 @@ export default async function PromptDetailPage({
       <PostPager listHref="/promptkit" {...neighbors} />
       <h1 className="mb-6 mt-6 font-display text-3xl font-extrabold">프롬프트 수정</h1>
       <PromptForm prompt={prompt} />
-      <PostPager className="mt-10" listHref="/promptkit" {...neighbors} />
+      <PostPager placement="bottom" listHref="/promptkit" {...neighbors} />
     </div>
   )
 }

@@ -122,12 +122,33 @@
   font-size: 0.875em;
 }
 
-.prose-deck.rich-content :where(ul) {
-  @apply list-disc pl-5;
+.prose-deck :where(ul),
+.rich-editor .ck-content :where(ul) {
+  list-style-type: disc;
+  margin: 0.4em 0;
+  padding-left: 1.75em;
 }
 
-.prose-deck.rich-content :where(ol) {
-  @apply list-decimal pl-5;
+.prose-deck :where(ol),
+.rich-editor .ck-content :where(ol) {
+  list-style-type: decimal;
+  margin: 0.4em 0;
+  padding-left: 1.75em;
+}
+
+.prose-deck :where(ul ul, ol ul),
+.rich-editor .ck-content :where(ul ul, ol ul) {
+  list-style-type: circle;
+}
+
+.prose-deck :where(ul ul ul, ol ul ul, ul ol ul),
+.rich-editor .ck-content :where(ul ul ul, ol ul ul, ul ol ul) {
+  list-style-type: square;
+}
+
+.prose-deck :where(li),
+.rich-editor .ck-content :where(li) {
+  margin: 0.2em 0;
 }
 
 .prose-deck.rich-content :where(blockquote) {
@@ -157,6 +178,10 @@
   @apply !rounded-b-xl !border-border !bg-background px-4 py-3 text-[15px] leading-relaxed;
 }
 
+.rich-editor-compact .ck.ck-editor__main > .ck-editor__editable {
+  min-height: 9rem;
+}
+
 .rich-editor .ck.ck-editor__editable.ck-focused {
   @apply !shadow-none !ring-2 !ring-ring;
 }
@@ -182,8 +207,50 @@
   background: hsl(var(--lux-champagne));
 }
 
+.hero-card-beam {
+  pointer-events: none;
+  padding: 2px;
+  overflow: hidden;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.hero-card-beam::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 255deg,
+    hsl(var(--lux-champagne) / 0.15) 290deg,
+    hsl(var(--lux-champagne)) 328deg,
+    hsl(40 55% 96%) 344deg,
+    hsl(var(--lux-champagne)) 356deg,
+    transparent 360deg
+  );
+  animation: hero-card-beam-spin 2s linear infinite;
+}
+
+.hero-card-beam[data-paused]::before {
+  animation-play-state: paused;
+}
+
+@keyframes hero-card-beam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
+    animation: none;
+  }
+
+  .hero-card-beam::before {
     animation: none;
   }
 }

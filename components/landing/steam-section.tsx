@@ -166,7 +166,7 @@ export function SteamSection({
   reviews: GameReview[]
   profile: SteamProfile | null
 }) {
-  const [tab, setTab] = useState<Tab>("rank")
+  const [tab, setTab] = useState<Tab>("recent")
   if (rankedGames.length === 0 && recentGames.length === 0 && reviews.length === 0) return null
 
   return (
@@ -197,15 +197,15 @@ export function SteamSection({
           aria-hidden
           className={cn(
             "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
-            tab === "recent" && "translate-x-full",
-            tab === "reviews" && "translate-x-[200%]"
+            tab === "reviews" && "translate-x-full",
+            tab === "rank" && "translate-x-[200%]"
           )}
         />
         {(
           [
-            ["rank", "누적", "누적 시간 순위"],
             ["recent", "최근", "최근 플레이"],
             ["reviews", "리뷰", "최신 리뷰"],
+            ["rank", "누적", "누적 시간 순위"],
           ] as const
         ).map(([key, shortLabel, label]) => (
           <button

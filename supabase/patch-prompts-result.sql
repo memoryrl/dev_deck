@@ -1,0 +1,2 @@
+ALTER TABLE devdeck.prompts
+  ADD COLUMN IF NOT EXISTS result_html TEXT NOT NULL DEFAULT '';

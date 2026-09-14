@@ -170,7 +170,7 @@ type AiRunResponse = {
 
 | Action | 입력 | 검증 |
 | --- | --- | --- |
-| `createPrompt` | title, content, category?, tags?, is_public? | title/content 비어 있으면 거부. tags는 string[] |
+| `createPrompt` | title, content, result_html?, category?, tags?, is_public? | title/content 비어 있으면 거부. tags는 string[] |
 | `updatePrompt` | id + 부분 필드 | 소유 행만 (RLS) |
 | `deletePrompt` | id | 소유 행만 |
 | `togglePromptPublic` | id, is_public | boolean |
@@ -200,6 +200,9 @@ type AiRunResponse = {
 | `deleteMenu` | id | owner. 하위 CASCADE |
 | `upsertBoardPost` / `deleteBoardPost` | 대시보드 글 | owner |
 | `savePublicPost` / `removePublicPost` | 공개 게시판 글쓰기 | write_role 충족 회원/관리자 |
+| `createComment` | target_type, target_id, body(CKEditor HTML), author_name?, parent_id? | 비회원 가능. IP·지역 서버 기록. 텍스트 2000자. 욕설 트리거 치환 |
+| `hideComment` / `deleteComment` | id | owner |
+| `addProfanityWord` / `removeProfanityWord` | word, replacement? | owner |
 
 ### 2.4 Steam Reviews
 

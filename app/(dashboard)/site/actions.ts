@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { forgetMemoryCache } from "@/lib/cache/memory"
 import { requireOwner } from "@/lib/auth/owner"
 import { ACCESS_ROLES, type AccessRole } from "@/lib/access"
 import { isSystemBoard, isSystemBoardKind, RESERVED_BOARD_SLUGS } from "@/lib/boards/kind"
@@ -10,6 +11,9 @@ import type { Board } from "@/types/board"
 import type { MenuLocation } from "@/types/menu"
 
 function refreshSite() {
+  forgetMemoryCache("menus:")
+  forgetMemoryCache("board:")
+  forgetMemoryCache("public:")
   revalidatePath("/")
   revalidatePath("/site/boards")
   revalidatePath("/site/menus")

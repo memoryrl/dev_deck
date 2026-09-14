@@ -1,28 +1,16 @@
 import { PublicHeaderNav } from "@/components/layout/public-header-nav"
-import { isOwnerUser } from "@/lib/auth/roles"
+import { sessionUserView } from "@/lib/auth/session-user"
+import { currentViewer } from "@/lib/boards/access"
 import { listNavMenus } from "@/lib/menus/public"
-import { createClient } from "@/lib/supabase/server"
-import { isSupabaseConfigured } from "@/lib/utils"
 
 export async function PublicHeader() {
-  let signedIn = false
-  let accountHref = "/login"
-  if (isSupabaseConfigured()) {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (user) {
-      signedIn = true
-      accountHref = isOwnerUser(user) ? "/promptkit" : "/account"
-    }
-  }
-
+  const viewer = await currentViewer()
+  const account = viewer.user ? sessionUserView(viewer.user) : null
   const navNodes = await listNavMenus("header")
 
   return (
     <header className="sticky top-0 z-30 overflow-visible">
-      <PublicHeaderNav signedIn={signedIn} accountHref={accountHref} navNodes={navNodes} />
+      <PublicHeaderNav account={account} navNodes={navNodes} />
     </header>
   )
 }

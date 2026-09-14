@@ -33,7 +33,7 @@ export default async function CareerDetailPage({
       <PostPager listHref="/career" {...neighbors} />
       <h1 className="mb-6 mt-6 font-display text-3xl font-extrabold">글 수정</h1>
       <CareerForm post={post} />
-      <PostPager className="mt-10" listHref="/career" {...neighbors} />
+      <PostPager placement="bottom" listHref="/career" {...neighbors} />
     </div>
   )
 }

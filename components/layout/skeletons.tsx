@@ -190,6 +190,25 @@ export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" |
   )
 }
 
+export function HomeLandingSkeleton() {
+  return (
+    <Screen label="랜딩 본문을 불러오는 중">
+      <div className="mx-auto max-w-6xl px-5 pb-6 pt-8">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border bg-card px-4 py-4">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="mt-3 h-8 w-12" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <LatestColumnsSkeleton />
+      <SteamShowcaseSkeleton />
+    </Screen>
+  )
+}
+
 export function PublicPageSkeleton({
   variant = "list",
 }: {
@@ -208,8 +227,7 @@ export function PublicPageSkeleton({
             <Skeleton className="h-10 w-28 rounded-md" />
           </div>
         </div>
-        <LatestColumnsSkeleton />
-        <SteamShowcaseSkeleton />
+        <HomeLandingSkeleton />
       </Screen>
     )
   }

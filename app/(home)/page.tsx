@@ -1,17 +1,17 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { FeaturedWorkCard } from "@/components/landing/featured-work"
 import { HeroVisual } from "@/components/landing/hero-visual"
-import { ModuleMarquee } from "@/components/landing/module-marquee"
+import { ContactCta } from "@/components/landing/contact-cta"
 import { LatestColumns } from "@/components/landing/latest-columns"
+import { ModuleMarquee } from "@/components/landing/module-marquee"
+import { SkillShowcase } from "@/components/landing/skill-showcase"
+import { StatsStrip } from "@/components/landing/stats-strip"
 import { SteamSection } from "@/components/landing/steam-section"
-import { LatestColumnsSkeleton, SteamShowcaseSkeleton } from "@/components/layout/skeletons"
-import { Badge } from "@/components/ui/badge"
+import { UmpcActivity } from "@/components/landing/umpc-activity"
+import { HomeLandingSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { listPublicCareerSkills, listRecentPublicCareerPosts } from "@/lib/career/public"
-import { listRecentPublicPrompts } from "@/lib/prompts/public"
-import { fetchOwnedGames } from "@/lib/steam/client"
-import { listPublicGameReviews } from "@/lib/steam/reviews"
+import { getHomeLandingData } from "@/lib/landing/home"
 
 export default function HomePage() {
   return (
@@ -31,132 +31,58 @@ export default function HomePage() {
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
             AI 바이브 코딩 템플릿, 회사 참여 이력, Steam 라이브러리를 공개 포트폴리오로 보여 줍니다.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/login">
-              <Button>로그인</Button>
-            </Link>
-            <Link href="/work">
-              <Button variant="outline">커리어 보기</Button>
-            </Link>
-            <Link href="/games">
-              <Button variant="outline">게임 보기</Button>
-            </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild>
+              <Link href="/work">커리어 보기</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/#prompts">프롬프트 보기</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/games">게임 보기</Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link href="/login">로그인</Link>
+            </Button>
           </div>
         </div>
       </section>
 
-      <ModuleMarquee />
-
-      <Suspense fallback={<LatestColumnsSkeleton />}>
-        <HomeLatest />
-      </Suspense>
-      <Suspense fallback={<SteamShowcaseSkeleton />}>
-        <HomeSteam />
-      </Suspense>
-      <Suspense fallback={<HomeSkillsSkeleton />}>
-        <HomeSkills />
+      <Suspense fallback={<HomeLandingSkeleton />}>
+        <HomeLanding />
       </Suspense>
     </main>
   )
 }
 
-async function HomeLatest() {
-  const [prompts, posts] = await Promise.all([
-    listRecentPublicPrompts(4),
-    listRecentPublicCareerPosts(4),
-  ])
-  return <LatestColumns prompts={prompts} posts={posts} />
-}
+async function HomeLanding() {
+  const data = await getHomeLandingData()
+  const featuredHref = data.featured?.href
+  const prompts = takeLatest(data.prompts, featuredHref, (item) => `/p/${item.id}`)
+  const posts = takeLatest(data.posts, featuredHref, (item) => `/work/${item.id}`)
 
-async function HomeSteam() {
-  const reviews = await listPublicGameReviews()
-  const reviewsWithText = reviews.filter((review) => review.review_text?.trim())
-  const latestReviews = [...(reviewsWithText.length > 0 ? reviewsWithText : reviews)]
-    .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
-    .slice(0, 6)
-
-  try {
-    const steam = await fetchOwnedGames()
-    const toFeatured = (game: (typeof steam.games)[number]) => ({
-      app_id: game.app_id,
-      name: game.name,
-      playtime_forever_minutes: game.playtime_forever_minutes,
-      playtime_2weeks_minutes: game.playtime_2weeks_minutes,
-      playtime_deck_minutes: game.playtime_deck_minutes,
-      last_played_at: game.last_played_at,
-      header_image_url: game.header_image_url,
-    })
-    const rankedGames = [...steam.games]
-      .sort((a, b) => b.playtime_forever_minutes - a.playtime_forever_minutes)
-      .slice(0, 5)
-      .map(toFeatured)
-    const recentGames = [...steam.games]
-      .filter((game) => game.last_played_at)
-      .sort((a, b) => Date.parse(b.last_played_at ?? "0") - Date.parse(a.last_played_at ?? "0"))
-      .slice(0, 5)
-      .map(toFeatured)
-    const steamTotalMinutes = steam.games.reduce((sum, game) => sum + game.playtime_forever_minutes, 0)
-    const steamTwoWeekMinutes = steam.games.reduce(
-      (sum, game) => sum + (game.playtime_2weeks_minutes ?? 0),
-      0
-    )
-    return (
-      <SteamSection
-        rankedGames={rankedGames}
-        recentGames={recentGames}
-        totalMinutes={steamTotalMinutes}
-        twoWeekMinutes={steamTwoWeekMinutes}
-        reviews={latestReviews}
-        profile={steam.profile}
-      />
-    )
-  } catch {
-    return (
-      <SteamSection
-        rankedGames={reviews.slice(0, 5).map((review) => ({
-          app_id: review.app_id,
-          name: review.game_title,
-          playtime_forever_minutes: 0,
-          playtime_2weeks_minutes: null,
-          playtime_deck_minutes: 0,
-          last_played_at: null,
-        }))}
-        recentGames={[]}
-        totalMinutes={0}
-        twoWeekMinutes={0}
-        reviews={latestReviews}
-        profile={null}
-      />
-    )
-  }
-}
-
-async function HomeSkills() {
-  const skills = await listPublicCareerSkills()
-  if (skills.length === 0) return null
   return (
-    <section id="skills" className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-20">
-      <h2 className="font-display text-3xl font-extrabold">스킬</h2>
-      <div className="mt-5 flex flex-wrap gap-2">
-        {skills.map((skill) => (
-          <Link key={skill.id} href="/work">
-            <Badge variant="secondary">{skill.name}</Badge>
-          </Link>
-        ))}
-      </div>
-    </section>
+    <>
+      <StatsStrip {...data.stats} />
+      <ModuleMarquee />
+      <FeaturedWorkCard work={data.featured} />
+      <LatestColumns prompts={prompts} posts={posts} />
+      <UmpcActivity umpc={data.umpc} activity={data.activity} />
+      <SteamSection
+        rankedGames={data.steam.rankedGames}
+        recentGames={data.steam.recentGames}
+        totalMinutes={data.steam.totalMinutes}
+        twoWeekMinutes={data.steam.twoWeekMinutes}
+        reviews={data.steam.latestReviews}
+        profile={data.steam.profile}
+      />
+      <SkillShowcase skills={data.skills} />
+      <ContactCta />
+    </>
   )
 }
 
-function HomeSkillsSkeleton() {
-  return (
-    <section className="mx-auto max-w-6xl px-5 pb-20" aria-hidden>
-      <Skeleton className="h-8 w-20" />
-      <div className="mt-5 flex flex-wrap gap-2">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className="h-7 w-16 rounded-full" />
-        ))}
-      </div>
-    </section>
-  )
+function takeLatest<T>(items: T[], featuredHref: string | undefined, hrefOf: (item: T) => string) {
+  const rest = featuredHref ? items.filter((item) => hrefOf(item) !== featuredHref) : items
+  return (rest.length > 0 ? rest : items).slice(0, 4)
 }

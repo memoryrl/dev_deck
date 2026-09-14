@@ -1,24 +1,52 @@
+import { cache } from "react"
 import { accessRoleOf, roleAtLeast, type AccessRole } from "@/lib/access"
+import { SYSTEM_BOARD_KINDS } from "@/lib/boards/kind"
+import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Board, SystemBoardKind } from "@/types/board"
 
-export async function currentAccessRole(): Promise<AccessRole> {
-  if (!isSupabaseConfigured()) return "visitor"
+const BOARD_SELECT = "id, slug, name, description, kind, view_role, write_role, is_active, sort_order, created_at, updated_at"
+
+export const currentViewer = cache(async () => {
+  if (!isSupabaseConfigured()) {
+    return { user: null, role: "visitor" as const, isOwner: false, userId: null as string | null }
+  }
   const supabase = createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  return accessRoleOf(user)
+  const role = accessRoleOf(user)
+  return { user, role, isOwner: role === "owner", userId: user?.id ?? null }
+})
+
+export async function currentAccessRole(): Promise<AccessRole> {
+  return (await currentViewer()).role
 }
 
-export async function getSystemBoard(kind: SystemBoardKind): Promise<Board | null> {
-  if (!isSupabaseConfigured()) return null
-  const supabase = createClient()
-  const { data, error } = await supabase.from("boards").select("*").eq("kind", kind).maybeSingle()
-  if (error) return null
-  return (data as Board | null) ?? null
-}
+const listSystemBoards = cache(async (): Promise<Partial<Record<SystemBoardKind, Board>>> => {
+  if (!isSupabaseConfigured()) return {}
+  return withMemoryCache(memoryKey.boardAll, MEMORY_TTL.board, async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from("boards")
+      .select(BOARD_SELECT)
+      .in("kind", SYSTEM_BOARD_KINDS)
+    if (error) return {}
+    const map: Partial<Record<SystemBoardKind, Board>> = {}
+    for (const row of (data as Board[]) ?? []) {
+      if (SYSTEM_BOARD_KINDS.includes(row.kind as SystemBoardKind)) {
+        map[row.kind as SystemBoardKind] = row
+      }
+    }
+    return map
+  })
+})
+
+export const getSystemBoard = cache(async (kind: SystemBoardKind): Promise<Board | null> => {
+  const boards = await listSystemBoards()
+  return boards[kind] ?? null
+})
 
 export async function canViewSystemBoard(kind: SystemBoardKind): Promise<boolean> {
   const board = await getSystemBoard(kind)

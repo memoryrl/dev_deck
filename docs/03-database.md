@@ -43,6 +43,8 @@ devdeck.profiles
 devdeck.boards 1:N board_posts
 devdeck.boards 1:N menus (optional board_id)
 devdeck.menus parent_id → menus (트리)
+devdeck.comments parent_id → comments (무한 트리)
+devdeck.profanity_words
 ```
 
 Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로 저장한다. `career_posts.skills`와 `career_skills.name`은 MVP에서 FK로 묶지 않는다.
@@ -71,7 +73,8 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 | id | UUID | PK, `gen_random_uuid()` | |
 | user_id | UUID | NOT NULL, FK → profiles(id) CASCADE | |
 | title | TEXT | NOT NULL | |
-| content | TEXT | NOT NULL | CKEditor HTML. 예전 Markdown 호환 |
+| content | TEXT | NOT NULL | 프롬프트 본문. CKEditor HTML |
+| result_html | TEXT | NOT NULL, DEFAULT `''` | 예상 결과물. 공개 상세 상단에 표시 |
 | category | TEXT | DEFAULT `'General'` | 자유 문자열. enum 아님. 예: `React`, `바이브코딩` |
 | tags | TEXT[] | | 예: `{AX,Claude,Refactoring}` |
 | is_public | BOOLEAN | DEFAULT false | 공개 읽기 |
@@ -81,6 +84,8 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 **카테고리 = 자유 텍스트:** Postgres `ENUM`이나 허용 값 CHECK를 두지 않는다. UI는 텍스트 입력이고, 나중에 자주 쓰는 값을 datalist로 제안하는 것은 선택이다.
 
 공개 목록 6개 한도는 컬럼이 아니다. 랜딩 조회만 `WHERE is_public ORDER BY created_at DESC LIMIT 6`. 공개 상세는 `id` + `is_public`이면 한도와 무관하게 읽는다.
+
+기존 DB는 `supabase/patch-prompts-result.sql`을 실행한다.
 
 ### 2.3 `career_posts`
 
@@ -194,7 +199,30 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 
 기존 DB는 `supabase/patch-boards-menus.sql`을 SQL Editor에서 실행한다. `kind` 컬럼과 시스템 게시판 시드가 포함된다.
 
-### 2.9 `supabase_health_checks`
+### 2.9 `comments`
+
+모든 공개 상세(프롬프트·커리어·범용글·Steam) 댓글. `parent_id`로 무한 트리.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| target_type | TEXT | prompt/career/board/steam | |
+| target_id | TEXT | | 글 UUID 또는 Steam appid |
+| parent_id | UUID | FK → comments CASCADE, nullable | 답글 |
+| user_id | UUID | FK → profiles SET NULL, nullable | 비회원은 null |
+| author_name | TEXT | 1–40자 | |
+| body | TEXT | 1–20000자 HTML. 트리거가 욕설 치환. 앱은 본문 텍스트 2000자 | |
+| ip_address | TEXT | | 서버가 기록 |
+| ip_region | TEXT | | 도시·국가 |
+| is_hidden | BOOLEAN | DEFAULT false | 관리자 숨김 |
+
+### 2.10 `profanity_words`
+
+저장 시 `mask_profanity()`가 단어 단위로 치환. 관리자만 CRUD.
+
+기존 DB는 `supabase/patch-comments.sql`을 실행한다. 댓글 본문을 CKEditor HTML로 쓰려면 `supabase/patch-comments-html.sql`도 실행한다.
+
+### 2.11 `supabase_health_checks`
 
 Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 
@@ -350,6 +378,7 @@ CREATE TABLE devdeck.prompts (
   user_id UUID REFERENCES devdeck.profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
+  result_html TEXT NOT NULL DEFAULT '',
   category TEXT DEFAULT 'General',
   tags TEXT[],
   is_public BOOLEAN DEFAULT false,

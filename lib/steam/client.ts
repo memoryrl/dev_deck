@@ -1,5 +1,7 @@
 import { steamHeaderUrl, steamIconUrl } from "@/lib/steam/images"
-import { fetchAchievementSummary, fetchAppCatalog, resolveSteamHeaderUrl } from "@/lib/steam/store"
+import { fetchAchievementSummary, fetchAppCatalog } from "@/lib/steam/store"
+import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
+import { cache } from "react"
 import type {
   SteamGame,
   SteamGamePageData,
@@ -34,19 +36,6 @@ function minutes(value: number | undefined) {
 function lastPlayedAt(unix: number | undefined) {
   if (!unix || unix <= 0) return null
   return new Date(unix * 1000).toISOString()
-}
-
-async function mapPool<T, R>(items: T[], pool: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results = new Array<R>(items.length)
-  let next = 0
-  async function worker() {
-    while (next < items.length) {
-      const index = next++
-      results[index] = await fn(items[index])
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(pool, items.length) }, () => worker()))
-  return results
 }
 
 function mapOwnedGame(game: SteamOwnedGame): SteamGame {
@@ -85,7 +74,7 @@ async function fetchSteamProfile(key: string, steamId: string): Promise<SteamPro
   }
 }
 
-export async function fetchOwnedGames(): Promise<SteamGamesResponse> {
+async function loadOwnedGames(): Promise<SteamGamesResponse> {
   const key = process.env.STEAM_API_KEY
   const steamId = process.env.STEAM_ID
   if (!key || !steamId) {
@@ -112,19 +101,18 @@ export async function fetchOwnedGames(): Promise<SteamGamesResponse> {
     response?: { game_count?: number; games?: SteamOwnedGame[] }
   }
   const games = json.response?.games ?? []
-  const mapped = games.map(mapOwnedGame)
-  const covers = await mapPool(mapped, 4, (game) => resolveSteamHeaderUrl(game.app_id))
 
   return {
     steam_id: steamId,
     game_count: json.response?.game_count ?? games.length,
     profile,
-    games: mapped.map((game, index) => ({
-      ...game,
-      header_image_url: covers[index],
-    })),
+    games: games.map(mapOwnedGame),
   }
 }
+
+export const fetchOwnedGames = cache(async () =>
+  withMemoryCache(memoryKey.steamOwned, MEMORY_TTL.steamOwned, loadOwnedGames)
+)
 
 export async function fetchGamePageData(appId: number): Promise<SteamGamePageData> {
   const [owned, catalog] = await Promise.all([

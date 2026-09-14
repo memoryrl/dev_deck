@@ -9,17 +9,23 @@ export function PostPager({
   listLabel = "목록으로",
   prev,
   next,
+  placement = "top",
   className,
 }: {
   listHref: string
   listLabel?: string
   prev?: NeighborLink | null
   next?: NeighborLink | null
+  placement?: "top" | "bottom"
   className?: string
 }) {
   return (
     <nav
-      className={cn("flex flex-wrap items-center justify-between gap-2", className)}
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-2",
+        placement === "top" ? "mb-8" : "mt-10",
+        className
+      )}
       aria-label="게시물 이동"
     >
       <Button asChild variant="outline" size="sm">

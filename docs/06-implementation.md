@@ -88,7 +88,7 @@ T7 등 외장 볼륨에서 macOS가 `._파일명`을 만든다. 생성을 OS 차
 3. `/api/ai/run` 501 자리만
 4. README (로컬 실행, env, schema 적용 방법)
 
-v2 (명시적으로 나중에): AI Runner, 리뷰 공개, Steam 캐시, 프롬프트 공개 목록 페이지네이션, 커리어 슬러그·댓글·커버 이미지·이력서 PDF.
+v2 (명시적으로 나중에): AI Runner, Steam 캐시, 프롬프트 공개 목록 페이지네이션, 커리어 슬러그·커버 이미지·이력서 PDF.
 
 ## 3. 구현 중 금지
 
@@ -160,3 +160,9 @@ UI는 한국어. 완료 전 06절 검증 체크리스트를 수행해라.
 7. CareerLog: 글(`career_posts`) + 스킬 인벤토리(`career_skills`). 랜딩 티저 6개, `/work`는 공개 글 전부.
 8. DB는 기존 Supabase 프로젝트. 테이블은 `devdeck` 스키마. 기존 `public`은 읽지 않는다.
 9. UI는 shadcn/ui. Envato 원본 파일은 커밋하지 않는다.
+
+## 3. 런타임 캐시
+
+인증(`getUser`)은 **요청 단위** `React.cache`만 쓴다. 전역에 넣지 않는다. 시스템 보드는 한 쿼리로 모아 같은 요청·TTL에서 재사용한다.
+
+Steam 보유 게임은 CDN HEAD 없이 `header.jpg` URL만 넘기고, 깨진 커버는 `SteamCover`가 클라이언트에서 보정한다. 공개 목록은 본문 컬럼을 빼고 건수를 제한한다. 글/메뉴 저장 시 해당 prefix를 지운다.

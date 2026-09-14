@@ -1,4 +1,5 @@
 import { PostPager } from "@/components/board/post-pager"
+import { ArticleComments } from "@/components/comments/article-comments"
 import { GameCatalog } from "@/components/steam/game-catalog"
 import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
@@ -37,7 +38,8 @@ export default async function SteamDetailPage({
         achievements={achievements}
       />
       <ReviewForm appId={appId} gameTitle={title} review={review} />
-      <PostPager listHref="/steam" {...neighbors} />
+      <PostPager placement="bottom" listHref="/steam" {...neighbors} />
+      <ArticleComments targetType="steam" targetId={String(appId)} returnTo={`/steam/${appId}`} />
     </div>
   )
 }

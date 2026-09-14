@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Prompt } from "@/types/prompt"
 
-export function PromptForm({ prompt }: { prompt?: Prompt }) {
+export function PromptForm({ prompt, returnTo, deleteTo }: { prompt?: Prompt; returnTo?: string; deleteTo?: string }) {
   const router = useRouter()
   const [isPublic, setIsPublic] = useState(prompt?.is_public ?? false)
   const [error, setError] = useState<string | null>(null)
@@ -25,14 +25,14 @@ export function PromptForm({ prompt }: { prompt?: Prompt }) {
       setError(result.error)
       return
     }
-    router.push("/promptkit")
+    router.push(returnTo ?? "/promptkit")
     router.refresh()
   }
 
   async function onDelete() {
     if (!prompt || !confirm("이 프롬프트를 삭제할까요?")) return
     await deletePrompt(prompt.id)
-    router.push("/promptkit")
+    router.push(deleteTo ?? "/promptkit")
     router.refresh()
   }
 
@@ -51,9 +51,17 @@ export function PromptForm({ prompt }: { prompt?: Prompt }) {
         <Input id="tags" name="tags" defaultValue={(prompt?.tags ?? []).join(", ")} />
       </div>
       <div>
-        <Label>본문</Label>
+        <Label>예상 결과물</Label>
+        <p className="mt-1 text-xs text-muted-foreground">방문자가 먼저 보는 화면·산출물입니다. 스크린샷이나 미리보기를 넣으세요.</p>
         <div className="mt-2">
-          <RichEditor name="content" defaultValue={prompt?.content ?? ""} />
+          <RichEditor name="result_html" defaultValue={prompt?.result_html ?? ""} placeholder="스크린샷·미리보기·산출물을 넣으세요" />
+        </div>
+      </div>
+      <div>
+        <Label>프롬프트</Label>
+        <p className="mt-1 text-xs text-muted-foreground">복사 대상입니다. 공개 상세에서는 접혀 있습니다.</p>
+        <div className="mt-2">
+          <RichEditor name="content" defaultValue={prompt?.content ?? ""} placeholder="복사할 프롬프트를 입력하세요" />
         </div>
       </div>
       <div className="flex items-center gap-2">

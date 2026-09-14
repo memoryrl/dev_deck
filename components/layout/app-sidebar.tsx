@@ -2,16 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Briefcase, Gamepad2, LayoutList, Menu, Sparkles } from "lucide-react"
+import { ADMIN_NAV } from "@/components/layout/admin-nav"
 import { cn } from "@/lib/utils"
-
-const items = [
-  { href: "/promptkit", label: "PromptKit", icon: Sparkles },
-  { href: "/career", label: "CareerLog", icon: Briefcase },
-  { href: "/steam", label: "Steam Tracker", icon: Gamepad2 },
-  { href: "/site/boards", label: "게시판", icon: LayoutList },
-  { href: "/site/menus", label: "메뉴", icon: Menu },
-]
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -22,7 +14,7 @@ export function AppSidebar() {
         DevDeck
       </Link>
       <nav className="space-y-1">
-        {items.map((item) => {
+        {ADMIN_NAV.map((item) => {
           const active = pathname.startsWith(item.href)
           const Icon = item.icon
           return (
@@ -31,9 +23,7 @@ export function AppSidebar() {
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                active ? "bg-primary text-primary-foreground" : "hover:bg-muted"
               )}
             >
               <Icon className="h-4 w-4" />

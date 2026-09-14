@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
+import { useMemo, useState } from "react"
+import { WrittenReviewBadge } from "@/components/steam/review-badge"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
 import { steamCoverSources } from "@/lib/steam/images"
@@ -16,23 +16,15 @@ type SortKey = "playtime" | "recent" | "two_weeks"
 export function SteamLibrary({
   reviews,
   hrefBase = "/steam",
+  library,
+  error = null,
 }: {
   reviews: GameReview[]
   hrefBase?: "/steam" | "/games"
+  library: SteamGamesResponse | null
+  error?: string | null
 }) {
-  const [data, setData] = useState<SteamGamesResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [sort, setSort] = useState<SortKey>("playtime")
-
-  useEffect(() => {
-    fetch("/api/steam/games")
-      .then(async (res) => {
-        const json = await res.json()
-        if (!res.ok) throw new Error(json.error ?? "불러오지 못했습니다.")
-        setData(json)
-      })
-      .catch((err: Error) => setError(err.message))
-  }, [])
 
   const reviewMap = useMemo(
     () => new Map(reviews.map((review) => [review.app_id, review])),
@@ -40,9 +32,9 @@ export function SteamLibrary({
   )
 
   const games = useMemo(() => {
-    const list = data?.games ?? []
+    const list = library?.games ?? []
     return [...list].sort((a, b) => compareGames(a, b, sort, reviewMap))
-  }, [data, reviewMap, sort])
+  }, [library, reviewMap, sort])
 
   const total = games.reduce((sum, game) => sum + game.playtime_forever_minutes, 0)
   const twoWeeks = games.reduce((sum, game) => sum + (game.playtime_2weeks_minutes ?? 0), 0)
@@ -54,8 +46,12 @@ export function SteamLibrary({
   if (error) {
     return <p className="text-sm text-destructive">{error}</p>
   }
-  if (!data) {
-    return <SteamLibrarySkeleton />
+  if (!library) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Steam 라이브러리를 불러오지 못했습니다. API 키와 Steam ID를 확인하세요.
+      </p>
+    )
   }
   if (games.length === 0) {
     return (
@@ -68,8 +64,8 @@ export function SteamLibrary({
   return (
     <div className="space-y-6">
       <LibraryHeader
-        profile={data.profile}
-        gameCount={data.game_count}
+        profile={library.profile}
+        gameCount={library.game_count}
         total={total}
         twoWeeks={twoWeeks}
         deck={deck}
@@ -234,6 +230,7 @@ function GameItem({
             className="h-48 w-full"
           />
           <TwoWeekBadge minutes={game.playtime_2weeks_minutes} />
+          {review ? <WrittenReviewBadge /> : null}
         </div>
         <div className="p-4">
           <h3 className="font-display text-lg font-bold">{game.name}</h3>
@@ -241,12 +238,11 @@ function GameItem({
             {formatPlaytime(game.playtime_forever_minutes)}
             {lastPlayed ? ` · ${lastPlayed} 플레이` : ""}
           </p>
-          {game.playtime_deck_minutes > 0 || review ? (
+          {game.playtime_deck_minutes > 0 || review?.is_favorite ? (
             <div className="mt-2 flex flex-wrap gap-2">
               {game.playtime_deck_minutes > 0 ? (
                 <Badge variant="secondary">Deck {formatPlaytime(game.playtime_deck_minutes)}</Badge>
               ) : null}
-              {review ? <Badge>리뷰</Badge> : null}
               {review?.is_favorite ? <Badge variant="secondary">즐겨찾기</Badge> : null}
             </div>
           ) : null}

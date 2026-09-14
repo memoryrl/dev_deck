@@ -1,4 +1,5 @@
 import { steamHeaderUrl } from "@/lib/steam/images"
+import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
 import type {
   SteamAchievementSummary,
   SteamAppCatalog,
@@ -109,6 +110,12 @@ export async function fetchAppCatalog(appId: number): Promise<SteamAppCatalog | 
 }
 
 export async function resolveSteamHeaderUrl(appId: number): Promise<string> {
+  return withMemoryCache(memoryKey.steamCover(appId), MEMORY_TTL.steamCover, () =>
+    probeSteamHeaderUrl(appId)
+  )
+}
+
+async function probeSteamHeaderUrl(appId: number): Promise<string> {
   const classic = steamHeaderUrl(appId)
   try {
     const probe = await fetch(classic, {

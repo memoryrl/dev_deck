@@ -53,6 +53,17 @@ export function sanitizeRichHtml(html: string) {
       a: ["href", "name", "target", "rel"],
       code: ["class"],
       pre: ["class"],
+      p: ["style"],
+      h2: ["style"],
+      h3: ["style"],
+      li: ["style"],
+      blockquote: ["style"],
+    },
+    allowedStyles: {
+      "*": {
+        "margin-left": [/^\d+(?:px|em|rem)$/],
+        "padding-left": [/^\d+(?:px|em|rem)$/],
+      },
     },
     allowedSchemes: ["http", "https", "mailto"],
   })

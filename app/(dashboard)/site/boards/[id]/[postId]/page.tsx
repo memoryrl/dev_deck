@@ -28,7 +28,7 @@ export default async function SiteBoardPostPage({
       <PostPager listHref={listHref} {...neighbors} />
       <h1 className="font-display text-3xl font-extrabold">글 수정</h1>
       <BoardPostAdminForm boardId={board.id} post={post} />
-      <PostPager listHref={listHref} {...neighbors} />
+      <PostPager placement="bottom" listHref={listHref} {...neighbors} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { SteamLibrary } from "@/app/(dashboard)/steam/steam-library"
 import { PublicContainer } from "@/components/layout/public-container"
 import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
+import { fetchOwnedGames } from "@/lib/steam/client"
 import { listPublicGameReviews } from "@/lib/steam/reviews"
 
 export default function PublicGamesPage() {
@@ -21,6 +22,18 @@ export default function PublicGamesPage() {
 }
 
 async function GamesLibrary() {
-  const reviews = await listPublicGameReviews()
-  return <SteamLibrary reviews={reviews} hrefBase="/games" />
+  const [reviews, steam] = await Promise.all([
+    listPublicGameReviews(),
+    fetchOwnedGames()
+      .then((library) => ({ library, error: null as string | null }))
+      .catch(() => ({ library: null, error: "Steam 응답이 실패했습니다." })),
+  ])
+  return (
+    <SteamLibrary
+      reviews={reviews}
+      library={steam.library}
+      error={steam.error}
+      hrefBase="/games"
+    />
+  )
 }

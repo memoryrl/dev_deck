@@ -1,16 +1,16 @@
 import { notFound } from "next/navigation"
+import { ArticleEditPanel } from "@/components/board/article-edit-panel"
 import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { PublicPostForm } from "@/components/board/public-post-form"
+import { ArticleComments } from "@/components/comments/article-comments"
 import { PublicContainer } from "@/components/layout/public-container"
-import { Card } from "@/components/ui/card"
 import { RichContent } from "@/components/editor/rich-content"
-import { accessRoleOf, boardPath, roleAtLeast } from "@/lib/access"
+import { boardPath, roleAtLeast } from "@/lib/access"
+import { currentViewer } from "@/lib/boards/access"
 import { getBoardBySlug, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
 import { findNeighbors } from "@/lib/posts/neighbors"
-import { createClient } from "@/lib/supabase/server"
-import { isSupabaseConfigured } from "@/lib/utils"
 
 export default async function PublicBoardPostPage({
   params,
@@ -21,21 +21,11 @@ export default async function PublicBoardPostPage({
   const post = await getBoardPost(params.id)
   if (!board || !board.is_active || isSystemBoard(board) || !post || post.board_id !== board.id) notFound()
 
-  let role = accessRoleOf(null)
-  let userId: string | null = null
-  if (isSupabaseConfigured()) {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    role = accessRoleOf(user)
-    userId = user?.id ?? null
-  }
-
+  const { role, isOwner, userId } = await currentViewer()
   if (!roleAtLeast(role, board.view_role)) notFound()
 
   const canWrite =
-    roleAtLeast(role, board.write_role) && (role === "owner" || post.user_id === userId)
+    roleAtLeast(role, board.write_role) && (isOwner || post.user_id === userId)
   const listHref = boardPath(board.slug)
   const neighbors = findNeighbors(
     await listBoardPosts(board.id),
@@ -45,21 +35,37 @@ export default async function PublicBoardPostPage({
     (item) => item.title
   )
 
+  const view = (
+    <>
+      <h1 className="mt-6 font-display text-4xl font-extrabold">{post.title}</h1>
+      <div className="mt-8">
+        <RichContent content={post.content} />
+      </div>
+    </>
+  )
+
   return (
     <PublicContainer as="article">
       <ArticleReader>
         <PostPager listHref={listHref} {...neighbors} />
-        <h1 className="mt-6 font-display text-4xl font-extrabold">{post.title}</h1>
-        <div className="mt-8">
-          <RichContent content={post.content} />
-        </div>
         {canWrite ? (
-          <Card className="mt-10">
-            <h2 className="mb-4 font-display text-xl font-bold">수정</h2>
-            <PublicPostForm boardId={board.id} slug={board.slug} post={post} />
-          </Card>
-        ) : null}
-        <PostPager className="mt-10" listHref={listHref} {...neighbors} />
+          <ArticleEditPanel
+            form={
+              <PublicPostForm
+                boardId={board.id}
+                slug={board.slug}
+                post={post}
+                returnTo={`${listHref}/${post.id}`}
+              />
+            }
+          >
+            {view}
+          </ArticleEditPanel>
+        ) : (
+          view
+        )}
+        <PostPager placement="bottom" listHref={listHref} {...neighbors} />
+        <ArticleComments targetType="board" targetId={post.id} returnTo={`${listHref}/${post.id}`} />
       </ArticleReader>
     </PublicContainer>
   )

@@ -2,29 +2,30 @@
 
 import Link from "next/link"
 import { useEffect, useId, useState } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, LogOut } from "lucide-react"
+import { signOut } from "@/app/(dashboard)/promptkit/actions"
+import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import { UserAvatar } from "@/components/layout/account-menu"
 import { MENU_ICON, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
+import { roleLabel } from "@/lib/access"
+import type { SessionUserView } from "@/lib/auth/session-user"
 import { cn } from "@/lib/utils"
 import type { NavNode } from "@/types/menu"
 
 export function PublicMobileNav({
   open,
   onClose,
-  signedIn,
-  accountHref,
+  account,
   navNodes,
 }: {
   open: boolean
   onClose: () => void
-  signedIn: boolean
-  accountHref: string
+  account: SessionUserView | null
   navNodes: NavNode[]
 }) {
   const [section, setSection] = useState<string | null>(null)
   const titleId = useId()
-  const owner = accountHref === "/promptkit"
-  const accountLabel = signedIn ? (owner ? "대시보드" : "내 계정") : "로그인"
 
   useEffect(() => {
     if (!open) setSection(null)
@@ -68,6 +69,16 @@ export function PublicMobileNav({
         <h2 id={titleId} className="sr-only">
           사이트 메뉴
         </h2>
+        {account ? (
+          <div className="flex items-center gap-3 border-b px-4 py-4">
+            <UserAvatar name={account.name} src={account.avatarUrl} className="size-11" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{account.name}</p>
+              {account.email ? <p className="truncate text-xs text-muted-foreground">{account.email}</p> : null}
+              <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{roleLabel(account.role)}</p>
+            </div>
+          </div>
+        ) : null}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {navNodes.map((menu) => {
             const Icon = MENU_ICON[menu.id as MegaId]
@@ -119,16 +130,58 @@ export function PublicMobileNav({
               </div>
             )
           })}
+          {account?.isOwner ? (
+            <div className="mt-3 border-t border-foreground/10 pt-3">
+              <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                관리자
+              </p>
+              {ADMIN_NAV.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
+                    onClick={onClose}
+                  >
+                    <Icon className="size-4 opacity-70" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          ) : null}
+          {account && !account.isOwner ? (
+            <Link
+              href="/account"
+              className="mt-2 flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
+              onClick={onClose}
+            >
+              내 계정
+            </Link>
+          ) : null}
         </nav>
 
         <div className="flex items-center gap-2 border-t px-5 py-4">
-          <Link
-            href={accountHref}
-            className="flex-1 rounded-full bg-foreground px-4 py-2.5 text-center text-sm font-medium text-background"
-            onClick={onClose}
-          >
-            {accountLabel}
-          </Link>
+          {account ? (
+            <form action={signOut} className="flex-1">
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium"
+              >
+                <LogOut className="size-4" />
+                로그아웃
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              className="flex-1 rounded-full bg-foreground px-4 py-2.5 text-center text-sm font-medium text-background"
+              onClick={onClose}
+            >
+              로그인
+            </Link>
+          )}
           <ThemeToggle className="rounded-full" />
         </div>
       </aside>

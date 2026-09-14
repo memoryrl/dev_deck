@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
+import { AccountMenu } from "@/components/layout/account-menu"
 import { BrandMark } from "@/components/layout/brand-mark"
 import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
 import { MENU_ICON, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { cn } from "@/lib/utils"
+import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
 
 type SceneId = MegaId | "default"
@@ -63,6 +65,80 @@ function PhotoSkin({ src, scene }: { src?: string; scene: SceneId }) {
   )
 }
 
+function MegaHighlight({
+  href,
+  photo,
+  scene,
+  label,
+  title,
+  body,
+  cta,
+  icon: Icon,
+  onNavigate,
+}: {
+  href: string
+  photo?: string
+  scene: SceneId
+  label: string
+  title: string
+  body: string
+  cta: string
+  icon?: (typeof MENU_ICON)[MegaId]
+  onNavigate: () => void
+}) {
+  const [broken, setBroken] = useState(false)
+  const showPhoto = Boolean(photo) && !broken
+
+  useEffect(() => {
+    setBroken(false)
+  }, [photo])
+
+  return (
+    <Link
+      href={href}
+      className="group relative flex min-h-[17rem] flex-col justify-between overflow-hidden p-6 text-white md:border-r md:border-white/10"
+      onClick={onNavigate}
+    >
+      <div aria-hidden className="absolute inset-0">
+        {showPhoto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={photo}
+            src={photo}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            onError={() => setBroken(true)}
+          />
+        ) : (
+          <div
+            className={cn(
+              "h-full w-full",
+              scene === "prompt" && "bg-[hsl(var(--lux-champagne))]",
+              scene === "career" && "bg-[hsl(var(--lux-cognac))]",
+              scene === "games" && "bg-[hsl(var(--lux-espresso))]",
+              scene === "default" && "bg-foreground"
+            )}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+        <div className="absolute inset-0 bg-black/25 transition-colors duration-300 group-hover:bg-black/10" />
+      </div>
+      <div className="relative z-10 drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]">
+        <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-white/75">
+          {Icon ? <Icon className="size-3.5 opacity-80" /> : null}
+          {label}
+        </p>
+        <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-white">{title}</h2>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/85">{body}</p>
+      </div>
+      <p className="relative z-10 mt-8 inline-flex items-center gap-1 text-sm font-semibold text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]">
+        {cta}
+        <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+      </p>
+    </Link>
+  )
+}
+
 function fallbackNodes(edit: Record<string, string>): NavNode[] {
   return publicMenus.map((menu) => ({
     id: menu.id,
@@ -80,12 +156,10 @@ function fallbackNodes(edit: Record<string, string>): NavNode[] {
 }
 
 export function PublicHeaderNav({
-  signedIn,
-  accountHref,
+  account,
   navNodes = [],
 }: {
-  signedIn: boolean
-  accountHref: string
+  account: SessionUserView | null
   navNodes?: NavNode[]
 }) {
   const [open, setOpen] = useState<string | null>(null)
@@ -93,7 +167,7 @@ export function PublicHeaderNav({
   const [photos, setPhotos] = useState<Partial<Record<SceneId, string>>>({})
   const rootRef = useRef<HTMLDivElement>(null)
   const labelId = useId()
-  const owner = accountHref === "/promptkit"
+  const owner = Boolean(account?.isOwner)
   const edit = {
     __prompt__: owner ? "/promptkit" : "/login",
     __career__: owner ? "/career" : "/login",
@@ -105,7 +179,6 @@ export function PublicHeaderNav({
   const scene: SceneId = (open as SceneId) && PHOTO_POOLS[open as SceneId] ? (open as SceneId) : "default"
   const ActiveIcon = MENU_ICON[open as MegaId]
   const photo = photos[scene]
-  const accountLabel = signedIn ? (accountHref === "/promptkit" ? "대시보드" : "내 계정") : "로그인"
   const closeDrawer = useCallback(() => setDrawer(false), [])
 
   useEffect(() => {
@@ -190,28 +263,62 @@ export function PublicHeaderNav({
                 </button>
               )
             })}
-            <Link
-              href={accountHref}
-              className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
-              onClick={() => setOpen(null)}
-            >
-              {accountLabel}
-            </Link>
+            {account ? (
+              <div className="ml-1">
+                <AccountMenu
+                  user={account}
+                  showAdminNav
+                  onOpen={() => {
+                    setOpen(null)
+                    setDrawer(false)
+                  }}
+                />
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
+                onClick={() => setOpen(null)}
+              >
+                로그인
+              </Link>
+            )}
             <ThemeToggle className="rounded-full border-0 bg-transparent shadow-none hover:bg-foreground/[0.06]" />
           </nav>
-          <button
-            type="button"
-            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-foreground/[0.06] lg:hidden"
-            aria-expanded={drawer}
-            aria-controls="public-mobile-nav"
-            aria-label={drawer ? "메뉴 닫기" : "메뉴 열기"}
-            onClick={() => {
-              setOpen(null)
-              setDrawer((value) => !value)
-            }}
-          >
-            {drawer ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+          <div className="flex items-center gap-1 lg:hidden">
+            {account ? (
+              <AccountMenu
+                user={account}
+                showAdminNav
+                compact
+                onOpen={() => {
+                  setOpen(null)
+                  setDrawer(false)
+                }}
+              />
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full bg-foreground px-3 py-1.5 text-sm font-medium text-background"
+                onClick={() => setOpen(null)}
+              >
+                로그인
+              </Link>
+            )}
+            <button
+              type="button"
+              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-foreground/[0.06]"
+              aria-expanded={drawer}
+              aria-controls="public-mobile-nav"
+              aria-label={drawer ? "메뉴 닫기" : "메뉴 열기"}
+              onClick={() => {
+                setOpen(null)
+                setDrawer((value) => !value)
+              }}
+            >
+              {drawer ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
 
         {activeNode ? (
@@ -223,34 +330,17 @@ export function PublicHeaderNav({
           >
             <div className="mx-auto max-w-6xl px-5 pb-8 pt-2">
               <div className="grid overflow-hidden rounded-2xl bg-background/70 ring-1 ring-foreground/10 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.65fr)]">
-                <Link
+                <MegaHighlight
                   href={staticMega ? staticMega.highlight.href : activeNode.children[0]?.href ?? "/"}
-                  className={cn(
-                    "group flex flex-col justify-between border-foreground/8 p-6 transition-colors md:border-r",
-                    scene === "prompt" && "bg-[hsl(var(--lux-champagne)/0.14)] hover:bg-[hsl(var(--lux-champagne)/0.2)]",
-                    scene === "career" && "bg-[hsl(var(--lux-cognac)/0.1)] hover:bg-[hsl(var(--lux-cognac)/0.16)]",
-                    scene === "games" && "bg-[hsl(var(--lux-espresso)/0.07)] hover:bg-[hsl(var(--lux-espresso)/0.12)]",
-                    scene === "default" && "bg-foreground/[0.03] hover:bg-foreground/[0.05]"
-                  )}
-                  onClick={() => setOpen(null)}
-                >
-                  <div>
-                    <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                      {ActiveIcon ? <ActiveIcon className="size-3.5 opacity-70" /> : null}
-                      {activeNode.label}
-                    </p>
-                    <h2 className="mt-4 font-display text-2xl font-bold tracking-tight">
-                      {staticMega ? staticMega.highlight.title : activeNode.label}
-                    </h2>
-                    <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                      {staticMega ? staticMega.highlight.body : "연결된 페이지와 게시판으로 이동합니다."}
-                    </p>
-                  </div>
-                  <p className="mt-8 inline-flex items-center gap-1 text-sm font-semibold">
-                    {staticMega ? staticMega.highlight.cta : activeNode.children[0]?.label ?? "바로가기"}
-                    <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                  </p>
-                </Link>
+                  photo={photo}
+                  scene={scene}
+                  label={activeNode.label}
+                  title={staticMega ? staticMega.highlight.title : activeNode.label}
+                  body={staticMega ? staticMega.highlight.body : "연결된 페이지와 게시판으로 이동합니다."}
+                  cta={staticMega ? staticMega.highlight.cta : activeNode.children[0]?.label ?? "바로가기"}
+                  icon={ActiveIcon}
+                  onNavigate={() => setOpen(null)}
+                />
                 <div className="grid gap-1 p-3 sm:grid-cols-2 sm:p-4">
                   {staticMega
                     ? staticMega.groups.map((group) => (
@@ -317,13 +407,7 @@ export function PublicHeaderNav({
           <BrandMark />
         </div>
       ) : null}
-      <PublicMobileNav
-        open={drawer}
-        onClose={closeDrawer}
-        signedIn={signedIn}
-        accountHref={accountHref}
-        navNodes={nodes}
-      />
+      <PublicMobileNav open={drawer} onClose={closeDrawer} account={account} navNodes={nodes} />
     </div>
   )
 }

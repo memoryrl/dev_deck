@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { forgetMemoryCache } from "@/lib/cache/memory"
 import { requireOwner } from "@/lib/auth/owner"
 import { createClient } from "@/lib/supabase/server"
 import { isBlankContent } from "@/lib/content"
@@ -8,6 +9,8 @@ import { parseCommaList } from "@/lib/utils"
 import type { CareerPostType } from "@/types/career"
 
 function refresh() {
+  forgetMemoryCache("public:career")
+  forgetMemoryCache("public:skills")
   revalidatePath("/")
   revalidatePath("/career")
   revalidatePath("/career/skills")

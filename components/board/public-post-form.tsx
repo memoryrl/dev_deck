@@ -15,10 +15,12 @@ export function PublicPostForm({
   boardId,
   slug,
   post,
+  returnTo,
 }: {
   boardId: string
   slug: string
   post?: BoardPost
+  returnTo?: string
 }) {
   const router = useRouter()
   const [published, setPublished] = useState(post?.is_published ?? true)
@@ -34,7 +36,7 @@ export function PublicPostForm({
       setError(result.error)
       return
     }
-    router.push(boardPath(result.slug))
+    router.push(returnTo ?? boardPath(result.slug))
     router.refresh()
   }
 

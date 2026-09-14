@@ -1,11 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { forgetMemoryCache } from "@/lib/cache/memory"
 import { requireOwner } from "@/lib/auth/owner"
 import { isBlankContent } from "@/lib/content"
 import { createClient } from "@/lib/supabase/server"
 
 function refreshReview(appId: number) {
+  forgetMemoryCache("public:reviews")
   revalidatePath("/")
   revalidatePath("/games")
   revalidatePath(`/games/${appId}`)

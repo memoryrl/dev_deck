@@ -2,6 +2,7 @@ import { ArrowUpRight, Github, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import { BrandMark } from "@/components/layout/brand-mark"
 import { Badge } from "@/components/ui/badge"
+import { SITE_CONTACT } from "@/lib/site/profile"
 import { listNavMenus } from "@/lib/menus/public"
 
 const columns = [
@@ -101,25 +102,25 @@ export async function PublicFooter() {
             <ul className="mt-3 space-y-2.5 text-sm text-muted-foreground">
               <li>
                 <a
-                  href="tel:01037284820"
+                  href={`tel:${SITE_CONTACT.phone}`}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   <Phone className="size-4 shrink-0" aria-hidden />
-                  010-3728-4820
+                  {SITE_CONTACT.phoneLabel}
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:memoryrl@gmail.com"
+                  href={`mailto:${SITE_CONTACT.email}`}
                   className="inline-flex items-center gap-2 hover:text-foreground"
                 >
                   <Mail className="size-4 shrink-0" aria-hidden />
-                  memoryrl@gmail.com
+                  {SITE_CONTACT.email}
                 </a>
               </li>
               <li>
                 <a
-                  href="https://github.com/memoryrl/dev_deck"
+                  href={SITE_CONTACT.github}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 hover:text-foreground"

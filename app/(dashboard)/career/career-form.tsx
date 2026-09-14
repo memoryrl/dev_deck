@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { CareerPost } from "@/types/career"
 
-export function CareerForm({ post }: { post?: CareerPost }) {
+export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; returnTo?: string; deleteTo?: string }) {
   const router = useRouter()
   const [isPublic, setIsPublic] = useState(post?.is_public ?? false)
   const [error, setError] = useState<string | null>(null)
@@ -25,14 +25,14 @@ export function CareerForm({ post }: { post?: CareerPost }) {
       setError(result.error)
       return
     }
-    router.push("/career")
+    router.push(returnTo ?? "/career")
     router.refresh()
   }
 
   async function onDelete() {
     if (!post || !confirm("이 글을 삭제할까요?")) return
     await deleteCareerPost(post.id)
-    router.push("/career")
+    router.push(deleteTo ?? "/career")
     router.refresh()
   }
 

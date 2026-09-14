@@ -17,6 +17,8 @@ const SLOTS = [
   "z-[3] translate-x-2 -translate-y-1 rotate-[7deg] scale-100",
 ]
 
+const INTERVAL_MS = 2000
+
 export function HeroVisual() {
   const [offset, setOffset] = useState(0)
   const pageActive = usePageActivity()
@@ -26,7 +28,7 @@ export function HeroVisual() {
     if (media.matches || !pageActive) return undefined
     const id = window.setInterval(() => {
       setOffset((value) => (value + 1) % cards.length)
-    }, 2000)
+    }, INTERVAL_MS)
     return () => window.clearInterval(id)
   }, [pageActive])
 
@@ -54,6 +56,7 @@ export function HeroVisual() {
             {cards.map((card, index) => {
               const Icon = card.icon
               const slot = (index + offset) % SLOTS.length
+              const isFront = slot === SLOTS.length - 1
               return (
                 <div
                   key={card.title}
@@ -63,10 +66,17 @@ export function HeroVisual() {
                     SLOTS[slot]
                   )}
                 >
-                  <div className="flex h-full flex-col justify-between p-3.5">
+                  <div className="relative z-10 flex h-full flex-col justify-between p-3.5">
                     <Icon className="size-4 text-foreground/70" />
                     <p className="font-display text-xs font-bold tracking-tight">{card.title}</p>
                   </div>
+                  {isFront ? (
+                    <span
+                      aria-hidden
+                      data-paused={pageActive ? undefined : ""}
+                      className="hero-card-beam absolute inset-0 z-20 rounded-2xl motion-reduce:hidden"
+                    />
+                  ) : null}
                 </div>
               )
             })}
