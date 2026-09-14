@@ -1,9 +1,11 @@
+import { getRequestOrigin } from "@/lib/auth/app-url"
 import { postLoginPath } from "@/lib/auth/roles"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = getRequestOrigin(request)
   const code = searchParams.get("code")
   let user: { email?: string | null } | null = null
   if (code) {

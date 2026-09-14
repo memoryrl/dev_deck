@@ -228,4 +228,4 @@ ANTHROPIC_API_KEY=
 
 - Preview / Production 모두 Vercel. DB는 기존 프로젝트의 `devdeck` 스키마를 공유한다.
 - 기존 앱의 `public` 스키마와 키를 같이 쓰므로, DevDeck RLS가 다른 스키마를 열지 않게 클라이언트를 `devdeck`으로 고정한다.
-- OAuth redirect URL을 **기존 목록에 추가**한다: `http://localhost:3000/auth/callback`, `https://<domain>/auth/callback`. 기존 앱 URL은 삭제하지 않는다.
+- OAuth redirect URL을 **기존 목록에 추가**한다: `http://localhost:3000/auth/callback`, `https://<domain>/auth/callback`. 기존 앱 URL은 삭제하지 않는다. **Site URL**은 프로덕션 도메인으로 둔다. localhost만 있으면 모바일에서 배포 주소로 로그인해 로컬로 튕긴다.
