@@ -1,18 +1,20 @@
 import { PromptForm } from "./prompt-form"
 import { PostList } from "@/components/board/post-list"
 import { Card } from "@/components/ui/card"
-import { createClient, ensureProfile } from "@/lib/supabase/server"
+import { parseListPage, parseSearchQuery } from "@/lib/pagination"
+import { listPromptsPage } from "@/lib/prompts/public"
+import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
-import type { Prompt } from "@/types/prompt"
 
-export default async function PromptKitPage() {
-  let prompts: Prompt[] = []
-  if (isSupabaseConfigured()) {
-    await ensureProfile()
-    const supabase = createClient()
-    const { data } = await supabase.from("prompts").select("*").order("created_at", { ascending: false })
-    prompts = (data as Prompt[]) ?? []
-  }
+export default async function PromptKitPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string; q?: string }
+}) {
+  const page = parseListPage(searchParams?.page)
+  const q = parseSearchQuery(searchParams?.q)
+  if (isSupabaseConfigured()) await ensureProfile()
+  const prompts = await listPromptsPage({ page, q })
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -25,8 +27,11 @@ export default async function PromptKitPage() {
       </Card>
       <PostList
         searchable
+        pathname="/promptkit"
+        searchQuery={q}
+        paged={prompts}
         empty="첫 프롬프트를 저장하세요."
-        items={prompts.map((prompt) => ({
+        items={prompts.rows.map((prompt) => ({
           href: `/promptkit/${prompt.id}`,
           title: prompt.title,
           createdAt: prompt.created_at,

@@ -1,6 +1,13 @@
 import { cache } from "react"
 import { canViewSystemBoard, currentAccessRole } from "@/lib/boards/access"
 import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
+import {
+  emptyPage,
+  fetchPagedRows,
+  ilikeContains,
+  LIST_PAGE_SIZE,
+  type PagedResult,
+} from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Prompt } from "@/types/prompt"
@@ -33,6 +40,35 @@ export const listPublicPrompts = cache(async (limit?: number): Promise<Prompt[]>
 
 export async function listRecentPublicPrompts(limit = PUBLIC_PROMPT_LIMIT): Promise<Prompt[]> {
   return listPublicPrompts(limit)
+}
+
+export async function listPromptsPage({
+  page,
+  q = "",
+  publicOnly = false,
+}: {
+  page: number
+  q?: string
+  publicOnly?: boolean
+}): Promise<PagedResult<Prompt>> {
+  if (!isSupabaseConfigured()) return emptyPage(page)
+  if (publicOnly && !(await canViewSystemBoard("prompts"))) return emptyPage(page)
+  const supabase = createClient()
+  const needle = q.trim()
+  return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
+    let query = supabase
+      .from("prompts")
+      .select(PROMPT_LIST_SELECT, { count: "exact" })
+      .order("created_at", { ascending: false })
+    if (publicOnly) query = query.eq("is_public", true)
+    if (needle) query = query.ilike("title", ilikeContains(needle))
+    const { data, error, count } = await query.range(from, to)
+    if (error) return null
+    return {
+      rows: ((data as Omit<Prompt, "content" | "result_html" | "user_id">[]) ?? []).map(asPromptListItem),
+      total: count ?? 0,
+    }
+  })
 }
 
 export const countPublicPrompts = cache(async (): Promise<number> => {

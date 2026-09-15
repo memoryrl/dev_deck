@@ -57,9 +57,9 @@ export function ListSkeleton({ count = 5, withSearch = true }: { count?: number;
         </div>
       ) : null}
       <Skeleton className={withSearch ? "mt-4 h-4 w-16" : "h-4 w-16"} />
-      <div className="mt-2 divide-y border-y">
+      <div className="mt-2 divide-y border-y bg-white dark:bg-card">
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="space-y-2 py-4">
+          <div key={index} className="space-y-2 px-4 py-4 sm:px-5">
             <Skeleton className="h-5 w-3/4 max-w-full" />
             <Skeleton className="h-3 w-56 max-w-full" />
           </div>
@@ -140,6 +140,19 @@ export function SteamShowcaseSkeleton() {
           </div>
         ))}
       </div>
+      <Skeleton className="mt-12 h-7 w-28" />
+      <div className="mt-5 space-y-3">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={index} className="flex gap-4 rounded-2xl border bg-card p-3">
+            <Skeleton className="h-[7.5rem] w-[13.5rem] shrink-0 rounded-lg" />
+            <div className="flex-1 space-y-2 py-1">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
     </Screen>
   )
 }
@@ -151,9 +164,9 @@ export function LatestColumnsSkeleton() {
         {Array.from({ length: 2 }).map((_, column) => (
           <div key={column} className="space-y-4">
             <Skeleton className="h-8 w-32" />
-            <div className="divide-y border-y">
+            <div className="divide-y border-y bg-white dark:bg-card">
               {Array.from({ length: 4 }).map((__, index) => (
-                <div key={index} className="space-y-2 py-4">
+                <div key={index} className="space-y-2 px-4 py-4 sm:px-5">
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-3 w-48" />
                 </div>

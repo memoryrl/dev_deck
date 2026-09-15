@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useEffect, useId, useState } from "react"
 import { usePathname } from "next/navigation"
-import { LogOut, Menu, X } from "lucide-react"
+import { Home, LogOut, Menu, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
 import { UserMenu } from "@/components/layout/user-menu"
@@ -41,6 +42,11 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
           DevDeck
         </Link>
         <div className="ml-auto flex items-center gap-1.5">
+          <Button asChild variant="ghost" size="icon" className="rounded-full md:hidden">
+            <Link href="/" aria-label="홈페이지">
+              <Home className="size-5" />
+            </Link>
+          </Button>
           <ThemeToggle className="hidden md:inline-flex" />
           <div className="md:hidden">
             <UserMenu user={account} compact />
@@ -87,10 +93,11 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             <Link
               href="/"
-              className="mb-2 flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
+              className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
               onClick={() => setDrawer(false)}
             >
-              사이트로
+              <Home className="size-4 opacity-70" />
+              홈페이지
             </Link>
             {ADMIN_NAV.map((item) => {
               const Icon = item.icon

@@ -10,7 +10,18 @@ import {
   Code,
   CodeBlock,
   Essentials,
+  FileRepository,
   Heading,
+  Image,
+  ImageBlock,
+  ImageCaption,
+  ImageInline,
+  ImageInsert,
+  ImageInsertViaUrl,
+  ImageResize,
+  ImageStyle,
+  ImageToolbar,
+  ImageUpload,
   Indent,
   IndentBlock,
   Italic,
@@ -22,6 +33,7 @@ import {
   Undo,
 } from "ckeditor5"
 import translations from "ckeditor5/translations/ko.js"
+import { EditorImageUploadAdapter } from "@/components/editor/ckeditor-upload-adapter"
 import { contentToEditorHtml } from "@/lib/content"
 import { structurePastedClipboard } from "@/lib/editor/paste"
 import "ckeditor5/ckeditor5.css"
@@ -70,6 +82,17 @@ export function RichEditorClient({
             Autoformat,
             PasteFromOffice,
             Undo,
+            FileRepository,
+            Image,
+            ImageBlock,
+            ImageInline,
+            ImageCaption,
+            ImageStyle,
+            ImageToolbar,
+            ImageResize,
+            ImageUpload,
+            ImageInsert,
+            ImageInsertViaUrl,
           ],
           toolbar: [
             "heading",
@@ -80,6 +103,7 @@ export function RichEditorClient({
             "code",
             "|",
             "link",
+            "insertImage",
             "bulletedList",
             "numberedList",
             "outdent",
@@ -90,6 +114,17 @@ export function RichEditorClient({
             "undo",
             "redo",
           ],
+          image: {
+            toolbar: [
+              "imageStyle:inline",
+              "imageStyle:block",
+              "imageStyle:side",
+              "|",
+              "toggleImageCaption",
+              "imageTextAlternative",
+              "resizeImage",
+            ],
+          },
           indentBlock: {
             offset: 1.5,
             unit: "em",
@@ -103,6 +138,9 @@ export function RichEditorClient({
           },
         }}
         onReady={(editor) => {
+          editor.plugins.get("FileRepository").createUploadAdapter = (loader) =>
+            new EditorImageUploadAdapter(loader)
+
           editor.editing.view.document.on(
             "clipboardInput",
             (_event, data: { dataTransfer: { getData: (type: string) => string }; content?: unknown }) => {

@@ -3,18 +3,20 @@ import { CareerForm } from "./career-form"
 import { PostList } from "@/components/board/post-list"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { createClient, ensureProfile } from "@/lib/supabase/server"
+import { listCareerPostsPage } from "@/lib/career/public"
+import { parseListPage, parseSearchQuery } from "@/lib/pagination"
+import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
-import type { CareerPost } from "@/types/career"
 
-export default async function CareerPage() {
-  let posts: CareerPost[] = []
-  if (isSupabaseConfigured()) {
-    await ensureProfile()
-    const supabase = createClient()
-    const { data } = await supabase.from("career_posts").select("*").order("created_at", { ascending: false })
-    posts = (data as CareerPost[]) ?? []
-  }
+export default async function CareerPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string; q?: string }
+}) {
+  const page = parseListPage(searchParams?.page)
+  const q = parseSearchQuery(searchParams?.q)
+  if (isSupabaseConfigured()) await ensureProfile()
+  const posts = await listCareerPostsPage({ page, q })
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -30,8 +32,11 @@ export default async function CareerPage() {
       </Card>
       <PostList
         searchable
+        pathname="/career"
+        searchQuery={q}
+        paged={posts}
         empty="참여했던 프로젝트를 글로 남겨 보세요."
-        items={posts.map((post) => ({
+        items={posts.rows.map((post) => ({
           href: `/career/${post.id}`,
           title: post.title,
           createdAt: post.created_at,

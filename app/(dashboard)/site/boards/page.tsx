@@ -28,10 +28,13 @@ export default async function SiteBoardsPage() {
       {boards.length === 0 ? (
         <p className="text-sm text-muted-foreground">아직 게시판이 없습니다.</p>
       ) : (
-        <div className="space-y-3">
+        <ul className="divide-y border-y bg-white dark:bg-card">
           {boards.map((board) => (
-            <Link key={board.id} href={`/site/boards/${board.id}`}>
-              <Card>
+            <li key={board.id}>
+              <Link
+                href={`/site/boards/${board.id}`}
+                className="block px-4 py-4 transition-colors hover:bg-muted/40 sm:px-5"
+              >
                 <div className="flex flex-wrap gap-2">
                   <Badge>{board.slug}</Badge>
                   <Badge variant="secondary">{kindLabel(board.kind ?? "generic")}</Badge>
@@ -42,14 +45,14 @@ export default async function SiteBoardsPage() {
                     <Badge variant="secondary">삭제 불가</Badge>
                   ) : null}
                 </div>
-                <h3 className="mt-3 font-display text-xl font-bold">{board.name}</h3>
+                <h3 className="mt-2 font-display text-lg font-bold">{board.name}</h3>
                 {board.description ? (
-                  <p className="mt-2 text-sm text-muted-foreground">{board.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{board.description}</p>
                 ) : null}
-              </Card>
-            </Link>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )

@@ -58,11 +58,15 @@ export function sanitizeRichHtml(html: string) {
       h3: ["style"],
       li: ["style"],
       blockquote: ["style"],
+      img: [...sanitizeHtml.defaults.allowedAttributes.img, "class", "style"],
+      figure: ["class", "style"],
+      figcaption: ["class"],
     },
     allowedStyles: {
       "*": {
         "margin-left": [/^\d+(?:px|em|rem)$/],
         "padding-left": [/^\d+(?:px|em|rem)$/],
+        width: [/^\d+(?:\.\d+)?(?:px|%|em|rem)$/],
       },
     },
     allowedSchemes: ["http", "https", "mailto"],

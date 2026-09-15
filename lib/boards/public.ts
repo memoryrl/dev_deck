@@ -1,3 +1,4 @@
+import { emptyPage, fetchPagedRows, ilikeContains, LIST_PAGE_SIZE, type PagedResult } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Board, BoardPost } from "@/types/board"
@@ -39,6 +40,27 @@ export async function listBoardPosts(boardId: string): Promise<BoardPost[]> {
     .order("created_at", { ascending: false })
   if (error) return []
   return (data as BoardPost[]) ?? []
+}
+
+export async function listBoardPostsPage(
+  boardId: string,
+  page: number,
+  q = ""
+): Promise<PagedResult<BoardPost>> {
+  if (!isSupabaseConfigured()) return emptyPage(page)
+  const supabase = createClient()
+  const needle = q.trim()
+  return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
+    let query = supabase
+      .from("board_posts")
+      .select("*", { count: "exact" })
+      .eq("board_id", boardId)
+      .order("created_at", { ascending: false })
+    if (needle) query = query.ilike("title", ilikeContains(needle))
+    const { data, error, count } = await query.range(from, to)
+    if (error) return null
+    return { rows: (data as BoardPost[]) ?? [], total: count ?? 0 }
+  })
 }
 
 export async function getBoardPost(id: string): Promise<BoardPost | null> {

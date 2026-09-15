@@ -42,7 +42,7 @@ export function CommentSection({
       {comments.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
       ) : (
-        <ul className="mt-6 space-y-4">
+        <ul className="mt-6 divide-y border-y bg-white dark:bg-card">
           {comments.map((node) => (
             <CommentItem
               key={node.id}
@@ -82,13 +82,25 @@ function CommentItem({
   const indent = Math.min(depth, 8)
 
   return (
-    <li className={cn(indent > 0 && "border-l border-foreground/10 pl-4")} style={{ marginLeft: indent ? undefined : undefined }}>
-      <article className="rounded-xl bg-foreground/[0.03] px-4 py-3" style={{ marginLeft: indent > 0 ? `${Math.min(indent, 6) * 0.5}rem` : undefined }}>
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-sm font-semibold">{node.author_name}</span>
-          <span className="text-xs tabular-nums text-muted-foreground">{maskIp(node.ip_address)}</span>
-          {node.ip_region ? <span className="text-xs text-muted-foreground">{node.ip_region}</span> : null}
-          <span className="text-xs text-muted-foreground">{formatBoardDateTime(node.created_at)}</span>
+    <li
+      className={cn(indent > 0 && "border-l border-foreground/10 pl-4")}
+      style={{ marginLeft: indent > 0 ? `${Math.min(indent, 6) * 0.5}rem` : undefined }}
+    >
+      <article className={cn("py-3", depth === 0 ? "px-4 sm:px-5" : "pr-2")}>
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span>
+            작성자 <span className="text-sm font-semibold text-foreground">{node.author_name}</span>
+          </span>
+          <span className="tabular-nums">{maskIp(node.ip_address)}</span>
+          {node.ip_region ? <span>{node.ip_region}</span> : null}
+          <span>{formatBoardDateTime(node.created_at)}</span>
+          <button
+            type="button"
+            className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
+            onClick={() => setReply((value) => !value)}
+          >
+            {reply ? "취소" : "답글"}
+          </button>
         </div>
         {node.is_hidden ? (
           <p className="mt-2 text-sm text-muted-foreground">숨긴 댓글입니다.</p>
@@ -97,13 +109,6 @@ function CommentItem({
             <RichContent content={node.body} className="space-y-2 text-sm" />
           </div>
         )}
-        <button
-          type="button"
-          className="mt-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          onClick={() => setReply((value) => !value)}
-        >
-          {reply ? "취소" : "답글"}
-        </button>
         {reply ? (
           <div className="mt-3">
             <CommentForm

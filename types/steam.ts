@@ -57,7 +57,7 @@ export type SteamAppCatalog = {
     linux: boolean
   }
   deck_compat: SteamDeckCompat | null
-  screenshot_urls: string[]
+  screenshots: { thumbnail: string; full: string }[]
   header_image: string | null
   store_url: string
   recommendations: number | null

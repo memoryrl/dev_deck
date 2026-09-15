@@ -2,18 +2,20 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Home } from "lucide-react"
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r bg-card p-5 md:block">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r bg-card p-5 md:flex">
       <Link href="/" className="mb-8 block font-display text-xl font-extrabold">
         DevDeck
       </Link>
-      <nav className="space-y-1">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {ADMIN_NAV.map((item) => {
           const active = pathname.startsWith(item.href)
           const Icon = item.icon
@@ -32,6 +34,12 @@ export function AppSidebar() {
           )
         })}
       </nav>
+      <Button asChild variant="outline" className="mt-4 h-10 w-full shrink-0 rounded-full">
+        <Link href="/">
+          <Home />
+          홈페이지
+        </Link>
+      </Button>
     </aside>
   )
 }

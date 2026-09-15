@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge"
+import { ScreenshotGallery } from "@/components/steam/screenshot-gallery"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
 import { steamHeroSources } from "@/lib/steam/images"
-import { cn, formatLastPlayed, formatPlaytime } from "@/lib/utils"
+import { formatLastPlayed, formatPlaytime } from "@/lib/utils"
 import type {
   SteamAchievementSummary,
   SteamAppCatalog,
@@ -185,18 +186,8 @@ export function GameCatalog({
         </dl>
       ) : null}
 
-      {catalog?.screenshot_urls.length ? (
-        <div className={cn("grid gap-2", catalog.screenshot_urls.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
-          {catalog.screenshot_urls.map((url) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={url}
-              src={url}
-              alt=""
-              className="h-36 w-full rounded-lg object-cover md:h-44"
-            />
-          ))}
-        </div>
+      {catalog?.screenshots?.length ? (
+        <ScreenshotGallery items={catalog.screenshots} title={title} />
       ) : null}
     </div>
   )

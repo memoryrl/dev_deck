@@ -8,7 +8,7 @@ export function CommentAdminActions({ id, hidden }: { id: string; hidden: boolea
   const router = useRouter()
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex shrink-0 flex-wrap gap-2">
       <Button
         type="button"
         size="sm"

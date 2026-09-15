@@ -1,18 +1,27 @@
 import Link from "next/link"
 import { CommentAdminActions, ProfanityDeleteButton } from "@/app/(dashboard)/site/comments/admin-actions"
+import { ProfanityWordsPanel } from "@/app/(dashboard)/site/comments/profanity-words-panel"
 import { ProfanityWordForm } from "@/app/(dashboard)/site/comments/word-form"
-import { Card } from "@/components/ui/card"
+import { ListPager } from "@/components/layout/list-pager"
 import { RichContent } from "@/components/editor/rich-content"
 import { commentTargetHref, commentTargetLabel, listAllComments, listProfanityWords } from "@/lib/comments/public"
+import { parseListPage } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { ensureProfile } from "@/lib/supabase/server"
 import { formatBoardDateTime, isSupabaseConfigured } from "@/lib/utils"
 
-export default async function SiteCommentsPage() {
+export default async function SiteCommentsPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string; words?: string }
+}) {
   await ensureProfile()
-  const comments = await listAllComments()
-  const words = await listProfanityWords()
-  const boardSlugs = await boardSlugMap(comments.filter((item) => item.target_type === "board").map((item) => item.target_id))
+  const commentPage = parseListPage(searchParams?.page)
+  const wordPage = parseListPage(searchParams?.words)
+  const [comments, words] = await Promise.all([listAllComments(commentPage), listProfanityWords(wordPage)])
+  const boardSlugs = await boardSlugMap(
+    comments.rows.filter((item) => item.target_type === "board").map((item) => item.target_id)
+  )
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -23,56 +32,101 @@ export default async function SiteCommentsPage() {
         </p>
       </div>
 
-      <Card className="space-y-4">
-        <h2 className="font-display text-xl font-bold">욕설 치환 단어</h2>
+      <ProfanityWordsPanel total={words.total}>
         <ProfanityWordForm />
-        {words.length === 0 ? (
+        {words.total === 0 ? (
           <p className="text-sm text-muted-foreground">등록된 단어가 없습니다.</p>
         ) : (
-          <ul className="divide-y divide-border">
-            {words.map((word) => (
-              <li key={word.id} className="flex items-center justify-between gap-3 py-2">
-                <p className="text-sm">
-                  <span className="font-semibold">{word.word}</span>
-                  <span className="mx-2 text-muted-foreground">→</span>
-                  <span>{word.replacement}</span>
-                </p>
-                <ProfanityDeleteButton id={word.id} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="divide-y divide-border">
+              {words.rows.map((word) => (
+                <li key={word.id} className="flex items-center justify-between gap-3 py-2">
+                  <p className="text-sm">
+                    <span className="font-semibold">{word.word}</span>
+                    <span className="mx-2 text-muted-foreground">→</span>
+                    <span>{word.replacement}</span>
+                  </p>
+                  <ProfanityDeleteButton id={word.id} />
+                </li>
+              ))}
+            </ul>
+            <ListPager
+              pathname="/site/comments"
+              param="words"
+              result={words}
+              extraParams={{ page: comments.page }}
+            />
+          </>
         )}
-      </Card>
+      </ProfanityWordsPanel>
 
-      <div className="space-y-3">
-        <h2 className="font-display text-xl font-bold">댓글 {comments.length}건</h2>
-        {comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
+      <div>
+        <h2 className="font-display text-xl font-bold">댓글 {comments.total}건</h2>
+        {comments.total === 0 ? (
+          <p className="mt-5 text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
         ) : (
-          comments.map((comment) => {
-            const href = commentTargetHref(comment.target_type, comment.target_id, boardSlugs.get(comment.target_id))
-            return (
-              <Card key={comment.id} className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">{commentTargetLabel(comment.target_type)}</span>
-                  <Link href={href} className="underline">
-                    원문
-                  </Link>
-                  {comment.parent_id ? <span>답글</span> : <span>댓글</span>}
-                  {comment.is_hidden ? <span>숨김</span> : null}
-                  <span>{formatBoardDateTime(comment.created_at)}</span>
-                </div>
-                <p className="text-sm font-semibold">
-                  {comment.author_name}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    {comment.ip_address} · {comment.ip_region ?? "-"}
-                  </span>
-                </p>
-                <RichContent content={comment.body} className="space-y-2 text-sm" />
-                <CommentAdminActions id={comment.id} hidden={comment.is_hidden} />
-              </Card>
-            )
-          })
+          <>
+            <ul className="mt-2 divide-y border-y bg-white dark:bg-card">
+              {comments.rows.map((comment, index) => {
+                const href = commentTargetHref(
+                  comment.target_type,
+                  comment.target_id,
+                  boardSlugs.get(comment.target_id)
+                )
+                const author = comment.author_name.trim() || "이름 없음"
+                const number = (comments.page - 1) * comments.pageSize + index + 1
+                return (
+                  <li
+                    key={comment.id}
+                    className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] leading-snug">
+                        <span className="text-muted-foreground">No. {number}</span>
+                        <span className="mx-2 text-foreground/20">|</span>
+                        <span className="font-semibold text-foreground">{commentTargetLabel(comment.target_type)}</span>
+                        <span className="mx-2 text-foreground/20">|</span>
+                        <Link href={href} className="font-medium underline-offset-2 hover:underline">
+                          원문
+                        </Link>
+                        <span className="mx-2 text-foreground/20">|</span>
+                        <span>{comment.parent_id ? "답글" : "댓글"}</span>
+                        {comment.is_hidden ? (
+                          <>
+                            <span className="mx-2 text-foreground/20">|</span>
+                            <span className="text-destructive">숨김</span>
+                          </>
+                        ) : null}
+                      </p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        작성자 <span className="font-semibold text-foreground">{author}</span>
+                        <span className="mx-1.5 text-foreground/20">|</span>
+                        {comment.user_id ? "회원" : "비회원"}
+                        <span className="mx-1.5 text-foreground/20">|</span>
+                        IP {comment.ip_address || "-"}
+                        {comment.ip_region ? (
+                          <>
+                            <span className="mx-1.5 text-foreground/20">|</span>
+                            {comment.ip_region}
+                          </>
+                        ) : null}
+                        <span className="mx-1.5 text-foreground/20">|</span>
+                        등록일 {formatBoardDateTime(comment.created_at)}
+                      </p>
+                      <RichContent content={comment.body} className="mt-2 space-y-2 text-sm" />
+                    </div>
+                    <CommentAdminActions id={comment.id} hidden={comment.is_hidden} />
+                  </li>
+                )
+              })}
+            </ul>
+            <ListPager
+              pathname="/site/comments"
+              param="page"
+              result={comments}
+              extraParams={{ words: words.page }}
+            />
+          </>
         )}
       </div>
     </div>

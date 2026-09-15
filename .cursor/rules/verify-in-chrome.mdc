@@ -1,0 +1,13 @@
+---
+description: UI 확인은 Cursor 내장 브라우저가 아니라 실제 Chrome에서 한다
+alwaysApply: true
+---
+
+# UI 확인 = 실제 Google Chrome
+
+UI·레이아웃·스타일·라우트를 검증할 때는 **Cursor 에디터 안 브라우저(MCP Simple Browser, `cursor-ide-browser`)를 쓰지 않는다.** 로그인 세션·데이터가 다른 별도 프로필이라 실제 화면이 아니다.
+
+1. 대상 URL을 사용자 Chrome에서 연다: `open -a "Google Chrome" "http://localhost:3000/..."`.
+2. 이미 같은 탭이 있으면 그 창을 앞으로 가져온다. 새 Cursor 브라우저 탭을 만들지 않는다.
+3. 화면 확인이 필요하면 Chrome 창을 캡처한다. 에디터 내장 뷰 스크린샷으로 대체하지 않는다.
+4. Chrome을 열 수 없을 때만 내장 브라우저를 쓰고, 그때는 실제 Chrome이 아니라고 사용자에게 밝힌다.

@@ -165,6 +165,52 @@
   font-size: 1em;
 }
 
+.prose-deck :where(figure.image),
+.prose-deck :where(figure.image) img,
+.prose-deck :where(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+.prose-deck :where(figure.image) {
+  margin: 1em auto;
+}
+
+.prose-deck :where(.image-style-align-left) {
+  float: left;
+  margin: 0.4em 1em 0.4em 0;
+}
+
+.prose-deck :where(.image-style-align-right) {
+  float: right;
+  margin: 0.4em 0 0.4em 1em;
+}
+
+.prose-deck :where(.image-style-align-center) {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose-deck :where(.image-style-side) {
+  float: right;
+  margin: 0.4em 0 0.4em 1em;
+  max-width: 50%;
+}
+
+.prose-deck :where(.image_resized) {
+  max-width: 100%;
+  height: auto;
+}
+
+.prose-deck :where(.image_resized) img {
+  width: 100%;
+}
+
+.prose-deck :where(figcaption) {
+  @apply text-center text-muted-foreground;
+  margin-top: 0.4em;
+}
+
 .rich-editor .ck.ck-editor {
   @apply w-full;
 }

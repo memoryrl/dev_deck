@@ -1,4 +1,4 @@
-import { Briefcase, Gamepad2, LayoutList, Menu, MessageSquare, Sparkles, type LucideIcon } from "lucide-react"
+import { Briefcase, Gamepad2, LayoutList, Menu, MessageSquare, Sparkles, Upload, type LucideIcon } from "lucide-react"
 
 export const ADMIN_NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/promptkit", label: "PromptKit", icon: Sparkles },
@@ -7,4 +7,5 @@ export const ADMIN_NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/site/boards", label: "게시판", icon: LayoutList },
   { href: "/site/comments", label: "댓글", icon: MessageSquare },
   { href: "/site/menus", label: "메뉴", icon: Menu },
+  { href: "/site/uploads", label: "업로드", icon: Upload },
 ]

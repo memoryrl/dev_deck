@@ -1,6 +1,13 @@
 import { cache } from "react"
 import { canViewSystemBoard, currentAccessRole } from "@/lib/boards/access"
 import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
+import {
+  emptyPage,
+  fetchPagedRows,
+  ilikeContains,
+  LIST_PAGE_SIZE,
+  type PagedResult,
+} from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
@@ -26,6 +33,32 @@ export const listPublicGameReviews = cache(async (): Promise<GameReview[]> => {
     return ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard)
   })
 })
+
+export async function listGameReviewsPage({
+  page,
+  q = "",
+}: {
+  page: number
+  q?: string
+}): Promise<PagedResult<GameReview>> {
+  if (!isSupabaseConfigured()) return emptyPage(page)
+  if (!(await canViewSystemBoard("steam"))) return emptyPage(page)
+  const supabase = createClient()
+  const needle = q.trim()
+  return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
+    let query = supabase
+      .from("game_reviews")
+      .select(REVIEW_CARD_SELECT, { count: "exact" })
+      .order("updated_at", { ascending: false })
+    if (needle) query = query.ilike("game_title", ilikeContains(needle))
+    const { data, error, count } = await query.range(from, to)
+    if (error) return null
+    return {
+      rows: ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard),
+      total: count ?? 0,
+    }
+  })
+}
 
 export const listLatestPublicGameReviews = cache(async (limit = 6): Promise<GameReview[]> => {
   if (!isSupabaseConfigured()) return []

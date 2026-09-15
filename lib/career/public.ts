@@ -1,6 +1,13 @@
 import { cache } from "react"
 import { canViewSystemBoard, currentAccessRole } from "@/lib/boards/access"
 import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
+import {
+  emptyPage,
+  fetchPagedRows,
+  ilikeContains,
+  LIST_PAGE_SIZE,
+  type PagedResult,
+} from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerPost, CareerSkill } from "@/types/career"
@@ -40,6 +47,35 @@ export const listPublicCareerPosts = cache(async (limit?: number): Promise<Caree
 
 export async function listRecentPublicCareerPosts(limit = PUBLIC_CAREER_TEASER_LIMIT): Promise<CareerPost[]> {
   return listPublicCareerPosts(limit)
+}
+
+export async function listCareerPostsPage({
+  page,
+  q = "",
+  publicOnly = false,
+}: {
+  page: number
+  q?: string
+  publicOnly?: boolean
+}): Promise<PagedResult<CareerPost>> {
+  if (!isSupabaseConfigured()) return emptyPage(page)
+  if (publicOnly && !(await canViewSystemBoard("career"))) return emptyPage(page)
+  const supabase = createClient()
+  const needle = q.trim()
+  return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
+    let query = supabase
+      .from("career_posts")
+      .select(CAREER_LIST_SELECT, { count: "exact" })
+      .order("created_at", { ascending: false })
+    if (publicOnly) query = query.eq("is_public", true)
+    if (needle) query = query.ilike("title", ilikeContains(needle))
+    const { data, error, count } = await query.range(from, to)
+    if (error) return null
+    return {
+      rows: ((data as Omit<CareerPost, "content" | "user_id">[]) ?? []).map(asCareerListItem),
+      total: count ?? 0,
+    }
+  })
 }
 
 export const countPublicCareerPosts = cache(async (): Promise<number> => {

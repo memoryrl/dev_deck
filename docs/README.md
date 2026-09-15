@@ -16,6 +16,7 @@ DevDeck은 **AI 프롬프트(PromptKit)**, **회사 참여 개발·스킬 정리
 | 4 | [04-api.md](./04-api.md) | Route Handler, Server Actions, 외부 API |
 | 5 | [05-ui.md](./05-ui.md) | 라우트, 레이아웃, 화면 상태, 컴포넌트 |
 | 6 | [06-implementation.md](./06-implementation.md) | 단계별 구현 순서와 Agent 킥오프 프롬프트 |
+| 7 | [07-uploads.md](./07-uploads.md) | Uppy 첨부 컴포넌트, CKEditor 이미지 업로드/압축 설계 |
 
 ## 핵심 결정 (요약)
 

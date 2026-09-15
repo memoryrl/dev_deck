@@ -114,13 +114,13 @@ export async function upsertMenu(formData: FormData) {
   }
 
   const query = id
-    ? supabase.from("menus").update(payload).eq("id", id)
-    : supabase.from("menus").insert(payload)
+    ? supabase.from("menus").update(payload).eq("id", id).select("id").single()
+    : supabase.from("menus").insert(payload).select("id").single()
 
-  const { error } = await query
+  const { data, error } = await query
   if (error) return { ok: false as const, error: error.message }
   refreshSite()
-  return { ok: true as const }
+  return { ok: true as const, id: data?.id ?? id }
 }
 
 export async function deleteMenu(id: string) {

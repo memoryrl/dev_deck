@@ -9,20 +9,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Board } from "@/types/board"
-import type { MenuItem } from "@/types/menu"
+import type { MenuItem, MenuLocation } from "@/types/menu"
 
 export function MenuForm({
   menu,
   menus,
   boards,
+  defaultParentId,
+  defaultLocation,
+  onSaved,
+  onDeleted,
 }: {
   menu?: MenuItem
   menus: MenuItem[]
   boards: Board[]
+  defaultParentId?: string | null
+  defaultLocation?: MenuLocation
+  onSaved?: (id: string) => void
+  onDeleted?: () => void
 }) {
   const router = useRouter()
   const [active, setActive] = useState(menu?.is_active ?? true)
   const [error, setError] = useState<string | null>(null)
+  const formId = menu?.id ?? "new"
   const parents = menus.filter((item) => !item.parent_id && item.id !== menu?.id)
 
   async function onSubmit(formData: FormData) {
@@ -35,25 +44,28 @@ export function MenuForm({
       return
     }
     router.refresh()
+    if (result.id) onSaved?.(result.id)
+    else if (menu) onSaved?.(menu.id)
   }
 
   async function onDelete() {
     if (!menu || !confirm("이 메뉴를 삭제할까요? 하위 메뉴도 함께 삭제됩니다.")) return
     await deleteMenu(menu.id)
     router.refresh()
+    onDeleted?.()
   }
 
   return (
     <form action={onSubmit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label htmlFor={`label-${menu?.id ?? "new"}`}>이름</Label>
-          <Input id={`label-${menu?.id ?? "new"}`} name="label" required defaultValue={menu?.label} />
+          <Label htmlFor={`label-${formId}`}>이름</Label>
+          <Input id={`label-${formId}`} name="label" required defaultValue={menu?.label} />
         </div>
         <div>
-          <Label htmlFor={`href-${menu?.id ?? "new"}`}>직접 링크</Label>
+          <Label htmlFor={`href-${formId}`}>직접 링크</Label>
           <Input
-            id={`href-${menu?.id ?? "new"}`}
+            id={`href-${formId}`}
             name="href"
             defaultValue={menu?.href ?? ""}
             placeholder="/work 또는 비움(하위 메뉴용)"
@@ -62,9 +74,9 @@ export function MenuForm({
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label htmlFor={`board-${menu?.id ?? "new"}`}>연결 게시판</Label>
+          <Label htmlFor={`board-${formId}`}>연결 게시판</Label>
           <select
-            id={`board-${menu?.id ?? "new"}`}
+            id={`board-${formId}`}
             name="board_id"
             defaultValue={menu?.board_id ?? ""}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
@@ -78,17 +90,17 @@ export function MenuForm({
           </select>
         </div>
         <div>
-          <Label htmlFor={`parent-${menu?.id ?? "new"}`}>상위 메뉴</Label>
+          <Label htmlFor={`parent-${formId}`}>상위 메뉴</Label>
           <select
-            id={`parent-${menu?.id ?? "new"}`}
+            id={`parent-${formId}`}
             name="parent_id"
-            defaultValue={menu?.parent_id ?? ""}
+            defaultValue={menu?.parent_id ?? defaultParentId ?? ""}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           >
             <option value="">최상위</option>
             {parents.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.label}
+                [{item.location === "header" ? "헤더" : "푸터"}] {item.label}
               </option>
             ))}
           </select>
@@ -96,11 +108,11 @@ export function MenuForm({
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <div>
-          <Label htmlFor={`location-${menu?.id ?? "new"}`}>위치</Label>
+          <Label htmlFor={`location-${formId}`}>위치</Label>
           <select
-            id={`location-${menu?.id ?? "new"}`}
+            id={`location-${formId}`}
             name="location"
-            defaultValue={menu?.location ?? "header"}
+            defaultValue={menu?.location ?? defaultLocation ?? "header"}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           >
             <option value="header">헤더</option>
@@ -108,9 +120,9 @@ export function MenuForm({
           </select>
         </div>
         <div>
-          <Label htmlFor={`view-${menu?.id ?? "new"}`}>보이는 권한</Label>
+          <Label htmlFor={`view-${formId}`}>보이는 권한</Label>
           <select
-            id={`view-${menu?.id ?? "new"}`}
+            id={`view-${formId}`}
             name="view_role"
             defaultValue={menu?.view_role ?? "visitor"}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
@@ -123,9 +135,9 @@ export function MenuForm({
           </select>
         </div>
         <div>
-          <Label htmlFor={`sort-${menu?.id ?? "new"}`}>정렬</Label>
+          <Label htmlFor={`sort-${formId}`}>정렬</Label>
           <Input
-            id={`sort-${menu?.id ?? "new"}`}
+            id={`sort-${formId}`}
             name="sort_order"
             type="number"
             defaultValue={menu?.sort_order ?? 0}

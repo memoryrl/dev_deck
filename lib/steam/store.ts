@@ -98,9 +98,15 @@ export async function fetchAppCatalog(appId: number): Promise<SteamAppCatalog | 
       linux: platforms?.linux === true,
     },
     deck_compat: parseDeckCompat(data.steam_deck_compatibility),
-    screenshot_urls: screenshots
-      .map((item) => asString(asRecord(item)?.path_thumbnail) ?? asString(asRecord(item)?.path_full))
-      .filter((url): url is string => Boolean(url))
+    screenshots: screenshots
+      .map((item) => {
+        const rec = asRecord(item)
+        const full = asString(rec?.path_full)
+        const thumbnail = asString(rec?.path_thumbnail) ?? full
+        if (!thumbnail) return null
+        return { thumbnail, full: full ?? thumbnail }
+      })
+      .filter((item): item is { thumbnail: string; full: string } => Boolean(item))
       .slice(0, 4),
     header_image: asString(data.header_image),
     store_url: `https://store.steampowered.com/app/${appId}`,

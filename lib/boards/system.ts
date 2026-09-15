@@ -1,3 +1,4 @@
+import { emptyPage, fetchPagedRows, ilikeContains, LIST_PAGE_SIZE, type PagedResult } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { SystemBoardKind } from "@/types/board"
@@ -53,51 +54,84 @@ export type ModuleEntry = {
 }
 
 export async function listModuleEntries(kind: SystemBoardKind): Promise<ModuleEntry[]> {
-  if (!isSupabaseConfigured()) return []
+  const page = await listModuleEntriesPage(kind, 1, "", 500)
+  return page.rows
+}
+
+export async function listModuleEntriesPage(
+  kind: SystemBoardKind,
+  page: number,
+  q = "",
+  pageSize = LIST_PAGE_SIZE
+): Promise<PagedResult<ModuleEntry>> {
+  if (!isSupabaseConfigured()) return emptyPage(page, pageSize)
   const supabase = createClient()
+  const needle = q.trim()
 
   if (kind === "prompts") {
-    const { data } = await supabase
-      .from("prompts")
-      .select("id, title, is_public, category, created_at")
-      .order("created_at", {
-        ascending: false,
-      })
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      title: row.title,
-      href: systemEntryHref(kind, row.id),
-      published: Boolean(row.is_public),
-      note: row.category,
-      createdAt: row.created_at,
-    }))
+    return fetchPagedRows(page, pageSize, async (from, to) => {
+      let query = supabase
+        .from("prompts")
+        .select("id, title, is_public, category, created_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+      if (needle) query = query.ilike("title", ilikeContains(needle))
+      const { data, error, count } = await query.range(from, to)
+      if (error) return null
+      return {
+        rows: (data ?? []).map((row) => ({
+          id: row.id,
+          title: row.title,
+          href: systemEntryHref(kind, row.id),
+          published: Boolean(row.is_public),
+          note: row.category,
+          createdAt: row.created_at,
+        })),
+        total: count ?? 0,
+      }
+    })
   }
 
   if (kind === "career") {
-    const { data } = await supabase
-      .from("career_posts")
-      .select("id, title, is_public, post_type, created_at")
-      .order("created_at", { ascending: false })
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      title: row.title,
-      href: systemEntryHref(kind, row.id),
-      published: Boolean(row.is_public),
-      note: row.post_type,
-      createdAt: row.created_at,
-    }))
+    return fetchPagedRows(page, pageSize, async (from, to) => {
+      let query = supabase
+        .from("career_posts")
+        .select("id, title, is_public, post_type, created_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+      if (needle) query = query.ilike("title", ilikeContains(needle))
+      const { data, error, count } = await query.range(from, to)
+      if (error) return null
+      return {
+        rows: (data ?? []).map((row) => ({
+          id: row.id,
+          title: row.title,
+          href: systemEntryHref(kind, row.id),
+          published: Boolean(row.is_public),
+          note: row.post_type,
+          createdAt: row.created_at,
+        })),
+        total: count ?? 0,
+      }
+    })
   }
 
-  const { data } = await supabase
-    .from("game_reviews")
-    .select("id, app_id, game_title, review_text, rating, created_at")
-    .order("updated_at", { ascending: false })
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.game_title,
-    href: systemEntryHref(kind, row.id, row.app_id),
-    published: Boolean(row.review_text?.trim()),
-    note: `평점 ${row.rating}`,
-    createdAt: row.created_at,
-  }))
+  return fetchPagedRows(page, pageSize, async (from, to) => {
+    let query = supabase
+      .from("game_reviews")
+      .select("id, app_id, game_title, review_text, rating, created_at", { count: "exact" })
+      .order("updated_at", { ascending: false })
+    if (needle) query = query.ilike("game_title", ilikeContains(needle))
+    const { data, error, count } = await query.range(from, to)
+    if (error) return null
+    return {
+      rows: (data ?? []).map((row) => ({
+        id: row.id,
+        title: row.game_title,
+        href: systemEntryHref(kind, row.id, row.app_id),
+        published: Boolean(row.review_text?.trim()),
+        note: `평점 ${row.rating}`,
+        createdAt: row.created_at,
+      })),
+      total: count ?? 0,
+    }
+  })
 }

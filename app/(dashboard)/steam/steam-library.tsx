@@ -1,41 +1,34 @@
-"use client"
-
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { ListPager } from "@/components/layout/list-pager"
 import { WrittenReviewBadge } from "@/components/steam/review-badge"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
 import { steamCoverSources } from "@/lib/steam/images"
+import { compareSteamGames, type SteamLibrarySort } from "@/lib/steam/sort"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { listQueryHref, paginateItems } from "@/lib/pagination"
 import { cn, formatLastPlayed, formatPlaytime } from "@/lib/utils"
 import type { GameReview, SteamGame, SteamGamesResponse, SteamProfile } from "@/types/steam"
-
-type SortKey = "playtime" | "recent" | "two_weeks"
 
 export function SteamLibrary({
   reviews,
   hrefBase = "/steam",
   library,
   error = null,
+  page = 1,
+  sort = "playtime",
 }: {
   reviews: GameReview[]
   hrefBase?: "/steam" | "/games"
   library: SteamGamesResponse | null
   error?: string | null
+  page?: number
+  sort?: SteamLibrarySort
 }) {
-  const [sort, setSort] = useState<SortKey>("playtime")
-
-  const reviewMap = useMemo(
-    () => new Map(reviews.map((review) => [review.app_id, review])),
-    [reviews]
-  )
-
-  const games = useMemo(() => {
-    const list = library?.games ?? []
-    return [...list].sort((a, b) => compareGames(a, b, sort, reviewMap))
-  }, [library, reviewMap, sort])
-
+  const reviewMap = new Map(reviews.map((review) => [review.app_id, review]))
+  const games = [...(library?.games ?? [])].sort((a, b) => compareSteamGames(a, b, sort, reviewMap))
+  const paged = paginateItems(games, page)
   const total = games.reduce((sum, game) => sum + game.playtime_forever_minutes, 0)
   const twoWeeks = games.reduce((sum, game) => sum + (game.playtime_2weeks_minutes ?? 0), 0)
   const deck = games.reduce((sum, game) => sum + game.playtime_deck_minutes, 0)
@@ -72,45 +65,10 @@ export function SteamLibrary({
         latest={latest}
       />
 
-      <div
-        role="tablist"
-        aria-label="라이브러리 정렬"
-        className="relative grid w-full grid-cols-3 rounded-full bg-secondary p-1"
-      >
-        <span
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
-            sort === "recent" && "translate-x-full",
-            sort === "two_weeks" && "translate-x-[200%]"
-          )}
-        />
-        {(
-          [
-            ["playtime", "누적", "누적 시간"],
-            ["recent", "최근", "최근 플레이"],
-            ["two_weeks", "2주", "최근 2주"],
-          ] as const
-        ).map(([key, shortLabel, label]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={sort === key}
-            className={cn(
-              "relative z-10 rounded-full px-3 py-2 text-sm font-semibold transition-colors duration-300",
-              sort === key ? "text-foreground" : "text-muted-foreground"
-            )}
-            onClick={() => setSort(key)}
-          >
-            <span className="md:hidden">{shortLabel}</span>
-            <span className="hidden md:inline">{label}</span>
-          </button>
-        ))}
-      </div>
+      <SortTabs pathname={hrefBase} sort={sort} />
 
       <div className="grid gap-4 md:grid-cols-2">
-        {games.map((game) => (
+        {paged.rows.map((game) => (
           <GameItem
             key={game.app_id}
             hrefBase={hrefBase}
@@ -119,6 +77,43 @@ export function SteamLibrary({
           />
         ))}
       </div>
+      <ListPager pathname={hrefBase} result={paged} extraParams={{ sort }} />
+    </div>
+  )
+}
+
+function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort }) {
+  return (
+    <div role="tablist" aria-label="라이브러리 정렬" className="relative grid w-full grid-cols-3 rounded-full bg-secondary p-1">
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
+          sort === "recent" && "translate-x-full",
+          sort === "two_weeks" && "translate-x-[200%]"
+        )}
+      />
+      {(
+        [
+          ["playtime", "누적", "누적 시간"],
+          ["recent", "최근", "최근 플레이"],
+          ["two_weeks", "2주", "최근 2주"],
+        ] as const
+      ).map(([key, shortLabel, label]) => (
+        <Link
+          key={key}
+          href={listQueryHref(pathname, {}, { sort: key, page: 1 })}
+          role="tab"
+          aria-selected={sort === key}
+          className={cn(
+            "relative z-10 rounded-full px-3 py-2 text-center text-sm font-semibold transition-colors duration-300",
+            sort === key ? "text-foreground" : "text-muted-foreground"
+          )}
+        >
+          <span className="md:hidden">{shortLabel}</span>
+          <span className="hidden md:inline">{label}</span>
+        </Link>
+      ))}
     </div>
   )
 }
@@ -188,24 +183,6 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="mt-1 truncate text-sm font-semibold">{value}</p>
     </div>
   )
-}
-
-function compareGames(
-  a: SteamGame,
-  b: SteamGame,
-  sort: SortKey,
-  reviewMap: Map<number, GameReview>
-) {
-  if (sort === "playtime") {
-    const favA = reviewMap.get(a.app_id)?.is_favorite ? 1 : 0
-    const favB = reviewMap.get(b.app_id)?.is_favorite ? 1 : 0
-    if (favA !== favB) return favB - favA
-    return b.playtime_forever_minutes - a.playtime_forever_minutes
-  }
-  if (sort === "two_weeks") {
-    return (b.playtime_2weeks_minutes ?? 0) - (a.playtime_2weeks_minutes ?? 0)
-  }
-  return Date.parse(b.last_played_at ?? "0") - Date.parse(a.last_played_at ?? "0")
 }
 
 function GameItem({

@@ -11,7 +11,7 @@ import { cn, formatLastPlayed, formatPlaytime } from "@/lib/utils"
 import type { FeaturedGame } from "@/components/landing/steam-featured"
 import type { GameReview, SteamProfile } from "@/types/steam"
 
-type Tab = "rank" | "recent" | "reviews"
+type Tab = "rank" | "recent"
 
 function RankMark({ rank, className }: { rank: number; className?: string }) {
   return (
@@ -190,21 +190,19 @@ export function SteamSection({
 
       <div
         role="tablist"
-        aria-label="Steam 목록"
-        className="relative mt-5 grid w-full grid-cols-3 rounded-full bg-secondary p-1"
+        aria-label="Steam 플레이 목록"
+        className="relative mt-5 grid w-full grid-cols-2 rounded-full bg-secondary p-1"
       >
         <span
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
-            tab === "reviews" && "translate-x-full",
-            tab === "rank" && "translate-x-[200%]"
+            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/2)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
+            tab === "rank" && "translate-x-full"
           )}
         />
         {(
           [
             ["recent", "최근", "최근 플레이"],
-            ["reviews", "리뷰", "최신 리뷰"],
             ["rank", "누적", "누적 시간 순위"],
           ] as const
         ).map(([key, shortLabel, label]) => (
@@ -239,11 +237,16 @@ export function SteamSection({
         >
           {tab === "rank" ? (
             <ShowcaseGrid games={rankedGames} kind="rank" />
-          ) : tab === "recent" ? (
-            <ShowcaseGrid games={recentGames} kind="recent" />
           ) : (
-            <ReviewList reviews={reviews} />
+            <ShowcaseGrid games={recentGames} kind="recent" />
           )}
+        </div>
+      </div>
+
+      <div className="mt-12">
+        <h3 className="font-display text-xl font-extrabold md:text-2xl">최신 리뷰</h3>
+        <div className="mt-5">
+          <ReviewList reviews={reviews} />
         </div>
       </div>
     </section>

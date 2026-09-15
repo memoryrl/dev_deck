@@ -6,17 +6,27 @@ import { PostList } from "@/components/board/post-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { getBoardById, listBoardPosts } from "@/lib/boards/public"
-import { isSystemBoard, kindLabel, listModuleEntries, systemDashboardHref } from "@/lib/boards/system"
+import { getBoardById, listBoardPostsPage } from "@/lib/boards/public"
+import { isSystemBoard, kindLabel, listModuleEntriesPage, systemDashboardHref } from "@/lib/boards/system"
+import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
 
-export default async function SiteBoardDetailPage({ params }: { params: { id: string } }) {
+export default async function SiteBoardDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams?: { page?: string; q?: string }
+}) {
   await ensureProfile()
   const board = await getBoardById(params.id)
   if (!board) notFound()
   const system = isSystemBoard(board)
-  const posts = system ? [] : await listBoardPosts(board.id)
-  const entries = system ? await listModuleEntries(board.kind) : []
+  const page = parseListPage(searchParams?.page)
+  const q = parseSearchQuery(searchParams?.q)
+  const pathname = `/site/boards/${board.id}`
+  const posts = system ? null : await listBoardPostsPage(board.id, page, q)
+  const entries = system ? await listModuleEntriesPage(board.kind, page, q) : null
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -42,7 +52,7 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
         <h2 className="mb-4 font-display text-xl font-bold">설정</h2>
         <BoardForm board={board} />
       </Card>
-      {system ? (
+      {system && entries ? (
         <div className="space-y-3">
           <h2 className="font-display text-xl font-bold">글</h2>
           <p className="text-sm text-muted-foreground">
@@ -50,8 +60,11 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
           </p>
           <PostList
             searchable
+            pathname={pathname}
+            searchQuery={q}
+            paged={entries}
             empty="글이 없습니다."
-            items={entries.map((entry) => ({
+            items={entries.rows.map((entry) => ({
               href: entry.href,
               title: entry.title,
               createdAt: entry.createdAt,
@@ -59,7 +72,8 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
             }))}
           />
         </div>
-      ) : (
+      ) : null}
+      {!system && posts ? (
         <>
           <Card>
             <h2 className="mb-4 font-display text-xl font-bold">새 글</h2>
@@ -67,8 +81,11 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
           </Card>
           <PostList
             searchable
+            pathname={pathname}
+            searchQuery={q}
+            paged={posts}
             empty="글이 없습니다."
-            items={posts.map((post) => ({
+            items={posts.rows.map((post) => ({
               href: `/site/boards/${board.id}/${post.id}`,
               title: post.title,
               createdAt: post.created_at,
@@ -76,7 +93,7 @@ export default async function SiteBoardDetailPage({ params }: { params: { id: st
             }))}
           />
         </>
-      )}
+      ) : null}
     </div>
   )
 }
