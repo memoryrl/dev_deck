@@ -9,4 +9,5 @@ export type Prompt = {
   is_public: boolean
   created_at: string
   updated_at: string
+  thumbnailUrl?: string | null
 }

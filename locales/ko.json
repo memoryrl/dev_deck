@@ -98,6 +98,8 @@
     "readMore": "읽어보기",
     "skills": "스킬",
     "recentActivity": "최근 활동",
+    "recentActivityLede": "가장 최근에 공개·갱신된 항목이에요.",
+    "recentActivityCount": "{{count}}건",
     "classic": "클래식",
     "topology": "토폴로지",
     "heroViewAria": "랜딩 히어로 뷰 전환",

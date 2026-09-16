@@ -7,12 +7,24 @@ import {
   listLatestPublicGameReviews,
 } from "@/lib/steam/reviews"
 import { plainTextFromContent } from "@/lib/content"
+import { resolvePromptThumbnail } from "@/lib/embeds/result-preview"
 import { formatPeriod } from "@/lib/i18n/format"
 import { getT } from "@/lib/i18n/dictionary"
 import type { CareerPost, CareerSkill } from "@/types/career"
 import type { Prompt } from "@/types/prompt"
 import type { FeaturedGame } from "@/components/landing/steam-featured"
 import type { GameReview, SteamProfile } from "@/types/steam"
+
+export type HomeActivityKind = "prompt" | "career" | "review"
+
+export type HomeActivityItem = {
+  kind: HomeActivityKind
+  label: string
+  title: string
+  detail: string | null
+  href: string
+  at: string
+}
 
 export type FeaturedWork =
   | {
@@ -22,6 +34,7 @@ export type FeaturedWork =
       excerpt: string
       badge: string
       meta: string | null
+      thumbnailUrl?: string | null
     }
   | {
       kind: "prompt"
@@ -30,6 +43,7 @@ export type FeaturedWork =
       excerpt: string
       badge: string
       meta: string | null
+      thumbnailUrl?: string | null
     }
 
 export type HomeLandingData = {
@@ -44,11 +58,7 @@ export type HomeLandingData = {
     playtimeMinutes: number
     reviewCount: number
   }
-  activity: {
-    promptAt: string | null
-    careerAt: string | null
-    reviewAt: string | null
-  }
+  activity: HomeActivityItem[]
   umpc: {
     href: string
     title: string
@@ -64,19 +74,91 @@ export type HomeLandingData = {
   }
 }
 
-function excerptOf(value: string, fallback = "") {
+function excerptOf(value: string, fallback = "", max = 180) {
   const text = plainTextFromContent(value).trim() || fallback.trim()
-  if (text.length <= 180) return text
-  return `${text.slice(0, 179).trim()}…`
+  if (!text) return ""
+  if (text.length <= max) return text
+  return `${text.slice(0, max - 1).trim()}…`
 }
 
-function latestIso(values: (string | null | undefined)[]) {
+function itemTimestamp(...values: (string | null | undefined)[]) {
   const dates = values
     .filter((value): value is string => Boolean(value))
     .map((value) => Date.parse(value))
     .filter((value) => Number.isFinite(value))
   if (dates.length === 0) return null
   return new Date(Math.max(...dates)).toISOString()
+}
+
+function pickLatestByDate<T>(items: T[], getAt: (item: T) => string | null): T | null {
+  let best: T | null = null
+  let bestMs = -Infinity
+  for (const item of items) {
+    const at = getAt(item)
+    if (!at) continue
+    const ms = Date.parse(at)
+    if (!Number.isFinite(ms) || ms <= bestMs) continue
+    best = item
+    bestMs = ms
+  }
+  return best
+}
+
+function buildActivity(
+  prompts: Prompt[],
+  posts: CareerPost[],
+  reviews: GameReview[],
+  t: (key: string) => string
+): HomeActivityItem[] {
+  const items: HomeActivityItem[] = []
+
+  const prompt = pickLatestByDate(prompts, (item) => itemTimestamp(item.updated_at, item.created_at))
+  if (prompt) {
+    const at = itemTimestamp(prompt.updated_at, prompt.created_at)
+    if (at) {
+      items.push({
+        kind: "prompt",
+        label: t("landing.badgePrompt"),
+        title: prompt.title,
+        detail: prompt.category || null,
+        href: `/p/${prompt.id}`,
+        at,
+      })
+    }
+  }
+
+  const post = pickLatestByDate(posts, (item) => itemTimestamp(item.updated_at, item.created_at))
+  if (post) {
+    const at = itemTimestamp(post.updated_at, post.created_at)
+    if (at) {
+      items.push({
+        kind: "career",
+        label: t("footer.career"),
+        title: post.title,
+        detail: [post.company, post.role].filter(Boolean).join(" · ") || null,
+        href: `/work/${post.id}`,
+        at,
+      })
+    }
+  }
+
+  const review = pickLatestByDate(reviews, (item) => itemTimestamp(item.updated_at, item.created_at))
+  if (review) {
+    const at = itemTimestamp(review.updated_at, review.created_at)
+    if (at) {
+      const summary = excerptOf(review.review_text ?? "", "", 90)
+      items.push({
+        kind: "review",
+        label: t("footer.reviews"),
+        title: review.game_title,
+        detail: summary || `★ ${review.rating}`,
+        href: `/games/${review.app_id}`,
+        at,
+      })
+    }
+  }
+
+  return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
 }
 
 function pickFeatured(posts: CareerPost[], prompts: Prompt[]): FeaturedWork | null {
@@ -180,14 +262,20 @@ export async function getHomeLandingData(): Promise<HomeLandingData> {
   }
 
   const featuredSource = featuredPost ? [featuredPost] : posts
+  const featured = pickFeatured(featuredSource, prompts)
+  if (featured?.kind === "prompt") {
+    const prompt = prompts.find((item) => featured.href === `/p/${item.id}`)
+    featured.thumbnailUrl = await resolvePromptThumbnail(prompt?.result_html)
+  }
   const reviewsWithText = latestReviews.filter((review) => review.review_text?.trim())
   const reviewCards = reviewsWithText.length > 0 ? reviewsWithText : latestReviews
+  const { t } = getT()
 
   return {
     prompts,
     posts,
     skills,
-    featured: pickFeatured(featuredSource, prompts),
+    featured,
     stats: {
       promptCount,
       careerCount,
@@ -195,11 +283,7 @@ export async function getHomeLandingData(): Promise<HomeLandingData> {
       playtimeMinutes: steamTotalMinutes,
       reviewCount,
     },
-    activity: {
-      promptAt: latestIso(prompts.flatMap((item) => [item.updated_at, item.created_at])),
-      careerAt: latestIso(posts.flatMap((item) => [item.updated_at, item.created_at])),
-      reviewAt: latestIso(latestReviews.flatMap((item) => [item.updated_at, item.created_at])),
-    },
+    activity: buildActivity(prompts, posts, latestReviews, t),
     umpc: pickUmpc(umpcReview, games),
     steam: {
       rankedGames: [...games]

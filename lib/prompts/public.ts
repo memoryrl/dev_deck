@@ -8,16 +8,26 @@ import {
   LIST_PAGE_SIZE,
   type PagedResult,
 } from "@/lib/pagination"
+import { resolvePromptThumbnail } from "@/lib/embeds/result-preview"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Prompt } from "@/types/prompt"
 
 export const PUBLIC_PROMPT_LIMIT = 6
 
-const PROMPT_LIST_SELECT = "id, title, category, tags, is_public, created_at, updated_at"
+const PROMPT_LIST_SELECT = "id, title, category, tags, is_public, created_at, updated_at, result_html"
 
-function asPromptListItem(row: Omit<Prompt, "content" | "result_html" | "user_id">): Prompt {
-  return { ...row, user_id: "", content: "", result_html: "" }
+function asPromptListItem(row: Omit<Prompt, "content" | "user_id">): Prompt {
+  return { ...row, user_id: "", content: "", result_html: row.result_html ?? "", thumbnailUrl: null }
+}
+
+export async function withPromptThumbnails(prompts: Prompt[]): Promise<Prompt[]> {
+  return Promise.all(
+    prompts.map(async (prompt) => ({
+      ...prompt,
+      thumbnailUrl: await resolvePromptThumbnail(prompt.result_html),
+    }))
+  )
 }
 
 export const listPublicPrompts = cache(async (limit?: number): Promise<Prompt[]> => {
@@ -34,7 +44,7 @@ export const listPublicPrompts = cache(async (limit?: number): Promise<Prompt[]>
       .order("created_at", { ascending: false })
     if (limit) query = query.limit(limit)
     const { data } = await query
-    return ((data as Omit<Prompt, "content" | "result_html" | "user_id">[]) ?? []).map(asPromptListItem)
+    return ((data as Omit<Prompt, "content" | "user_id">[]) ?? []).map(asPromptListItem)
   })
 })
 
@@ -65,7 +75,7 @@ export async function listPromptsPage({
     const { data, error, count } = await query.range(from, to)
     if (error) return null
     return {
-      rows: ((data as Omit<Prompt, "content" | "result_html" | "user_id">[]) ?? []).map(asPromptListItem),
+      rows: ((data as Omit<Prompt, "content" | "user_id">[]) ?? []).map(asPromptListItem),
       total: count ?? 0,
     }
   })

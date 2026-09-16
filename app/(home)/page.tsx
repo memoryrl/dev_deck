@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
 import { getT } from "@/lib/i18n/dictionary"
-import { buildLandingTopology } from "@/lib/landing/topology"
+import { buildLandingTopology, listLandingModules } from "@/lib/landing/topology"
 
 export default function HomePage() {
   return (
@@ -89,7 +89,7 @@ function ClassicHeroCopy() {
 }
 
 async function HomeLanding() {
-  const data = await getHomeLandingData()
+  const [data, modules] = await Promise.all([getHomeLandingData(), listLandingModules()])
   const featuredHref = data.featured?.href
   const prompts = takeLatest(data.prompts, featuredHref, (item) => `/p/${item.id}`)
   const posts = takeLatest(data.posts, featuredHref, (item) => `/work/${item.id}`)
@@ -97,7 +97,7 @@ async function HomeLanding() {
   return (
     <>
       <StatsStrip {...data.stats} />
-      <ModuleMarquee />
+      <ModuleMarquee modules={modules} />
       <FeaturedWorkCard work={data.featured} />
       <LatestColumns prompts={prompts} posts={posts} />
       <UmpcActivity umpc={data.umpc} activity={data.activity} />

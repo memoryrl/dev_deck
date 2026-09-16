@@ -7,12 +7,13 @@ import { ArticleComments } from "@/components/comments/article-comments"
 import { CopyButton } from "@/components/layout/copy-button"
 import { PublicContainer } from "@/components/layout/public-container"
 import { PromptBodyToggle } from "@/components/prompts/prompt-body-toggle"
+import { ResultPreview } from "@/components/prompts/result-preview"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 import { Badge } from "@/components/ui/badge"
-import { RichContent } from "@/components/editor/rich-content"
 import { currentViewer } from "@/lib/boards/access"
 import { plainTextFromContent } from "@/lib/content"
 import { findNeighbors } from "@/lib/posts/neighbors"
+import { resolveResultEmbed } from "@/lib/embeds/result-preview"
 import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
 
 export default async function PublicPromptPage({
@@ -23,6 +24,7 @@ export default async function PublicPromptPage({
   const prompt = await getPublicPromptById(params.id)
   if (!prompt) notFound()
   const { isOwner } = await currentViewer()
+  const resultEmbed = prompt.result_html?.trim() ? await resolveResultEmbed(prompt.result_html) : null
   const neighbors = findNeighbors(
     await listPublicPrompts(),
     prompt.id,
@@ -49,9 +51,7 @@ export default async function PublicPromptPage({
       <section className="mt-8">
         <p className="text-sm font-semibold text-muted-foreground">예상 결과물</p>
         {prompt.result_html?.trim() ? (
-          <div className="mt-4 overflow-hidden rounded-2xl border bg-card p-4 md:p-6">
-            <RichContent content={prompt.result_html} />
-          </div>
+          <ResultPreview html={prompt.result_html} embed={resultEmbed} />
         ) : (
           <EmptyPlaceholder className="mt-4">아직 등록된 결과물이 없습니다.</EmptyPlaceholder>
         )}

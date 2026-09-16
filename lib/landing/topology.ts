@@ -9,8 +9,8 @@ import type { MenuItem } from "@/types/menu"
 // 08-landing-topology.md 갱신본 참고. "결국 루트 메뉴에 따라 로봇이 배정된다"는
 // 방향에 맞춰, 하드코딩된 PromptKit/CareerLog/Steam 3개 대신 실제 헤더 루트 메뉴
 // (devdeck.menus, location='header', parent_id=null)를 그대로 팀원 책상으로 그린다.
-// 메뉴가 늘거나 줄면 책상 수도 그만큼 늘고 준다(topology-scene.tsx에서 최대 3열
-// 그리드로 배치). 하위 메뉴는 그 책상의 목록 자리에 그대로 나온다. 팀장 자리는
+// 메뉴가 늘거나 줄면 책상 수도 그만큼 늘고 준다(topology-scene.tsx에서 한 행 4석,
+// 마주보는 페어 2개). 하위 메뉴는 그 책상의 목록 자리에 그대로 나온다. 팀장 자리는
 // "관리자 대시보드"(components/layout/admin-nav.ts, ADMIN_NAV)를 나타내는 좌석인데,
 // 관리자로 로그인했을 때만 통째로 존재한다 — 그 외에는 좌석 자체가 배열에 없다
 // (잠긴 채로 보여주지 않고 아예 안 보인다).
@@ -86,8 +86,11 @@ function buildAdminModule(t: (key: string) => string): TopologyModuleNode {
   }
 }
 
-export async function buildLandingTopology(): Promise<TopologyData> {
-  const [allMenus, viewer] = await Promise.all([listAllMenus(), currentViewer()])
+// 헤더 루트 메뉴(devdeck.menus, location='header', parent_id=null)를 팀원 모듈
+// 목록으로 만든다. 토폴로지 3D 책상뿐 아니라 랜딩 페이지의 다른 섹션(모듈 마퀴 등)도
+// 이 함수 하나를 같이 써서, 메뉴가 추가/변경되면 두 군데 다 자동으로 반영된다.
+export async function listLandingModules(): Promise<TopologyModuleNode[]> {
+  const allMenus = await listAllMenus()
   const { t } = getT()
 
   const headerItems = allMenus.filter((item) => item.location === "header" && isVisible(item))
@@ -103,7 +106,7 @@ export async function buildLandingTopology(): Promise<TopologyData> {
 
   const roots = byParent.get(null) ?? []
 
-  const memberModules: TopologyModuleNode[] = roots.map((root, index) => {
+  return roots.map((root, index) => {
     const children = byParent.get(root.id) ?? []
     const items: TopologyItemNode[] = children.slice(0, MAX_ITEMS_PER_MODULE).map((child) => ({
       id: child.id,
@@ -123,6 +126,11 @@ export async function buildLandingTopology(): Promise<TopologyData> {
       items,
     }
   })
+}
+
+export async function buildLandingTopology(): Promise<TopologyData> {
+  const [memberModules, viewer] = await Promise.all([listLandingModules(), currentViewer()])
+  const { t } = getT()
 
   // 요청사항: "관리자 메뉴와 로봇은 관리자가 로그인했을 때만 보이게 한다" — 관리자가
   // 아니면 이 좌석 자체를 배열에서 뺀다(잠긴 상태로도 보여주지 않음).

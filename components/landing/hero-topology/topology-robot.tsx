@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef } from "react"
 import { Html, useAnimations, useGLTF } from "@react-three/drei"
-import { useFrame } from "@react-three/fiber"
+import { useFrame, useThree } from "@react-three/fiber"
 import { SkeletonUtils } from "three-stdlib"
 import {
   Color,
   MathUtils,
   MeshStandardMaterial,
+  Vector3,
   type Group,
   type Material,
   type Mesh,
@@ -15,15 +16,14 @@ import {
 } from "three"
 
 const FACE_DESK = 0
-const DEFAULT_FACE_USER = Math.PI
 const TURN_SPEED = 7.5
 
 // public/models/robot.glb: quaternius.itch.io/lowpoly-robot (CC0) — FBX를
 // FBX2glTF로 변환. 바인드 포즈 기준 키가 약 4.5유닛이라 책상 스케일에 맞춰
 // 축소하고, 변환 과정에서 로봇이 뒤(-Z)를 보게 나와 데스크 좌표계의 "정면"
 // (+Z, 사용자)에 맞추는 보정 회전을 더한다.
-// 모니터는 책상 로컬 -Z, 사용자는 +Z. 바깥 그룹 yaw + 보정 π가 실제 시선이다.
-// idle yaw=0 → 시선 -Z(모니터), 클릭 yaw=π → 시선 +Z(사용자).
+// 모니터는 책상 로컬 -Z, 스툴/로봇은 +Z. 바깥 그룹 yaw + 보정 π가 실제 시선이다.
+// idle yaw=0 → 시선 -Z(모니터). 선택되면 부모 좌표에서 실제 카메라를 향해 돈다.
 const MODEL_URL = "/models/robot.glb"
 const MODEL_SCALE = 0.17
 const MODEL_FACING_OFFSET = Math.PI
@@ -153,29 +153,40 @@ export function TopologyRobot({
   skinIndex = 0,
   active,
   hovered = false,
-  faceYaw = DEFAULT_FACE_USER,
   guideTitle,
   guideDescription,
 }: {
   skinIndex?: number
   active: boolean
   hovered?: boolean
-  // 확대 카메라가 대각선에서 접근하는 쪽으로 로봇이 돌아본다(topology-camera.ts의
-  // focusFacingYaw로 topology-desk.tsx가 계산해 넘겨준다). 안 넘기면 예전처럼 정면(+Z).
-  faceYaw?: number
   guideTitle: string
   guideDescription: string
 }) {
   const groupRef = useRef<Group>(null)
   const facing = useRef(FACE_DESK)
+  const lookScratch = useRef(new Vector3())
+  const { camera } = useThree()
   const skin = useMemo(() => skinFor(skinIndex), [skinIndex])
   const highlight = skin.main
 
   useFrame((_, delta) => {
     const group = groupRef.current
     if (!group) return
-    const target = active ? faceYaw : FACE_DESK
-    facing.current = MathUtils.damp(facing.current, target, TURN_SPEED, delta)
+    let target = FACE_DESK
+    if (active) {
+      // 부모(좌석) 좌표에서 카메라를 본다. 로봇 자신의 yaw를 포함하면 목표각이
+      // 매 프레임 따라가며 흔들린다. 시선은 로컬 -Z이므로 atan2(-x, -z).
+      const parent = group.parent
+      if (parent) {
+        const local = lookScratch.current
+        local.copy(camera.position)
+        parent.worldToLocal(local)
+        target = Math.atan2(-local.x, -local.z)
+      }
+    }
+    const current = facing.current
+    const shortest = Math.atan2(Math.sin(target - current), Math.cos(target - current))
+    facing.current = MathUtils.damp(current, current + shortest, TURN_SPEED, delta)
     group.rotation.y = facing.current
   })
 

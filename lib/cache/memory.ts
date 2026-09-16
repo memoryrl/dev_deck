@@ -7,6 +7,7 @@ export const MEMORY_TTL = {
   menus: 60_000,
   publicList: 30_000,
   board: 60_000,
+  previewEmbed: 30 * 60_000,
 } as const
 
 export const memoryKey = {
@@ -18,6 +19,7 @@ export const memoryKey = {
   skills: (role: string) => `public:skills:${role}`,
   reviews: (role: string) => `public:reviews:${role}`,
   boardAll: "board:system:all",
+  previewEmbed: (url: string) => `preview:embed:${url}`,
 }
 
 export function withMemoryCache<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {

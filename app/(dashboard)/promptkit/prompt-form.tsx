@@ -52,7 +52,9 @@ export function PromptForm({ prompt, returnTo, deleteTo }: { prompt?: Prompt; re
       </div>
       <div>
         <Label>예상 결과물</Label>
-        <p className="mt-1 text-xs text-muted-foreground">방문자가 먼저 보는 화면·산출물입니다. 스크린샷이나 미리보기를 넣으세요.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          방문자가 먼저 보는 화면입니다. 스크린샷을 넣거나, 21st.dev·Spline 공개 미리보기 링크를 넣으면 페이지 안에 그대로 임베드됩니다.
+        </p>
         <div className="mt-2">
           <RichEditor name="result_html" defaultValue={prompt?.result_html ?? ""} placeholder="스크린샷·미리보기·산출물을 넣으세요" />
         </div>

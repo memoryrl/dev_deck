@@ -6,7 +6,6 @@ import { useThree, type ThreeEvent } from "@react-three/fiber"
 import { Lock } from "lucide-react"
 import type { Vector3 } from "three"
 import { useI18n } from "@/components/i18n/i18n-provider"
-import { focusFacingYaw } from "@/components/landing/hero-topology/topology-camera"
 import { TopologyRobot } from "@/components/landing/hero-topology/topology-robot"
 import { cn } from "@/lib/utils"
 import type { TopologyModuleNode } from "@/lib/landing/topology"
@@ -127,11 +126,6 @@ export function TopologyDesk({
   const leaveTimer = useRef<number | null>(null)
   const width = wide ? 2.3 : 1.7
   const lit = hovered || active
-  // topology-scene.tsx의 CameraFocus가 이 책상을 확대할 때 어느 쪽 대각선(+X/-X)에서
-  // 접근하는지와 같은 기준(position.x < -0.15)으로 계산해야, 로봇이 돌아보는 방향과
-  // 실제 카메라가 서는 위치가 어긋나지 않는다.
-  const focusSide: 1 | -1 = position.x < -0.15 ? -1 : 1
-  const faceYaw = focusFacingYaw(focusSide)
 
   function enterHover() {
     if (leaveTimer.current != null) {
@@ -236,7 +230,6 @@ export function TopologyDesk({
           skinIndex={skinIndex}
           active={active}
           hovered={hovered}
-          faceYaw={faceYaw}
           guideTitle={t("landing.robotGuideTitle", { label: module.label })}
           guideDescription={module.guideDescription}
         />
@@ -248,7 +241,7 @@ export function TopologyDesk({
 
       {active ? null : (
         <Html
-          position={[0, 1.85, 0]}
+          position={[0, 1.85, 0.55]}
           center
           occlude={false}
           zIndexRange={[20, 0]}

@@ -10,7 +10,7 @@ import { getBoardBySlug, listBoardPostsPage } from "@/lib/boards/public"
 import { isSystemBoard, systemPublicHref } from "@/lib/boards/system"
 import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery, type PagedResult } from "@/lib/pagination"
-import { listPromptsPage } from "@/lib/prompts/public"
+import { listPromptsPage, withPromptThumbnails } from "@/lib/prompts/public"
 import { listGameReviewsPage } from "@/lib/steam/reviews"
 
 export default async function PublicBoardPage({
@@ -48,6 +48,7 @@ export default async function PublicBoardPage({
         paged={paged}
         empty="아직 글이 없습니다."
         items={paged.rows}
+        layout={board.kind === "prompts" ? "cards" : "list"}
       />
 
       {canWrite ? (
@@ -84,13 +85,15 @@ async function listGenericBoardPage(boardId: string, slug: string, page: number,
 async function listSystemPublicPage(kind: "prompts" | "career" | "steam", page: number, q: string) {
   if (kind === "prompts") {
     const prompts = await listPromptsPage({ page, q, publicOnly: true })
+    const rows = await withPromptThumbnails(prompts.rows)
     return {
       ...prompts,
-      rows: prompts.rows.map((prompt) => ({
+      rows: rows.map((prompt) => ({
         href: systemPublicHref(kind, prompt.id),
         title: prompt.title,
         createdAt: prompt.created_at,
         meta: prompt.category,
+        thumbnailUrl: prompt.thumbnailUrl,
       })),
     } satisfies PagedResult<PostListRow>
   }

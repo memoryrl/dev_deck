@@ -14,6 +14,7 @@ export type PostListRow = {
   createdAt: string
   author?: string | null
   meta?: string | null
+  thumbnailUrl?: string | null
 }
 
 export function PostList({
@@ -27,6 +28,7 @@ export function PostList({
   pathname,
   searchQuery = "",
   extraParams,
+  layout = "list",
 }: {
   items: PostListRow[]
   empty?: string
@@ -38,6 +40,7 @@ export function PostList({
   pathname?: string
   searchQuery?: string
   extraParams?: Record<string, string | number | undefined>
+  layout?: "list" | "cards"
 }) {
   const { t, locale } = getT()
   const emptyText = empty ?? t("list.emptyPosts")
@@ -94,6 +97,51 @@ export function PostList({
         <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
           {searched ? t("list.emptySearch") : emptyText}
         </p>
+      ) : layout === "cards" ? (
+        <ul
+          className={cn(
+            "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3",
+            displayCount || searchable ? "mt-4" : null
+          )}
+        >
+          {rows.map((item, index) => {
+            const author = item.author?.trim() || authorName
+            const number = paged ? (paged.page - 1) * paged.pageSize + index + 1 : index + 1
+            const thumb = item.thumbnailUrl?.trim()
+            return (
+              <li key={`${item.href}-${index}`}>
+                <Link
+                  href={item.href}
+                  className="flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:bg-muted/30 dark:bg-card"
+                >
+                  <div className="aspect-[16/10] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb} alt="" className="h-full w-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="flex flex-1 flex-col px-4 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="min-w-0 text-[15px] leading-snug">
+                        <span className="text-muted-foreground">No. {number}</span>
+                        <span className="mx-2 text-foreground/20">|</span>
+                        <span className="font-semibold text-foreground">{item.title}</span>
+                      </p>
+                      {item.meta ? (
+                        <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">{item.meta}</span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {t("common.author")} {author}
+                      <span className="mx-1.5 text-foreground/20">|</span>
+                      {t("common.postedAt")} {formatBoardDateTime(item.createdAt, locale)}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       ) : (
         <ul
           className={cn(

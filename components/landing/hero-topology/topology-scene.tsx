@@ -6,7 +6,7 @@ import { Html, OrbitControls } from "@react-three/drei"
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib"
 import * as THREE from "three"
 import { TopologyDesk } from "@/components/landing/hero-topology/topology-desk"
-import { FOCUS_CAM_LOCAL } from "@/components/landing/hero-topology/topology-camera"
+import { FOCUS_WORLD_OFFSET } from "@/components/landing/hero-topology/topology-camera"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
 
 const TINT_COLOR: Record<TopologyTint, string> = {
@@ -15,34 +15,44 @@ const TINT_COLOR: Record<TopologyTint, string> = {
   espresso: "#1a1614",
 }
 
-// 루트 메뉴 수만큼 책상이 늘고 주는 동적 레이아웃. 관리자 좌석(isLead, 로그인한
-// 관리자에게만 존재)이 있으면 TV 등지는 넓은 책상으로 방 안쪽 중앙-뒤에 앉히고,
-// 나머지 팀원 책상은 그 앞쪽에 최대 3열 그리드로 채운다 — 4번째 책상부터는 다음
-// 줄로 넘어간다. 바닥·벽도 열·행 수에 비례해 커진다.
-const GRID_COLS = 3
-const COL_SPACING = 2.1
-const ROW_SPACING = 1.85
+// 동적 오피스 배치.
+// - 팀장(isLead): TV를 등지고, 팀원 쪽 파티션을 바라본다 (rotationY = π).
+// - 팀원: 한 행에 4석 = 마주보는 페어 2개. 페어 사이(모니터끼리)에 파티션.
+//   왼쪽 좌석 yaw = -π/2 (파트너를 향해 +X), 오른쪽 yaw = +π/2 (파트너를 향해 -X).
+// - 남는 인원은 다음 행으로 넘어가고, 페어가 둘 다 채워졌을 때만 가운데 파티션을 둔다.
+const SEATS_PER_ROW = 4
+const PAIR_GAP = 1.62
+const CLUSTER_X = 2.42
+const PAIR_CENTERS = [-CLUSTER_X, CLUSTER_X] as const
+const ROW_SPACING = 2.5
 const LEAD_WIDTH = 2.3
-const MEMBER_WIDTH = 1.7
 const ROOM_MARGIN = 1.8
-const MIN_ROOM_WIDTH = 6.4
-const MIN_ROOM_DEPTH = 7.0
-const REFERENCE_ROOM_WIDTH = 7.2
-const REFERENCE_ROOM_DEPTH = 7.0
-const LEAD_Z = -2.3
-const MEMBER_Z_START = 0.6
+const MIN_ROOM_WIDTH = 9.2
+const MIN_ROOM_DEPTH = 7.4
+const REFERENCE_ROOM_WIDTH = 9.2
+const REFERENCE_ROOM_DEPTH = 7.4
+const LEAD_Z = -2.45
+const MEMBER_Z_START = 0.95
+const FACE_LEFT = -Math.PI / 2
+const FACE_RIGHT = Math.PI / 2
+const FACE_TEAM = Math.PI
 
-const BASE_ZOOM_AT_REFERENCE = 92
+const BASE_ZOOM_AT_REFERENCE = 78
 const MIN_BASE_ZOOM = 40
 const FOCUS_ZOOM = 124
 const LERP_FACTOR = 0.28
 const FOCUS_ARRIVE = 0.05
 const ROBOT_LOCAL = new THREE.Vector3(0, 1.05, 0.55)
-// 정면(+Z)이 아니라 기본 아이소메트릭과 같은 대각(옆+앞+위)에서 들여다본다.
-// 같은 줄 로봇이 카메라와 타깃 사이에 끼지 않게, 방 바깥쪽(+X 또는 -X)을 고른다.
-// FOCUS_CAM_LOCAL은 topology-camera.ts에서 가져온다 — topology-robot.tsx가 로봇을
-// "카메라 쪽으로" 돌리는 각도 계산도 이 값을 같이 써야 방향이 어긋나지 않는다.
 const Y_AXIS = new THREE.Vector3(0, 1, 0)
+
+function memberSeatPose(col: number): { x: number; rotationY: number } {
+  const pair = Math.floor(col / 2)
+  const isLeft = col % 2 === 0
+  return {
+    x: PAIR_CENTERS[pair] + (isLeft ? -PAIR_GAP / 2 : PAIR_GAP / 2),
+    rotationY: isLeft ? FACE_LEFT : FACE_RIGHT,
+  }
+}
 
 const FLOOR_BASE_COLOR = "#cbb28f"
 const FLOOR_TOP_COLOR = "#f3ead9"
@@ -57,34 +67,32 @@ function computeLayout(modules: TopologyModuleNode[]) {
   const hasLead = leadIndex >= 0
   const memberModules = hasLead ? modules.filter((_, index) => index !== leadIndex) : modules
   const memberCount = memberModules.length
-  const numRows = memberCount > 0 ? Math.ceil(memberCount / GRID_COLS) : 0
+  const numRows = memberCount > 0 ? Math.ceil(memberCount / SEATS_PER_ROW) : 0
 
   const seats = new Map<string, Seat>()
   if (hasLead) {
-    seats.set(modules[leadIndex].id, { position: [0, 0, LEAD_Z], rotationY: 0, wide: true })
+    seats.set(modules[leadIndex].id, { position: [0, 0, LEAD_Z], rotationY: FACE_TEAM, wide: true })
   }
 
-  let widestRow = 0
   const partitions: RowPartition[] = []
   for (let row = 0; row < numRows; row++) {
-    const colsInRow = Math.min(GRID_COLS, memberCount - row * GRID_COLS)
-    widestRow = Math.max(widestRow, colsInRow)
+    const colsInRow = Math.min(SEATS_PER_ROW, memberCount - row * SEATS_PER_ROW)
     const z = MEMBER_Z_START + row * ROW_SPACING
     for (let col = 0; col < colsInRow; col++) {
-      const seatModule = memberModules[row * GRID_COLS + col]
-      const x = (col - (colsInRow - 1) / 2) * COL_SPACING
-      seats.set(seatModule.id, { position: [x, 0, z], rotationY: 0, wide: false })
-      if (col < colsInRow - 1) partitions.push({ x: x + COL_SPACING / 2, z })
+      const seatModule = memberModules[row * SEATS_PER_ROW + col]
+      const pose = memberSeatPose(col)
+      seats.set(seatModule.id, { position: [pose.x, 0, z], rotationY: pose.rotationY, wide: false })
+    }
+    for (let pair = 0; pair < PAIR_CENTERS.length; pair++) {
+      const rightCol = pair * 2 + 1
+      if (rightCol < colsInRow) partitions.push({ x: PAIR_CENTERS[pair], z })
     }
   }
 
-  const memberRowSpan = widestRow > 0 ? (widestRow - 1) * COL_SPACING + MEMBER_WIDTH : 0
-  const roomWidth = Math.max(
-    memberRowSpan + ROOM_MARGIN,
-    hasLead ? LEAD_WIDTH + ROOM_MARGIN : 0,
-    MIN_ROOM_WIDTH
-  )
-  const roomDepth = Math.max(numRows > 0 ? (numRows - 1) * ROW_SPACING + 3.4 : 3.4, MIN_ROOM_DEPTH)
+  const outerDeskX = CLUSTER_X + PAIR_GAP / 2
+  const memberSpan = memberCount > 0 ? outerDeskX * 2 + 1.1 : 0
+  const roomWidth = Math.max(memberSpan + ROOM_MARGIN, hasLead ? LEAD_WIDTH + ROOM_MARGIN : 0, MIN_ROOM_WIDTH)
+  const roomDepth = Math.max(numRows > 0 ? (numRows - 1) * ROW_SPACING + 4.2 : 4.2, MIN_ROOM_DEPTH)
 
   const memberCenterZ = numRows > 0 ? MEMBER_Z_START + ((numRows - 1) * ROW_SPACING) / 2 : MEMBER_Z_START
   const roomTarget: [number, number, number] = [
@@ -142,9 +150,7 @@ function CameraFocus({
         scratch.current.copy(ROBOT_LOCAL).applyAxisAngle(Y_AXIS, layout.rotationY).add(layout.position)
         desiredTarget.current.copy(scratch.current)
         desiredTarget.current.y += 0.22
-        const side = layout.position.x < -0.15 ? -1 : 1
-        scratch.current.set(FOCUS_CAM_LOCAL.x * side, FOCUS_CAM_LOCAL.y, FOCUS_CAM_LOCAL.z)
-        desiredCam.current.copy(scratch.current).applyAxisAngle(Y_AXIS, layout.rotationY).add(layout.position)
+        desiredCam.current.copy(scratch.current).add(FOCUS_WORLD_OFFSET)
         desiredZoom.current = FOCUS_ZOOM
       } else {
         desiredTarget.current.set(...roomTarget)
@@ -260,15 +266,21 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
     ? { position: new THREE.Vector3(...activeSeat.position), rotationY: activeSeat.rotationY }
     : null
 
-  const wallWidth = layout.roomWidth
-  const floorWidth = wallWidth + 0.4
-  const wallCenterX = 0
-  const wallZ = LEAD_Z - 1.1
-  const sideWallX = -wallWidth / 2 - 0.1
+  // 방 프레임은 바닥 상판을 단일 기준 박스로 둔다.
+  // 뒷벽(TV)·옆벽(차트)은 그 테두리에 맞춰 붙이고, 두께만큼 안쪽에서 맞대어
+  // 꼭짓점이 벌어지거나 어긋나지 않게 한다.
+  const WALL_T = 0.06
+  const WALL_H = 2.2
+  const FLOOR_OVERHANG = 0.2
+  const floorWidth = layout.roomWidth
   const floorDepth = layout.roomDepth
-  const floorCenterZ = wallZ + floorDepth / 2 - 0.2
-  const sideWallLength = floorDepth + 1.0
-  const sideWallCenterZ = wallZ + sideWallLength / 2 - 0.3
+  const floorMinZ = LEAD_Z - 1.1
+  const floorCenterZ = floorMinZ + floorDepth / 2
+  const floorMinX = -floorWidth / 2
+  const backWallZ = floorMinZ + WALL_T / 2
+  const sideWallX = floorMinX + WALL_T / 2
+  const sideWallDepth = floorDepth - WALL_T
+  const sideWallCenterZ = floorMinZ + WALL_T + sideWallDepth / 2
 
   return (
     <Canvas
@@ -335,7 +347,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
           아이소메트릭 카메라에서 이 사각 플랫폼은 마름모(다이아몬드) 형태로 보인다.
           루트 메뉴 수(책상 수·줄 수)에 맞춰 폭과 깊이가 함께 늘고 준다. */}
       <mesh position={[0, -0.09, floorCenterZ]}>
-        <boxGeometry args={[floorWidth + 0.4, 0.14, floorDepth + 0.4]} />
+        <boxGeometry args={[floorWidth + FLOOR_OVERHANG * 2, 0.14, floorDepth + FLOOR_OVERHANG * 2]} />
         <meshStandardMaterial color={FLOOR_BASE_COLOR} roughness={0.9} />
       </mesh>
       <mesh position={[0, -0.02, floorCenterZ]}>
@@ -343,19 +355,19 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         <meshStandardMaterial color={FLOOR_TOP_COLOR} roughness={0.85} />
       </mesh>
 
-      {/* 뒷벽(TV) + 옆벽(화이트보드) — "투명한 가벽"이라 반투명 유리 재질로 만든다.
-          옆벽 길이도 방 깊이(줄 수)에 맞춰 늘어난다. */}
-      <mesh position={[wallCenterX, 1.1, wallZ]}>
-        <boxGeometry args={[wallWidth, 2.2, 0.06]} />
+      {/* 뒷벽(TV) + 옆벽(화이트보드) — 바닥 상판 테두리에 맞춘 반투명 가벽.
+          옆벽은 뒷벽 두께만큼 짧게 해서 코너에서 맞댄다. */}
+      <mesh position={[0, WALL_H / 2, backWallZ]}>
+        <boxGeometry args={[floorWidth, WALL_H, WALL_T]} />
         <meshStandardMaterial color={WALL_COLOR} transparent opacity={0.24} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[sideWallX, 1.1, sideWallCenterZ]}>
-        <boxGeometry args={[0.06, 2.2, sideWallLength]} />
+      <mesh position={[sideWallX, WALL_H / 2, sideWallCenterZ]}>
+        <boxGeometry args={[WALL_T, WALL_H, sideWallDepth]} />
         <meshStandardMaterial color={WALL_COLOR} transparent opacity={0.24} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
 
       {/* TV — 팀장 책상 뒤(팀장 자리가 있을 때). "팀장이 TV 등지고 앉는다"는 요청의 기준점 */}
-      <group position={[wallCenterX - 0.7, 1.55, wallZ + 0.06]}>
+      <group position={[-0.7, 1.55, backWallZ + WALL_T / 2 + 0.01]}>
         <mesh>
           <boxGeometry args={[1.5, 0.85, 0.06]} />
           <meshStandardMaterial color="#201e1c" roughness={0.4} />
@@ -370,7 +382,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
       </group>
 
       {/* 화이트보드 — 옆벽에 붙여 +x 방향(방 안쪽)을 바라보게 한다 */}
-      <group position={[sideWallX + 0.04, 1.35, wallZ + 3.2]}>
+      <group position={[sideWallX + WALL_T / 2 + 0.01, 1.35, floorCenterZ + 0.35]}>
         <mesh>
           <boxGeometry args={[0.05, 1.0, 1.5]} />
           <meshStandardMaterial color="#f7f4ee" roughness={0.6} />
@@ -386,12 +398,12 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
       {/* 파티션 — 팀장 구역과 팀원 구역 사이 (팀장 자리가 있을 때만) */}
       {layout.hasLead ? (
         <mesh position={[0, 0.55, (LEAD_Z + MEMBER_Z_START) / 2 - 0.15]}>
-          <boxGeometry args={[Math.max(layout.roomWidth - 1.6, 2.0), 0.9, 0.08]} />
+          <boxGeometry args={[Math.max(floorWidth - 1.6, 2.0), 0.9, 0.08]} />
           <meshStandardMaterial color={PARTITION_COLOR} roughness={0.75} />
         </mesh>
       ) : null}
 
-      {/* 파티션 — 같은 줄에 나란히 앉은 팀원 책상들 사이, 줄마다 반복 */}
+      {/* 파티션 — 마주보는 책상 사이(페어가 채워진 자리만) */}
       {layout.partitions.map((partition, index) => (
         <mesh key={index} position={[partition.x, 0.55, partition.z]}>
           <boxGeometry args={[0.08, 0.9, 1.7]} />
@@ -399,7 +411,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         </mesh>
       ))}
 
-      <OfficePlant position={[wallWidth / 2 - 0.5, 0, LEAD_Z - 0.1]} />
+      <OfficePlant position={[floorWidth / 2 - 0.5, 0, LEAD_Z - 0.1]} />
 
       {data.modules.map((module, index) => {
         const seat = deskLayout.get(module.id)

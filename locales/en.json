@@ -98,6 +98,8 @@
     "readMore": "Read",
     "skills": "Skills",
     "recentActivity": "Recent activity",
+    "recentActivityLede": "The latest published or updated items.",
+    "recentActivityCount": "{{count}}",
     "classic": "Classic",
     "topology": "Topology",
     "heroViewAria": "Switch landing hero view",
