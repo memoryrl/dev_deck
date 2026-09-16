@@ -15,7 +15,7 @@ import {
 } from "three"
 
 const FACE_DESK = 0
-const FACE_USER = Math.PI
+const DEFAULT_FACE_USER = Math.PI
 const TURN_SPEED = 7.5
 
 // public/models/robot.glb: quaternius.itch.io/lowpoly-robot (CC0) — FBX를
@@ -56,27 +56,27 @@ function skinFor(index: number): RobotSkin {
 // 요청사항: 예전 상자 로봇 시절 몸통을 휘감던 고리 3개(haloRef)는 실제 glTF
 // 모델의 어깨/머리 높이와 어긋나 클릭 시 카메라가 가까이 붙으면 "머리 위에 원반이
 // 뜬 것처럼" 보였다 — 발밑 스포트라이트 링만 남긴다.
-function RobotHighlight({ color }: { color: string }) {
+function RobotHighlight({ color, soft = false }: { color: string; soft?: boolean }) {
   const ringRef = useRef<Mesh>(null)
   const washRef = useRef<Mesh>(null)
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
-    const pulse = 1 + Math.sin(t * 3.4) * 0.06
+    const pulse = 1 + Math.sin(t * 3.4) * (soft ? 0.04 : 0.06)
     ringRef.current?.scale.set(pulse, pulse, 1)
     const wash = washRef.current?.material as MeshBasicMaterial | undefined
-    if (wash) wash.opacity = 0.16 + Math.sin(t * 3.4) * 0.07
+    if (wash) wash.opacity = (soft ? 0.12 : 0.16) + Math.sin(t * 3.4) * 0.07
   })
 
   return (
     <group>
       <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[0.38, 0.5, 48]} />
-        <meshBasicMaterial color={color} transparent opacity={0.95} depthWrite={false} />
+        <meshBasicMaterial color={color} transparent opacity={soft ? 0.7 : 0.95} depthWrite={false} />
       </mesh>
       <mesh ref={washRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
         <ringGeometry args={[0.5, 0.82, 48]} />
-        <meshBasicMaterial color={color} transparent opacity={0.2} depthWrite={false} />
+        <meshBasicMaterial color={color} transparent opacity={soft ? 0.14 : 0.2} depthWrite={false} />
       </mesh>
     </group>
   )
@@ -87,7 +87,14 @@ function tintClone(material: Material, skin: RobotSkin): Material {
   if (!(cloned instanceof MeshStandardMaterial)) return cloned
   if (cloned.name === "Main") cloned.color = new Color(skin.main)
   else if (cloned.name === "Grey") cloned.color = new Color(skin.grey)
-  else if (cloned.name === "Black") cloned.color = new Color(skin.black)
+  else if (cloned.name === "Black") {
+    // 눈/바이저(Black)가 무광 평면이라 밋밋해 보인다는 피드백 — 광택 있는 렌즈처럼
+    // roughness를 낮추고 metalness를 올려 조명 방향에 또렷한 하이라이트가 지도록
+    // 해서 입체감을 준다.
+    cloned.color = new Color(skin.black)
+    cloned.roughness = 0.12
+    cloned.metalness = 0.7
+  }
   return cloned
 }
 
@@ -145,11 +152,19 @@ function RobotModel({ skin, active }: { skin: RobotSkin; active: boolean }) {
 export function TopologyRobot({
   skinIndex = 0,
   active,
-  guideText,
+  hovered = false,
+  faceYaw = DEFAULT_FACE_USER,
+  guideTitle,
+  guideDescription,
 }: {
   skinIndex?: number
   active: boolean
-  guideText: string
+  hovered?: boolean
+  // 확대 카메라가 대각선에서 접근하는 쪽으로 로봇이 돌아본다(topology-camera.ts의
+  // focusFacingYaw로 topology-desk.tsx가 계산해 넘겨준다). 안 넘기면 예전처럼 정면(+Z).
+  faceYaw?: number
+  guideTitle: string
+  guideDescription: string
 }) {
   const groupRef = useRef<Group>(null)
   const facing = useRef(FACE_DESK)
@@ -159,28 +174,32 @@ export function TopologyRobot({
   useFrame((_, delta) => {
     const group = groupRef.current
     if (!group) return
-    const target = active ? FACE_USER : FACE_DESK
+    const target = active ? faceYaw : FACE_DESK
     facing.current = MathUtils.damp(facing.current, target, TURN_SPEED, delta)
     group.rotation.y = facing.current
   })
 
   return (
     <group ref={groupRef} rotation={[0, FACE_DESK, 0]}>
-      {active ? <RobotHighlight color={highlight} /> : null}
+      {active || hovered ? <RobotHighlight color={highlight} soft={hovered && !active} /> : null}
       {active ? <pointLight color={highlight} intensity={1.4} distance={2.4} position={[0, 0.7, 0.2]} /> : null}
 
       <RobotModel skin={skin} active={active} />
 
       {active ? (
         <Html
-          position={[0, 1.28, 0]}
+          position={[0, 1.68, 0.12]}
           center
           occlude={false}
           zIndexRange={[40, 0]}
+          wrapperClass="topology-speech-html"
           className="pointer-events-none select-none"
         >
           <div className="topology-speech">
-            <p className="topology-speech-text">{guideText}</p>
+            <p className="topology-speech-text">
+              <span className="topology-speech-title">{guideTitle}</span>
+              <span className="topology-speech-detail">{guideDescription}</span>
+            </p>
             <span className="topology-speech-tail" aria-hidden />
           </div>
         </Html>

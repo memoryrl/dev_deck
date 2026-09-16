@@ -8,6 +8,7 @@ import { PublicContainer } from "@/components/layout/public-container"
 import { RichContent } from "@/components/editor/rich-content"
 import { boardPath, roleAtLeast } from "@/lib/access"
 import { currentViewer } from "@/lib/boards/access"
+import { commentRoleFor } from "@/lib/boards/permissions"
 import { getBoardBySlug, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
 import { findNeighbors } from "@/lib/posts/neighbors"
@@ -65,7 +66,12 @@ export default async function PublicBoardPostPage({
           view
         )}
         <PostPager placement="bottom" listHref={listHref} {...neighbors} />
-        <ArticleComments targetType="board" targetId={post.id} returnTo={`${listHref}/${post.id}`} />
+        <ArticleComments
+          targetType="board"
+          targetId={post.id}
+          returnTo={`${listHref}/${post.id}`}
+          commentRole={commentRoleFor(board)}
+        />
       </ArticleReader>
     </PublicContainer>
   )

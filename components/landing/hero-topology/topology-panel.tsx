@@ -55,7 +55,15 @@ function popupSide(index: number): "left" | "right" {
   return index % 2 === 0 ? "left" : "right"
 }
 
-export function TopologyPanel({ data }: { data: TopologyData }) {
+export function TopologyPanel({
+  data,
+  className,
+  panPixels = 0,
+}: {
+  data: TopologyData
+  className?: string
+  panPixels?: number
+}) {
   const { t } = useI18n()
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
   const activeModule = data.modules.find((module) => module.id === activeModuleId) ?? null
@@ -102,8 +110,8 @@ export function TopologyPanel({ data }: { data: TopologyData }) {
   const tint = activeCard ? TINT_FACE[activeCard.tint] : TINT_FACE.champagne
 
   return (
-    <div className="relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] md:h-[640px]">
-      <TopologyScene data={data} activeModuleId={activeModuleId} onSelectModule={setActiveModuleId} />
+    <div className={cn("relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] md:h-[640px]", className)}>
+      <TopologyScene data={data} activeModuleId={activeModuleId} onSelectModule={setActiveModuleId} panPixels={panPixels} />
 
       <TopologyIntro
         open={introOpen}
@@ -121,7 +129,7 @@ export function TopologyPanel({ data }: { data: TopologyData }) {
       >
         <aside
           key={activeCard?.id ?? "dock"}
-          className={cn("topology-dock w-[min(22.5rem,calc(100vw-2rem))]", open && "is-open")}
+          className={cn("topology-dock w-[min(22.5rem,calc(100%-2rem))]", open && "is-open")}
         >
           {activeCard ? (
             <div

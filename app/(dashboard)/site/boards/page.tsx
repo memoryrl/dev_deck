@@ -41,6 +41,7 @@ export default async function SiteBoardsPage() {
                   {board.is_active ? <Badge variant="secondary">활성</Badge> : <Badge>비활성</Badge>}
                   <Badge variant="secondary">읽기 {roleLabel(board.view_role)}</Badge>
                   <Badge variant="secondary">쓰기 {roleLabel(board.write_role)}</Badge>
+                  <Badge variant="secondary">댓글 {roleLabel(board.comment_role)}</Badge>
                   {isSystemBoard({ kind: board.kind ?? "generic" }) ? (
                     <Badge variant="secondary">삭제 불가</Badge>
                   ) : null}

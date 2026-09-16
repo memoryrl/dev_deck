@@ -166,7 +166,8 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 | description | TEXT | | |
 | kind | TEXT | `generic` / `prompts` / `career` / `steam` | 시스템 kind는 행 1개 |
 | view_role | TEXT | `visitor` / `member` / `owner` | 읽기 최소 권한 |
-| write_role | TEXT | `member` / `owner` | 쓰기 최소 권한. 시스템은 owner 고정 |
+| write_role | TEXT | `member` / `owner` | 글쓰기 최소 권한. 시스템은 owner 고정. 공지 `owner`, 자유게시판 `member` |
+| comment_role | TEXT | `visitor` / `member` / `owner` | 댓글 최소 권한. 기본 `visitor`. 공지·자유게시판은 `member` |
 | is_active | BOOLEAN | DEFAULT true | |
 | sort_order | INT | DEFAULT 0 | |
 | created_at / updated_at | timestamptz | | |
@@ -220,7 +221,7 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 
 저장 시 `mask_profanity()`가 단어 단위로 치환. 관리자만 CRUD.
 
-기존 DB는 `supabase/patch-comments.sql`을 실행한다. 댓글 본문을 CKEditor HTML로 쓰려면 `supabase/patch-comments-html.sql`도 실행한다.
+기존 DB는 `supabase/patch-comments.sql`을 실행한다. 댓글 본문을 CKEditor HTML로 쓰려면 `supabase/patch-comments-html.sql`도 실행한다. 커뮤니티 게시판 권한(공지 관리자 글쓰기, 댓글 회원 이상, 자유게시판 회원 글쓰기)은 `supabase/patch-community-roles.sql`이다.
 
 ### 2.11 `supabase_health_checks`
 
@@ -335,7 +336,7 @@ ON auth.users INSERT
 | 대상 | SELECT | 쓰기 |
 | --- | --- | --- |
 | boards | owner 또는 (활성 + view_role 충족) | owner |
-| board_posts | owner / 작성자 / (공개 + 게시판 읽기 권한) | owner 또는 (작성자 + write_role 충족) |
+| board_posts | owner / 작성자 / (공개 + 게시판 읽기 권한) | owner는 모든 글. 그 외는 작성자 + write_role 충족 |
 | menus | owner 또는 (활성 + view_role 충족) | owner |
 
 ### 5.6 `supabase_health_checks`

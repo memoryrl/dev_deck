@@ -8,16 +8,30 @@ DECLARE
   id_prompt UUID;
   id_career UUID;
   id_games UUID;
+  id_community UUID;
+  id_community_footer UUID;
   id_browse UUID;
   id_pk UUID;
   id_cl UUID;
   id_st UUID;
+  id_notice UUID;
+  id_free UUID;
 BEGIN
   SELECT COUNT(*) INTO menu_count FROM devdeck.menus;
   IF menu_count > 0 THEN
     RAISE NOTICE 'menus already has % rows — skip seed', menu_count;
     RETURN;
   END IF;
+
+  INSERT INTO devdeck.boards (slug, name, description, kind, view_role, write_role, is_active, sort_order)
+  VALUES
+    ('notice', '공지사항', '사이트 운영 공지', 'generic', 'visitor', 'owner', true, 40),
+    ('free', '자유게시판', '자유롭게 이야기를 남기는 공간', 'generic', 'visitor', 'member', true, 50)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
+  RETURNING id INTO id_notice;
+
+  SELECT id INTO id_notice FROM devdeck.boards WHERE slug = 'notice';
+  SELECT id INTO id_free FROM devdeck.boards WHERE slug = 'free';
 
   INSERT INTO devdeck.menus (label, href, location, view_role, is_active, sort_order)
   VALUES ('AI Prompt', NULL, 'header', 'visitor', true, 0)
@@ -46,6 +60,14 @@ BEGIN
     (id_games, '게임 목록', '/games', 'header', 'visitor', true, 0),
     (id_games, '추천 게임', '/#games', 'header', 'visitor', true, 10),
     (id_games, '리뷰 관리', '/steam', 'header', 'owner', true, 20);
+
+  INSERT INTO devdeck.menus (label, href, location, view_role, is_active, sort_order)
+  VALUES ('커뮤니티', NULL, 'header', 'visitor', true, 30)
+  RETURNING id INTO id_community;
+
+  INSERT INTO devdeck.menus (parent_id, board_id, label, href, location, view_role, is_active, sort_order) VALUES
+    (id_community, id_notice, '공지사항', NULL, 'header', 'visitor', true, 0),
+    (id_community, id_free, '자유게시판', NULL, 'header', 'visitor', true, 10);
 
   INSERT INTO devdeck.menus (label, href, location, view_role, is_active, sort_order)
   VALUES ('둘러보기', NULL, 'footer', 'visitor', true, 0)
@@ -82,6 +104,14 @@ BEGIN
     (id_st, '라이브러리', '/games', 'footer', 'visitor', true, 0),
     (id_st, '리뷰', '/games', 'footer', 'visitor', true, 10),
     (id_st, '리뷰 관리', '/steam', 'footer', 'owner', true, 20);
+
+  INSERT INTO devdeck.menus (label, href, location, view_role, is_active, sort_order)
+  VALUES ('커뮤니티', NULL, 'footer', 'visitor', true, 40)
+  RETURNING id INTO id_community_footer;
+
+  INSERT INTO devdeck.menus (parent_id, board_id, label, href, location, view_role, is_active, sort_order) VALUES
+    (id_community_footer, id_notice, '공지사항', NULL, 'footer', 'visitor', true, 0),
+    (id_community_footer, id_free, '자유게시판', NULL, 'footer', 'visitor', true, 10);
 
   RAISE NOTICE 'default menus seeded';
 END $$;

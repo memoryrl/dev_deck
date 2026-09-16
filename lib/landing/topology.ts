@@ -1,4 +1,5 @@
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import { publicMenus } from "@/components/layout/public-nav-data"
 import { roleAtLeast } from "@/lib/access"
 import { currentViewer } from "@/lib/boards/access"
 import { getT } from "@/lib/i18n/dictionary"
@@ -30,6 +31,8 @@ export type TopologyModuleNode = {
   tint: TopologyTint
   isLead: boolean
   restricted: boolean
+  /** 로봇 말풍선 부연설명 (헤더 메가 메뉴와 동일한 카피) */
+  guideDescription: string
   items: TopologyItemNode[]
 }
 
@@ -52,6 +55,17 @@ function isVisible(item: MenuItem) {
   return true
 }
 
+function resolveModuleGuideDescription(
+  label: string,
+  t: (key: string) => string,
+  isAdminModule: boolean,
+): string {
+  if (isAdminModule) return t("landing.moduleAdminGuide")
+  const mega = publicMenus.find((menu) => t(menu.labelKey) === label)
+  if (mega) return t(mega.highlight.bodyKey)
+  return t("mega.fallbackBody")
+}
+
 function buildAdminModule(t: (key: string) => string): TopologyModuleNode {
   // 이 함수는 관리자로 로그인했을 때만 호출된다 — 그 외에는 아예 목록에 넣지 않는다
   // (책상 자체가 안 보임. 잠긴 채로 보여주지 않는다).
@@ -62,6 +76,7 @@ function buildAdminModule(t: (key: string) => string): TopologyModuleNode {
     tint: "espresso",
     isLead: true,
     restricted: false,
+    guideDescription: resolveModuleGuideDescription(t("dashboard.adminMenu"), t, true),
     items: ADMIN_NAV.slice(0, MAX_ITEMS_PER_MODULE).map((entry) => ({
       id: entry.href,
       label: t(entry.labelKey),
@@ -104,6 +119,7 @@ export async function buildLandingTopology(): Promise<TopologyData> {
       tint: TINTS[index % TINTS.length],
       isLead: false,
       restricted: false,
+      guideDescription: resolveModuleGuideDescription(root.label, t, false),
       items,
     }
   })

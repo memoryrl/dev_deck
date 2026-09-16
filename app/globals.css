@@ -363,6 +363,25 @@
   animation-delay: 1.1s;
 }
 
+/* 토폴로지 위에서 좌측 카피가 책상·로봇과 겹쳐도 읽히도록, 클래식 히어로와 같은
+   파치먼트 톤을 글자 뒤에만 부드럽게 깔아 둔다. 카피가 scale 되어도 가장자리가
+   상자처럼 보이지 않게 넓게 퍼지고 살짝 흐린다. */
+.hero-copy-veil {
+  pointer-events: none;
+  position: absolute;
+  top: -6rem;
+  right: -9rem;
+  bottom: -7rem;
+  left: -6rem;
+  background: radial-gradient(
+    ellipse 72% 68% at 30% 42%,
+    hsl(var(--background) / 0.84) 0%,
+    hsl(var(--background) / 0.4) 52%,
+    hsl(var(--background) / 0) 76%
+  );
+  filter: blur(20px);
+}
+
 @keyframes topology-dock-rise {
   0% {
     opacity: 0;
@@ -447,24 +466,50 @@
   }
 }
 
+.topology-speech-html {
+  width: 15.5rem !important;
+  max-width: 15.5rem;
+  overflow: visible !important;
+}
+
 .topology-speech {
   position: relative;
+  width: 15.5rem;
+  transform-origin: 1.35rem 100%;
   animation: topology-speech-pop 0.42s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
 
 .topology-speech-text {
   margin: 0;
-  max-width: 12.5rem;
-  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
   border: 3px solid hsl(var(--foreground));
   border-radius: 1.15rem 1.15rem 1.15rem 0.55rem;
   background: #fffdf8;
-  padding: 0.45rem 0.85rem 0.5rem;
+  padding: 0.55rem 0.9rem 0.6rem;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: hsl(20 14% 12%);
   box-shadow: 4px 4px 0 hsl(var(--foreground));
+}
+
+.topology-speech-title {
+  display: block;
+  line-height: 1.35;
+}
+
+.topology-speech-detail {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: hsl(20 10% 32%);
 }
 
 .topology-speech-tail {
@@ -497,6 +542,10 @@
 
   .hero-card-beam::before {
     animation: none;
+  }
+
+  .hero-copy-veil {
+    transition: none;
   }
 
   .hero-topology-cue,

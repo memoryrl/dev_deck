@@ -1,14 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { CommentForm } from "@/components/comments/comment-form"
 import { RichContent } from "@/components/editor/rich-content"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import type { AccessRole } from "@/lib/access"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import { maskIp } from "@/lib/comments/mask"
 import { countComments } from "@/lib/comments/tree"
 import type { CommentNode, CommentTargetType } from "@/types/comment"
 import { cn } from "@/lib/utils"
+
+function commentHintKey(role: AccessRole) {
+  if (role === "owner") return "comments.hintOwner"
+  if (role === "member") return "comments.hintMember"
+  return "comments.hint"
+}
 
 export function CommentSection({
   targetType,
@@ -17,6 +25,8 @@ export function CommentSection({
   comments,
   signedIn,
   viewerName,
+  canComment,
+  commentRole,
 }: {
   targetType: CommentTargetType
   targetId: string
@@ -24,6 +34,8 @@ export function CommentSection({
   comments: CommentNode[]
   signedIn: boolean
   viewerName: string
+  canComment: boolean
+  commentRole: AccessRole
 }) {
   const total = countComments(comments)
   const { t } = useI18n()
@@ -31,15 +43,25 @@ export function CommentSection({
   return (
     <section className="mt-12 border-t border-foreground/10 pt-8">
       <h2 className="font-display text-2xl font-bold">{t("comments.title", { count: total })}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{t("comments.hint")}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{t(commentHintKey(commentRole))}</p>
       <div className="mt-5 rounded-2xl border border-foreground/10 bg-background/60 p-4">
-        <CommentForm
-          targetType={targetType}
-          targetId={targetId}
-          returnTo={returnTo}
-          signedIn={signedIn}
-          defaultName={viewerName}
-        />
+        {canComment ? (
+          <CommentForm
+            targetType={targetType}
+            targetId={targetId}
+            returnTo={returnTo}
+            signedIn={signedIn}
+            defaultName={viewerName}
+          />
+        ) : signedIn ? (
+          <p className="text-sm text-muted-foreground">{t("comments.noPermission")}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/login" className="font-semibold text-foreground underline">
+              {t("comments.loginToWrite")}
+            </Link>
+          </p>
+        )}
       </div>
       {comments.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">{t("comments.empty")}</p>
@@ -55,6 +77,7 @@ export function CommentSection({
               returnTo={returnTo}
               signedIn={signedIn}
               viewerName={viewerName}
+              canComment={canComment}
             />
           ))}
         </ul>
@@ -71,6 +94,7 @@ function CommentItem({
   returnTo,
   signedIn,
   viewerName,
+  canComment,
 }: {
   node: CommentNode
   depth: number
@@ -79,6 +103,7 @@ function CommentItem({
   returnTo: string
   signedIn: boolean
   viewerName: string
+  canComment: boolean
 }) {
   const [reply, setReply] = useState(false)
   const indent = Math.min(depth, 8)
@@ -97,13 +122,15 @@ function CommentItem({
           <span className="tabular-nums">{maskIp(node.ip_address)}</span>
           {node.ip_region ? <span>{node.ip_region}</span> : null}
           <span>{formatBoardDateTime(node.created_at, locale)}</span>
-          <button
-            type="button"
-            className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
-            onClick={() => setReply((value) => !value)}
-          >
-            {reply ? t("common.cancel") : t("common.reply")}
-          </button>
+          {canComment ? (
+            <button
+              type="button"
+              className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
+              onClick={() => setReply((value) => !value)}
+            >
+              {reply ? t("common.cancel") : t("common.reply")}
+            </button>
+          ) : null}
         </div>
         {node.is_hidden ? (
           <p className="mt-2 text-sm text-muted-foreground">{t("comments.hidden")}</p>
@@ -139,6 +166,7 @@ function CommentItem({
               returnTo={returnTo}
               signedIn={signedIn}
               viewerName={viewerName}
+              canComment={canComment}
             />
           ))}
         </ul>

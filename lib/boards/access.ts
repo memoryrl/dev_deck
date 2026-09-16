@@ -1,6 +1,7 @@
 import { cache } from "react"
 import { accessRoleOf, roleAtLeast, type AccessRole } from "@/lib/access"
 import { SYSTEM_BOARD_KINDS } from "@/lib/boards/kind"
+import { withBoardDefaults } from "@/lib/boards/permissions"
 import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
@@ -36,7 +37,7 @@ const listSystemBoards = cache(async (): Promise<Partial<Record<SystemBoardKind,
     const map: Partial<Record<SystemBoardKind, Board>> = {}
     for (const row of (data as Board[]) ?? []) {
       if (SYSTEM_BOARD_KINDS.includes(row.kind as SystemBoardKind)) {
-        map[row.kind as SystemBoardKind] = row
+        map[row.kind as SystemBoardKind] = withBoardDefaults(row)
       }
     }
     return map

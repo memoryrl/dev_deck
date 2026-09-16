@@ -1,6 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { accessRoleOf, roleAtLeast } from "@/lib/access"
+import { commentRoleFor } from "@/lib/boards/permissions"
+import { getBoardById } from "@/lib/boards/public"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
 import { isBlankContent, plainTextFromContent, sanitizeRichHtml } from "@/lib/content"
@@ -40,6 +43,22 @@ export async function createComment(formData: FormData) {
 
   const supabase = createClient()
   const user = await ensureProfile()
+
+  if (targetType === "board") {
+    const { data: post } = await supabase
+      .from("board_posts")
+      .select("board_id")
+      .eq("id", targetId)
+      .maybeSingle()
+    if (!post) return { ok: false as const, error: "댓글 대상이 없습니다." }
+    const board = await getBoardById(post.board_id)
+    if (!board || !board.is_active) return { ok: false as const, error: "게시판을 찾을 수 없습니다." }
+    const required = commentRoleFor(board)
+    if (!roleAtLeast(accessRoleOf(user), required)) {
+      if (!user) return { ok: false as const, error: "댓글을 쓰려면 로그인하세요." }
+      return { ok: false as const, error: "이 게시판에 댓글을 쓸 권한이 없습니다." }
+    }
+  }
 
   if (user) {
     const meta = user.user_metadata ?? {}

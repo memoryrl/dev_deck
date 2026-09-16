@@ -180,9 +180,15 @@ export function PublicHeaderNav({
   }
   const nodes = navNodes.length > 0 ? navNodes : fallbackNodes(edit, t)
   const activeNode = nodes.find((menu) => menu.id === open)
-  const staticMega = publicMenus.find((menu) => menu.id === open)
-  const scene: SceneId = (open as SceneId) && PHOTO_POOLS[open as SceneId] ? (open as SceneId) : "default"
-  const ActiveIcon = MENU_ICON[open as MegaId]
+  // DB 메뉴 id는 UUID라 MegaId(prompt/career/games)와 다르다.
+  // id로 못 찾으면 라벨로 static mega 카피(부연설명·아이콘·씬)를 매칭한다.
+  const staticMega =
+    publicMenus.find((menu) => menu.id === open) ??
+    (activeNode
+      ? publicMenus.find((menu) => t(menu.labelKey) === activeNode.label)
+      : undefined)
+  const scene: SceneId = staticMega?.id ?? "default"
+  const ActiveIcon = staticMega ? MENU_ICON[staticMega.id] : undefined
   const photo = photos[scene]
   const closeDrawer = useCallback(() => setDrawer(false), [])
 
@@ -330,7 +336,10 @@ export function PublicHeaderNav({
         {activeNode ? (
           <div
             id={`${labelId}-panel`}
-            className="relative z-10 hidden lg:block"
+            // open(null → id)로 처음 열릴 때만 마운트되므로 이 진입 애니메이션은 열 때만
+            // 재생된다 — 열린 채로 다른 메뉴로 옮겨갈 때는 activeNode만 바뀌고 이 div는
+            // 그대로라 다시 슬라이드되지 않는다. 닫을 때는 그냥 언마운트(기존처럼 즉시 사라짐).
+            className="relative z-10 hidden lg:block lg:animate-in lg:slide-in-from-top-4 lg:fade-in lg:duration-300 lg:ease-out"
             role="region"
             aria-label={activeNode.label}
           >

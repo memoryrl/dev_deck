@@ -28,7 +28,11 @@ export function TopologyIntro({ open, hidden, modules, onOpen, onClose }: Topolo
   return (
     <div
       className={cn(
-        "absolute bottom-4 left-4 z-20",
+        // 카드 너비는 여기 루트에서 정한다 — absolute 자식의 calc(100%...)는 "가장 가까운
+        // position 조상"인 이 div를 기준으로 계산되는데, 루트 자체는 폭 지정이 없으면
+        // 인라인 흐름 자식(토글 버튼, 36px)만 보고 스스로를 36px로 줄여버려 카드가
+        // 4px짜리로 찌그러지는 버그가 있었다(calc(36px-2rem)). 루트에 직접 폭을 준다.
+        "absolute bottom-4 left-4 z-20 w-[min(22rem,calc(100%-2rem))]",
         hidden && "pointer-events-none invisible"
       )}
     >
@@ -48,11 +52,11 @@ export function TopologyIntro({ open, hidden, modules, onOpen, onClose }: Topolo
 
       <div
         className={cn(
-          "absolute bottom-0 left-0 origin-bottom-left transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+          "absolute bottom-0 left-0 w-full origin-bottom-left transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
           open ? "scale-100 opacity-100" : "pointer-events-none scale-50 opacity-0"
         )}
       >
-        <div className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-foreground/10 bg-background/90 p-4 shadow-lg backdrop-blur-xl">
+        <div className="rounded-2xl border border-foreground/10 bg-background/90 p-4 shadow-lg backdrop-blur-xl">
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground/70">
               <MousePointerClick className="size-3.5" />

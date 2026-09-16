@@ -5,8 +5,7 @@ import { accessRoleOf, boardPath, roleAtLeast } from "@/lib/access"
 import { getBoardById } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
 import { isBlankContent } from "@/lib/content"
-import { ensureProfile } from "@/lib/supabase/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, ensureProfile } from "@/lib/supabase/server"
 
 async function canWriteBoard(boardId: string) {
   const user = await ensureProfile()
@@ -33,20 +32,24 @@ export async function savePublicPost(formData: FormData) {
 
   const id = String(formData.get("id") ?? "")
   const supabase = createClient()
-  const payload = {
+  const fields = {
     board_id: boardId,
-    user_id: allowed.user.id,
     title,
     excerpt: String(formData.get("excerpt") ?? "").trim() || null,
     content,
     is_published: formData.get("is_published") === "on",
   }
 
-  const query = id
-    ? supabase.from("board_posts").update(payload).eq("id", id).eq("user_id", allowed.user.id)
-    : supabase.from("board_posts").insert(payload)
-
-  const { error } = await query
+  let error
+  if (id) {
+    let query = supabase.from("board_posts").update(fields).eq("id", id)
+    if (accessRoleOf(allowed.user) !== "owner") {
+      query = query.eq("user_id", allowed.user.id)
+    }
+    ;({ error } = await query)
+  } else {
+    ;({ error } = await supabase.from("board_posts").insert({ ...fields, user_id: allowed.user.id }))
+  }
   if (error) return { ok: false as const, error: error.message }
 
   revalidatePath(boardPath(allowed.board.slug))

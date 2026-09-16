@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PostList, type PostListRow } from "@/components/board/post-list"
 import { PublicPostForm } from "@/components/board/public-post-form"
@@ -54,6 +55,14 @@ export default async function PublicBoardPage({
           <h2 className="mb-4 font-display text-xl font-bold">글쓰기</h2>
           <PublicPostForm boardId={board.id} slug={board.slug} />
         </Card>
+      ) : !system && board.write_role === "member" && role === "visitor" ? (
+        <p className="mt-10 text-sm text-muted-foreground">
+          글을 쓰려면{" "}
+          <Link href="/login" className="font-semibold text-foreground underline">
+            로그인
+          </Link>
+          하세요.
+        </p>
       ) : null}
     </PublicContainer>
   )

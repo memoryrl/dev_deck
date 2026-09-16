@@ -193,14 +193,14 @@ type AiRunResponse = {
 
 | Action | 입력 | 검증 |
 | --- | --- | --- |
-| `upsertBoard` | name, slug, view_role, write_role, … | owner. slug 형식. 시스템 게시판은 slug/write_role 고정 |
+| `upsertBoard` | name, slug, view_role, write_role, comment_role, … | owner. slug 형식. 시스템 게시판은 slug/write_role 고정 |
 | `deleteBoard` | id | owner. 시스템 kind는 거부. 범용 글 CASCADE |
 | `ensureSystemBoards` | — | owner 페이지에서 prompts/career/steam 시드 |
 | `upsertMenu` | label, location, parent_id?, board_id?, href?, view_role | owner |
 | `deleteMenu` | id | owner. 하위 CASCADE |
 | `upsertBoardPost` / `deleteBoardPost` | 대시보드 글 | owner |
-| `savePublicPost` / `removePublicPost` | 공개 게시판 글쓰기 | write_role 충족 회원/관리자 |
-| `createComment` | target_type, target_id, body(CKEditor HTML), author_name?, parent_id? | 비회원 가능. IP·지역 서버 기록. 텍스트 2000자. 욕설 트리거 치환 |
+| `savePublicPost` / `removePublicPost` | 공개 게시판 글쓰기 | write_role 충족 회원/관리자. 관리자는 모든 글 수정·삭제 |
+| `createComment` | target_type, target_id, body(CKEditor HTML), author_name?, parent_id? | 프롬프트·커리어·Steam은 비회원 가능. 게시판은 `comment_role` 충족. IP·지역 서버 기록. 텍스트 2000자. 욕설 트리거 치환 |
 | `hideComment` / `deleteComment` | id | owner |
 | `addProfanityWord` / `removeProfanityWord` | word, replacement? | owner |
 

@@ -104,7 +104,7 @@ create table if not exists devdeck.uploads (
 
 ### 4.2 `POST /api/uploads/editor-image`
 
-CKEditor `UploadAdapter`가 호출하는 엔드포인트. **로그인 여부와 무관하게 열어둔다** — 비회원도 댓글·공개 게시판 글을 쓸 수 있고(`components/comments/comment-form.tsx`, `components/board/public-post-form.tsx`) 그 에디터에도 이미지 업로드를 지원해야 하므로, 세션 기반 인증으로 막을 수 없다. 대신:
+CKEditor `UploadAdapter`가 호출하는 엔드포인트. **로그인 여부와 무관하게 열어둔다** — 프롬프트·커리어·Steam 댓글은 비회원도 쓸 수 있고(`components/comments/comment-form.tsx`) 그 에디터에도 이미지 업로드를 지원해야 하므로, 세션 기반 인증으로 막을 수 없다. 대신:
 
 1. `Content-Type`이 `multipart/form-data`인지, `file` 필드가 있는지 확인
 2. 매직바이트로 jpeg/png/webp/gif 인지 검증 (확장자·`file.type`은 클라이언트가 조작 가능하므로 신뢰하지 않음)
@@ -238,7 +238,7 @@ allowedStyles: {
 
 ## 7. 보안/제약 사항
 
-- 댓글·공개 게시판은 비회원도 쓸 수 있어 이미지 업로드 엔드포인트가 사실상 공개 엔드포인트다. 매직바이트 검증 + 용량 캡 + IP 레이트리밋으로 방어하되, 이건 개인 프로젝트 규모에 맞춘 best-effort이지 완전한 어뷰징 방지는 아니라는 점을 명시
+- 프롬프트·커리어·Steam 댓글은 비회원도 쓸 수 있어 이미지 업로드 엔드포인트가 사실상 공개 엔드포인트다. 매직바이트 검증 + 용량 캡 + IP 레이트리밋으로 방어하되, 이건 개인 프로젝트 규모에 맞춘 best-effort이지 완전한 어뷰징 방지는 아니라는 점을 명시
 - 레이트리밋은 서버리스 함수 인스턴스 메모리 기반이라 재시작/스케일아웃 시 카운터가 리셋된다. 트래픽이 늘면 Upstash Redis 등으로 교체할 지점으로 남겨둠
 - `editor-images` 버킷은 RLS로 잠그고 서비스 롤 라우트만 쓰게 해서, 업로드 검증을 우회해 Storage에 직접 쓰는 경로를 차단
 - `uploads` 버킷은 로그인 사용자 본인 폴더 밖 쓰기를 RLS로 차단

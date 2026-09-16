@@ -1,11 +1,14 @@
 "use client"
 
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react"
 import { Html } from "@react-three/drei"
-import type { ThreeEvent } from "@react-three/fiber"
+import { useThree, type ThreeEvent } from "@react-three/fiber"
 import { Lock } from "lucide-react"
 import type { Vector3 } from "three"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { focusFacingYaw } from "@/components/landing/hero-topology/topology-camera"
 import { TopologyRobot } from "@/components/landing/hero-topology/topology-robot"
+import { cn } from "@/lib/utils"
 import type { TopologyModuleNode } from "@/lib/landing/topology"
 
 function legOffsets(halfWidth: number): [number, number][] {
@@ -118,13 +121,60 @@ export function TopologyDesk({
   skinIndex = 0,
   onSelect,
 }: TopologyDeskProps) {
+  const { gl } = useThree()
+  const { t } = useI18n()
+  const [hovered, setHovered] = useState(false)
+  const leaveTimer = useRef<number | null>(null)
+  const width = wide ? 2.3 : 1.7
+  const lit = hovered || active
+  // topology-scene.tsx의 CameraFocus가 이 책상을 확대할 때 어느 쪽 대각선(+X/-X)에서
+  // 접근하는지와 같은 기준(position.x < -0.15)으로 계산해야, 로봇이 돌아보는 방향과
+  // 실제 카메라가 서는 위치가 어긋나지 않는다.
+  const focusSide: 1 | -1 = position.x < -0.15 ? -1 : 1
+  const faceYaw = focusFacingYaw(focusSide)
+
+  function enterHover() {
+    if (leaveTimer.current != null) {
+      window.clearTimeout(leaveTimer.current)
+      leaveTimer.current = null
+    }
+    setHovered(true)
+  }
+
+  function leaveHover() {
+    if (leaveTimer.current != null) window.clearTimeout(leaveTimer.current)
+    leaveTimer.current = window.setTimeout(() => {
+      leaveTimer.current = null
+      setHovered(false)
+    }, 50)
+  }
+
+  // 클릭해서 확대되는 동안은 마우스가 그대로 있고 3D 콘텐츠만 카메라를 따라 움직인다.
+  // 포인터가 실제로 움직이지 않으면 r3f가 pointerout을 쏘지 않아, 패널을 닫아도 글로우
+  // 링이 남는 경우가 있었다 — active가 꺼지는 순간 hover도 강제로 같이 꺼준다.
+  useEffect(() => {
+    if (!active) setHovered(false)
+  }, [active])
+
+  useEffect(() => {
+    const el = gl.domElement
+    el.style.cursor = hovered ? "pointer" : "grab"
+    return () => {
+      el.style.cursor = "grab"
+      if (leaveTimer.current != null) window.clearTimeout(leaveTimer.current)
+    }
+  }, [gl, hovered])
+
   function handleClick(event: ThreeEvent<MouseEvent>) {
     event.stopPropagation()
     onSelect()
   }
 
-  const { t } = useI18n()
-  const width = wide ? 2.3 : 1.7
+  function handleTagClick(event: ReactMouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    onSelect()
+  }
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -139,20 +189,62 @@ export function TopologyDesk({
         </mesh>
       ))}
 
+      {lit ? (
+        <>
+          <mesh position={[0, 0.562, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[width + 0.08, 1.02]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={active ? 0.16 : 0.28}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[0, 0.02, 0.18]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.72, 0.98, 48]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={active ? 0.18 : 0.32}
+              depthWrite={false}
+            />
+          </mesh>
+        </>
+      ) : null}
+
       <DeskProp moduleId={module.id} color={color} />
 
       <group position={[0, 0, 0.55]}>
         <Stool />
       </group>
-      <group position={[0, SEAT_HEIGHT, 0.55]}>
-        <TopologyRobot skinIndex={skinIndex} active={active} guideText={t("landing.robotGuide")} />
-      </group>
 
-      {/* 클릭 판정을 넓히기 위한 투명 히트박스 — 개별 부품마다 핸들러를 붙이는 대신
-          이 하나만 클릭을 받는다(three.js는 visible=false여도 레이캐스트는 통과시킨다). */}
-      <mesh position={[0, 0.7, 0]} onClick={handleClick} visible={false}>
-        <boxGeometry args={[width + 0.2, 1.6, 1.5]} />
-      </mesh>
+      {/* 클릭/호버 판정을 책상 전체가 아니라 로봇 몸통 주변으로만 좁힌다 — 책상 표면이나
+          모니터 위로 마우스가 지나가도 선택되지 않고, 로봇 실루엣 근처에서만 반응한다. */}
+      <group
+        position={[0, SEAT_HEIGHT, 0.55]}
+        onClick={handleClick}
+        onPointerOver={(event) => {
+          event.stopPropagation()
+          enterHover()
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation()
+          leaveHover()
+        }}
+      >
+        <TopologyRobot
+          skinIndex={skinIndex}
+          active={active}
+          hovered={hovered}
+          faceYaw={faceYaw}
+          guideTitle={t("landing.robotGuideTitle", { label: module.label })}
+          guideDescription={module.guideDescription}
+        />
+        {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도. */}
+        <mesh position={[0, 0.6, -0.05]} visible={false}>
+          <boxGeometry args={[0.8, 1.5, 0.85]} />
+        </mesh>
+      </group>
 
       {active ? null : (
         <Html
@@ -160,15 +252,24 @@ export function TopologyDesk({
           center
           occlude={false}
           zIndexRange={[20, 0]}
-          className="pointer-events-none select-none"
+          className="select-none"
         >
-          <div
-            className="flex items-center gap-1 whitespace-nowrap rounded-full bg-background/80 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm ring-1 ring-foreground/10"
+          <button
+            type="button"
+            className={cn(
+              "flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm ring-1 transition duration-200",
+              hovered
+                ? "bg-background ring-2 ring-foreground/35 shadow-md scale-[1.06]"
+                : "bg-background/80 ring-foreground/10"
+            )}
             title={module.restricted ? t("landing.restrictedItems") : undefined}
+            onPointerEnter={enterHover}
+            onPointerLeave={leaveHover}
+            onClick={handleTagClick}
           >
             {module.restricted ? <Lock className="size-3 text-muted-foreground" /> : null}
             {module.label}
-          </div>
+          </button>
         </Html>
       )}
     </group>

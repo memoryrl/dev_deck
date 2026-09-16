@@ -1,3 +1,4 @@
+import { withBoardDefaults } from "@/lib/boards/permissions"
 import { emptyPage, fetchPagedRows, ilikeContains, LIST_PAGE_SIZE, type PagedResult } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
@@ -8,10 +9,7 @@ export async function listBoards(): Promise<Board[]> {
   const supabase = createClient()
   const { data, error } = await supabase.from("boards").select("*").order("sort_order").order("name")
   if (error) return []
-  return ((data as Board[]) ?? []).map((board) => ({
-    ...board,
-    kind: board.kind ?? "generic",
-  }))
+  return ((data as Board[]) ?? []).map((board) => withBoardDefaults(board))
 }
 
 export async function getBoardBySlug(slug: string): Promise<Board | null> {
@@ -19,7 +17,7 @@ export async function getBoardBySlug(slug: string): Promise<Board | null> {
   const supabase = createClient()
   const { data, error } = await supabase.from("boards").select("*").eq("slug", slug).maybeSingle()
   if (error) return null
-  return data ? { ...(data as Board), kind: (data as Board).kind ?? "generic" } : null
+  return data ? withBoardDefaults(data as Board) : null
 }
 
 export async function getBoardById(id: string): Promise<Board | null> {
@@ -27,7 +25,7 @@ export async function getBoardById(id: string): Promise<Board | null> {
   const supabase = createClient()
   const { data, error } = await supabase.from("boards").select("*").eq("id", id).maybeSingle()
   if (error) return null
-  return data ? { ...(data as Board), kind: (data as Board).kind ?? "generic" } : null
+  return data ? withBoardDefaults(data as Board) : null
 }
 
 export async function listBoardPosts(boardId: string): Promise<BoardPost[]> {

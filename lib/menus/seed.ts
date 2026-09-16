@@ -52,6 +52,17 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     ],
   },
   {
+    label: "커뮤니티",
+    href: null,
+    location: "header",
+    view_role: "visitor",
+    sort_order: 30,
+    children: [
+      { label: "공지사항", href: "/b/notice", view_role: "visitor", sort_order: 0 },
+      { label: "자유게시판", href: "/b/free", view_role: "visitor", sort_order: 10 },
+    ],
+  },
+  {
     label: "둘러보기",
     href: null,
     location: "footer",
@@ -97,6 +108,17 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
       { label: "라이브러리", href: "/games", view_role: "visitor", sort_order: 0 },
       { label: "리뷰", href: "/games", view_role: "visitor", sort_order: 10 },
       { label: "리뷰 관리", href: "/steam", view_role: "owner", sort_order: 20 },
+    ],
+  },
+  {
+    label: "커뮤니티",
+    href: null,
+    location: "footer",
+    view_role: "visitor",
+    sort_order: 40,
+    children: [
+      { label: "공지사항", href: "/b/notice", view_role: "visitor", sort_order: 0 },
+      { label: "자유게시판", href: "/b/free", view_role: "visitor", sort_order: 10 },
     ],
   },
 ]

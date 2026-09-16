@@ -11,6 +11,7 @@ export type Board = {
   kind: BoardKind
   view_role: AccessRole
   write_role: "member" | "owner"
+  comment_role: AccessRole
   is_active: boolean
   sort_order: number
   created_at: string

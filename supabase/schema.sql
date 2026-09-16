@@ -307,6 +307,8 @@ CREATE TABLE IF NOT EXISTS devdeck.boards (
     CHECK (view_role IN ('visitor', 'member', 'owner')),
   write_role TEXT NOT NULL DEFAULT 'owner'
     CHECK (write_role IN ('member', 'owner')),
+  comment_role TEXT NOT NULL DEFAULT 'visitor'
+    CHECK (comment_role IN ('visitor', 'member', 'owner')),
   is_active BOOLEAN NOT NULL DEFAULT true,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -624,7 +626,20 @@ CREATE POLICY comments_select ON devdeck.comments
 DROP POLICY IF EXISTS comments_insert ON devdeck.comments;
 CREATE POLICY comments_insert ON devdeck.comments
   FOR INSERT TO anon, authenticated
-  WITH CHECK (is_hidden = false);
+  WITH CHECK (
+    is_hidden = false
+    AND (
+      target_type <> 'board'
+      OR EXISTS (
+        SELECT 1
+        FROM devdeck.board_posts p
+        JOIN devdeck.boards b ON b.id = p.board_id
+        WHERE p.id::text = target_id
+          AND b.is_active
+          AND devdeck.role_at_least(COALESCE(b.comment_role, 'visitor'))
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS comments_owner ON devdeck.comments;
 CREATE POLICY comments_owner ON devdeck.comments

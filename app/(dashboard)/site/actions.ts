@@ -52,22 +52,33 @@ export async function upsertBoard(formData: FormData) {
     return { ok: false as const, error: "쓰기 권한이 올바르지 않습니다." }
   }
 
+  const commentRole = parseRole(String(formData.get("comment_role") ?? "visitor"), "visitor")
+
   const payload = {
     slug: existing && isSystemBoard(existing) ? existing.slug : slug,
     name,
     description: String(formData.get("description") ?? "").trim() || null,
     view_role: parseRole(String(formData.get("view_role") ?? "visitor"), "visitor"),
     write_role: existing && isSystemBoard(existing) ? "owner" : writeRole,
+    comment_role: commentRole,
     is_active: formData.get("is_active") === "on",
     sort_order: Number(formData.get("sort_order") ?? 0) || 0,
     ...(existing ? {} : { kind: "generic" as const }),
   }
 
-  const query = id
-    ? supabase.from("boards").update(payload).eq("id", id)
-    : supabase.from("boards").insert(payload)
+  const persist = async (body: typeof payload | Omit<typeof payload, "comment_role">) => {
+    const query = id
+      ? supabase.from("boards").update(body).eq("id", id)
+      : supabase.from("boards").insert(body)
+    return query
+  }
 
-  const { error } = await query
+  let { error } = await persist(payload)
+  if (error && /comment_role/.test(error.message)) {
+    const { comment_role: _omit, ...withoutCommentRole } = payload
+    const retry = await persist(withoutCommentRole)
+    error = retry.error
+  }
   if (error) return { ok: false as const, error: error.message }
   refreshSite()
   return { ok: true as const }

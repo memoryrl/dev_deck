@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Html, OrbitControls } from "@react-three/drei"
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib"
 import * as THREE from "three"
 import { TopologyDesk } from "@/components/landing/hero-topology/topology-desk"
+import { FOCUS_CAM_LOCAL } from "@/components/landing/hero-topology/topology-camera"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
 
 const TINT_COLOR: Record<TopologyTint, string> = {
@@ -33,11 +34,14 @@ const MEMBER_Z_START = 0.6
 
 const BASE_ZOOM_AT_REFERENCE = 92
 const MIN_BASE_ZOOM = 40
-const FOCUS_ZOOM = 122
+const FOCUS_ZOOM = 124
 const LERP_FACTOR = 0.28
 const FOCUS_ARRIVE = 0.05
 const ROBOT_LOCAL = new THREE.Vector3(0, 1.05, 0.55)
-const FRONT_LOCAL = new THREE.Vector3(0.12, 1.42, 2.55)
+// 정면(+Z)이 아니라 기본 아이소메트릭과 같은 대각(옆+앞+위)에서 들여다본다.
+// 같은 줄 로봇이 카메라와 타깃 사이에 끼지 않게, 방 바깥쪽(+X 또는 -X)을 고른다.
+// FOCUS_CAM_LOCAL은 topology-camera.ts에서 가져온다 — topology-robot.tsx가 로봇을
+// "카메라 쪽으로" 돌리는 각도 계산도 이 값을 같이 써야 방향이 어긋나지 않는다.
 const Y_AXIS = new THREE.Vector3(0, 1, 0)
 
 const FLOOR_BASE_COLOR = "#cbb28f"
@@ -100,6 +104,7 @@ type Props = {
   data: TopologyData
   activeModuleId: string | null
   onSelectModule: (id: string | null) => void
+  panPixels?: number
 }
 
 function CameraFocus({
@@ -136,8 +141,10 @@ function CameraFocus({
       if (layout) {
         scratch.current.copy(ROBOT_LOCAL).applyAxisAngle(Y_AXIS, layout.rotationY).add(layout.position)
         desiredTarget.current.copy(scratch.current)
-        desiredTarget.current.y += 0.28
-        desiredCam.current.copy(FRONT_LOCAL).applyAxisAngle(Y_AXIS, layout.rotationY).add(layout.position)
+        desiredTarget.current.y += 0.22
+        const side = layout.position.x < -0.15 ? -1 : 1
+        scratch.current.set(FOCUS_CAM_LOCAL.x * side, FOCUS_CAM_LOCAL.y, FOCUS_CAM_LOCAL.z)
+        desiredCam.current.copy(scratch.current).applyAxisAngle(Y_AXIS, layout.rotationY).add(layout.position)
         desiredZoom.current = FOCUS_ZOOM
       } else {
         desiredTarget.current.set(...roomTarget)
@@ -188,6 +195,30 @@ function CameraFocus({
   return null
 }
 
+// 회전 중심(OrbitControls target)은 항상 방의 진짜 중심이어야 자연스럽게 도는데,
+// roomTarget 자체를 옮겨서 화면을 밀면 회전 중심도 같이 밀려 드래그가 어색해진다.
+// 대신 카메라의 위치·타깃은 그대로 두고 setViewOffset으로 "렌더링되는 창"만 옆으로
+// 밀어 화면상 위치만 이동시킨다 — 회전 중심은 항상 중앙에 남는다.
+function ViewportPan({ panPixels }: { panPixels: number }) {
+  const { camera, size } = useThree()
+
+  useEffect(() => {
+    const ortho = camera as THREE.OrthographicCamera
+    if (!ortho.isOrthographicCamera) return
+    if (panPixels === 0) {
+      ortho.clearViewOffset()
+    } else {
+      ortho.setViewOffset(size.width, size.height, -panPixels, 0, size.width, size.height)
+    }
+    ortho.updateProjectionMatrix()
+    return () => {
+      ortho.clearViewOffset()
+    }
+  }, [camera, size.width, size.height, panPixels])
+
+  return null
+}
+
 function OfficePlant({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
@@ -211,17 +242,17 @@ function OfficePlant({ position }: { position: [number, number, number] }) {
   )
 }
 
-export function TopologyScene({ data, activeModuleId, onSelectModule }: Props) {
+export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels = 0 }: Props) {
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const dragging = useRef(false)
 
   const layout = useMemo(() => computeLayout(data.modules), [data.modules])
   const deskLayout = layout.seats
+  const roomTarget = layout.roomTarget
 
   const cameraOffset = useMemo(
-    () =>
-      new THREE.Vector3(layout.roomTarget[0] + 8.4, layout.roomTarget[1] + 6.8, layout.roomTarget[2] + 8.4),
-    [layout.roomTarget]
+    () => new THREE.Vector3(roomTarget[0] + 8.4, roomTarget[1] + 6.8, roomTarget[2] + 8.4),
+    [roomTarget]
   )
 
   const activeSeat = activeModuleId ? deskLayout.get(activeModuleId) ?? null : null
@@ -270,11 +301,12 @@ export function TopologyScene({ data, activeModuleId, onSelectModule }: Props) {
       }}
       onCreated={({ camera }) => {
         camera.position.copy(cameraOffset)
-        camera.lookAt(...layout.roomTarget)
+        camera.lookAt(...roomTarget)
         camera.updateProjectionMatrix()
       }}
     >
       <color attach="background" args={[FLOOR_TOP_COLOR]} />
+      <ViewportPan panPixels={panPixels} />
       <OrbitControls
         ref={controlsRef}
         makeDefault
@@ -289,7 +321,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule }: Props) {
       <CameraFocus
         focusKey={activeModuleId}
         layout={activeLayout}
-        roomTarget={layout.roomTarget}
+        roomTarget={roomTarget}
         cameraOffset={cameraOffset}
         baseZoom={layout.zoom}
         controlsRef={controlsRef}

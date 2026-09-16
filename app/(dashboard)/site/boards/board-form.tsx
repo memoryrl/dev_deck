@@ -66,7 +66,7 @@ export function BoardForm({ board }: { board?: Board }) {
         <Label htmlFor="description">설명</Label>
         <Textarea id="description" name="description" rows={3} defaultValue={board?.description ?? ""} />
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <Label htmlFor="view_role">읽기 권한</Label>
           <select
@@ -87,12 +87,27 @@ export function BoardForm({ board }: { board?: Board }) {
           <select
             id="write_role"
             name="write_role"
-            defaultValue="owner"
+            defaultValue={board?.write_role ?? "owner"}
             disabled={system}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm disabled:opacity-60"
           >
             <option value="owner">{roleLabel("owner")}</option>
             {!system ? <option value="member">{roleLabel("member")}</option> : null}
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="comment_role">댓글 권한</Label>
+          <select
+            id="comment_role"
+            name="comment_role"
+            defaultValue={board?.comment_role ?? "visitor"}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+          >
+            {ACCESS_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {roleLabel(role)}
+              </option>
+            ))}
           </select>
         </div>
         <div>

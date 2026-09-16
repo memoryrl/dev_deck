@@ -9,21 +9,30 @@ import {
 } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { HeroVisual } from "@/components/landing/hero-visual"
 import { TopologyPanel } from "@/components/landing/hero-topology/topology-panel"
 import { cn } from "@/lib/utils"
 import type { TopologyData } from "@/lib/landing/topology"
 
 const STORAGE_KEY = "devdeck:landing-hero-view"
 const DESKTOP_QUERY = "(min-width: 768px)"
-const DRAG_START_PX = 8 // 이 이상 움직여야 클릭이 아니라 드래그로 인정한다
-const DRAG_COMMIT_RATIO = 0.18 // 트랙 너비의 18% 이상 끌면 슬라이드 전환
+const DRAG_START_PX = 8
+const DRAG_COMMIT_RATIO = 0.18
 
 type Slide = 0 | 1
 
-// 우측 상단 스위치는 두 화면이 "같은 자리에서 바뀐다"는 느낌이라 헷갈린다는 피드백에
-// 따라, 좌우 화살표 + 하단 점 인디케이터 + 드래그 스와이프로 넘기는 캐러셀로 바꿨다.
-// 3D 씬(topology-scene.tsx) 안에는 카메라를 돌리는 자체 드래그가 이미 있어서, 캔버스나
-// 게시물 팝업(.topology-dock) 위에서 시작한 드래그는 캐러셀이 가로채지 않고 그대로 넘긴다.
+function HeroBlobs() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div className="absolute -left-24 -top-28 size-[32rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-sand)/0.9),transparent_64%)] blur-2xl" />
+      <div className="absolute -right-16 top-0 size-[28rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-champagne)/0.28),transparent_64%)] blur-2xl" />
+      <div className="absolute bottom-0 left-1/3 size-[22rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-cognac)/0.16),transparent_64%)] blur-2xl" />
+    </div>
+  )
+}
+
+// 좌측 카피는 고정. 클래식은 히어로 전체 위에 카드를 우측 하단에 얹고, 토폴로지는
+// 같은 히어로 박스 전체를 3D 오피스로 채운다. 캔버스·팝업 위 드래그는 캐러셀이 가로채지 않는다.
 export function HeroSection({ topology, children }: { topology: TopologyData; children: ReactNode }) {
   const { t } = useI18n()
   const [slide, setSlide] = useState<Slide>(0)
@@ -72,8 +81,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (!isDesktop) return
     const target = event.target as HTMLElement
-    // 3D 카메라 드래그(canvas)나 게시물 팝업 위 드래그는 캐러셀이 가로채지 않는다.
-    if (target.closest("canvas") || target.closest(".topology-dock")) return
+    if (target.closest("a, button, canvas, .topology-dock")) return
     drag.current = { startX: event.clientX, pointerId: event.pointerId, dragging: false, offset: 0 }
   }
 
@@ -119,68 +127,92 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
   const width = trackRef.current?.clientWidth || 1
   const dragPercent = (dragOffset / width) * 100
   const translatePercent = -slide * 100 + dragPercent
+  const topologyProgress = isDesktop ? Math.min(1, Math.max(0, slide - dragPercent / 100)) : 0
+  const veilStyle = {
+    opacity: topologyProgress,
+    transition: isDragging ? "none" : "opacity 0.35s ease-out",
+  } as const
 
   return (
     <div
-      className={cn("relative", isDragging && "select-none [&_*]:cursor-grabbing")}
+      className={cn("relative md:h-[640px]", isDragging && "select-none [&_*]:cursor-grabbing")}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      <div className="overflow-hidden">
-        <div
-          ref={trackRef}
-          className={cn("flex w-full items-stretch", !isDragging && "transition-transform duration-350 ease-out")}
-          style={{ transform: `translateX(${translatePercent}%)` }}
-        >
-          <div className="w-full shrink-0">{children}</div>
-          <div className="w-full shrink-0">
-            {isDesktop && visitedTopology ? <TopologyPanel data={topology} /> : <div className="h-[560px] md:h-[640px]" />}
+      <div className="absolute inset-0 hidden overflow-hidden md:block">
+          <div
+            ref={trackRef}
+            className={cn("flex h-full w-full", !isDragging && "transition-transform duration-350 ease-out")}
+            style={{ transform: `translateX(${translatePercent}%)` }}
+          >
+            <div className="relative h-full w-full shrink-0">
+              <HeroBlobs />
+              <HeroVisual />
+            </div>
+            <div className="relative h-full w-full shrink-0">
+              {visitedTopology ? (
+                <TopologyPanel data={topology} className="h-full md:h-full" panPixels={100} />
+              ) : (
+                <div className="h-full bg-[#efe6d8]" />
+              )}
+            </div>
           </div>
+        </div>
+      <div className="md:hidden">
+        <HeroBlobs />
+        <HeroVisual />
+      </div>
+
+      <div className="pointer-events-none relative z-20 mx-auto max-w-6xl px-5 pb-44 pt-20 md:h-full md:pb-28 md:pt-28">
+        <div
+          className={cn(
+            "group relative w-fit max-w-2xl origin-top-left transition-transform duration-350 ease-out",
+            slide === 1 && "is-topology md:scale-[0.62]"
+          )}
+        >
+          <div aria-hidden className="hero-copy-veil hidden md:block" style={veilStyle} />
+          <div className="pointer-events-auto relative">{children}</div>
         </div>
       </div>
 
-      {isDesktop ? (
-        <>
+      <button
+        type="button"
+        onClick={() => commit(0)}
+        disabled={slide === 0}
+        aria-label={t("landing.classic")}
+        className="absolute left-3 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-background/70 p-2 shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background disabled:pointer-events-none disabled:opacity-30 md:inline-flex"
+      >
+        <ChevronLeft className="size-5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => commit(1)}
+        disabled={slide === 1}
+        aria-label={t("landing.topology")}
+        className={cn(
+          "absolute right-5 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-background/80 p-2.5 shadow-sm backdrop-blur-md transition-colors hover:bg-background disabled:pointer-events-none disabled:opacity-30 md:inline-flex",
+          slide === 0 ? "hero-topology-cue" : "ring-1 ring-foreground/10"
+        )}
+      >
+        <ChevronRight className="size-5" />
+      </button>
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 hidden justify-center gap-2 md:flex">
+        {([0, 1] as const).map((index) => (
           <button
+            key={index}
             type="button"
-            onClick={() => commit(0)}
-            disabled={slide === 0}
-            aria-label={t("landing.classic")}
-            className="absolute left-3 top-1/2 z-30 -translate-y-1/2 rounded-full bg-background/70 p-2 shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background disabled:pointer-events-none disabled:opacity-30"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => commit(1)}
-            disabled={slide === 1}
-            aria-label={t("landing.topology")}
+            onClick={() => commit(index)}
+            aria-label={index === 0 ? t("landing.classic") : t("landing.topology")}
+            aria-current={slide === index}
             className={cn(
-              "absolute right-5 top-1/2 z-30 -translate-y-1/2 rounded-full bg-background/80 p-2.5 shadow-sm backdrop-blur-md transition-colors hover:bg-background disabled:pointer-events-none disabled:opacity-30",
-              slide === 0 ? "hero-topology-cue" : "ring-1 ring-foreground/10"
+              "pointer-events-auto h-2 rounded-full transition-all",
+              slide === index ? "w-5 bg-foreground" : "w-2 bg-foreground/25 hover:bg-foreground/40"
             )}
-          >
-            <ChevronRight className="size-5" />
-          </button>
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center gap-2">
-            {([0, 1] as const).map((index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => commit(index)}
-                aria-label={index === 0 ? t("landing.classic") : t("landing.topology")}
-                aria-current={slide === index}
-                className={cn(
-                  "pointer-events-auto h-2 rounded-full transition-all",
-                  slide === index ? "w-5 bg-foreground" : "w-2 bg-foreground/25 hover:bg-foreground/40"
-                )}
-              />
-            ))}
-          </div>
-        </>
-      ) : null}
+          />
+        ))}
+      </div>
     </div>
   )
 }
