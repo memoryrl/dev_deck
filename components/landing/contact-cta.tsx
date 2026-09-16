@@ -1,8 +1,10 @@
 import { Github, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getT } from "@/lib/i18n/dictionary"
 import { SITE_CONTACT, SITE_INTRO } from "@/lib/site/profile"
 
 export function ContactCta() {
+  const { t } = getT()
   return (
     <section id="contact" className="mx-auto max-w-6xl px-5 pb-20 pt-8">
       <div className="dark relative overflow-hidden rounded-2xl border bg-[hsl(24_14%_11%)] text-card-foreground">
@@ -40,7 +42,7 @@ export function ContactCta() {
             <Button asChild size="lg">
               <a href={`mailto:${SITE_CONTACT.email}`}>
                 <Mail />
-                메일 보내기
+                {t("landing.sendMail")}
               </a>
             </Button>
           </div>

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { listQueryHref, pageWindow, type PagedResult } from "@/lib/pagination"
+import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 
 export function ListPager({
@@ -17,6 +18,7 @@ export function ListPager({
   extraParams?: Record<string, string | number | undefined>
   className?: string
 }) {
+  const { t } = getT()
   if (result.total === 0) return null
 
   const pageParam = param ?? "page"
@@ -29,10 +31,10 @@ export function ListPager({
   return (
     <nav
       className={cn("mt-4 flex flex-wrap items-center justify-between gap-3", className)}
-      aria-label="목록 페이지"
+      aria-label={t("common.listPager")}
     >
       <p className="text-sm text-muted-foreground">
-        {from}–{to} / 총 {result.total}건
+        {t("common.pageRange", { from, to, count: result.total })}
       </p>
       {result.pageCount > 1 ? (
         <div className="flex items-center gap-1">
@@ -40,13 +42,13 @@ export function ListPager({
             <Button asChild variant="outline" size="sm">
               <Link href={listQueryHref(pathname, base, { [pageParam]: prev })}>
                 <ChevronLeft />
-                이전
+                {t("common.prev")}
               </Link>
             </Button>
           ) : (
             <Button variant="outline" size="sm" disabled>
               <ChevronLeft />
-              이전
+              {t("common.prev")}
             </Button>
           )}
           {pageWindow(result.page, result.pageCount).map((item) =>
@@ -67,13 +69,13 @@ export function ListPager({
           {next ? (
             <Button asChild variant="outline" size="sm">
               <Link href={listQueryHref(pathname, base, { [pageParam]: next })}>
-                다음
+                {t("common.next")}
                 <ChevronRight />
               </Link>
             </Button>
           ) : (
             <Button variant="outline" size="sm" disabled>
-              다음
+              {t("common.next")}
               <ChevronRight />
             </Button>
           )}

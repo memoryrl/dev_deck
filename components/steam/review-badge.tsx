@@ -1,6 +1,10 @@
+"use client"
+
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
 export function WrittenReviewBadge({ className }: { className?: string }) {
+  const { t } = useI18n()
   return (
     <span
       className={cn(
@@ -8,7 +12,7 @@ export function WrittenReviewBadge({ className }: { className?: string }) {
         className
       )}
     >
-      작성된 리뷰
+      {t("steam.writtenReview")}
     </span>
   )
 }

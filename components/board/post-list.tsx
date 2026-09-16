@@ -4,7 +4,9 @@ import { ListPager } from "@/components/layout/list-pager"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { listQueryHref, type PagedResult } from "@/lib/pagination"
-import { cn, formatBoardDateTime } from "@/lib/utils"
+import { getT } from "@/lib/i18n/dictionary"
+import { formatBoardDateTime } from "@/lib/i18n/format"
+import { cn } from "@/lib/utils"
 
 export type PostListRow = {
   href: string
@@ -16,10 +18,10 @@ export type PostListRow = {
 
 export function PostList({
   items,
-  empty = "아직 글이 없습니다.",
+  empty,
   searchable = false,
   showCount,
-  authorFallback = "관리자",
+  authorFallback,
   className,
   paged,
   pathname,
@@ -37,6 +39,9 @@ export function PostList({
   searchQuery?: string
   extraParams?: Record<string, string | number | undefined>
 }) {
+  const { t, locale } = getT()
+  const emptyText = empty ?? t("list.emptyPosts")
+  const authorName = authorFallback ?? t("role.owner")
   const displayCount = showCount ?? Boolean(searchable || paged)
   const rows = items
   const searched = Boolean(searchQuery.trim())
@@ -54,25 +59,25 @@ export function PostList({
           <div className="relative shrink-0">
             <select
               defaultValue="title"
-              aria-label="검색 조건"
+              aria-label={t("common.searchField")}
               className="h-10 appearance-none rounded-full border border-input bg-background pl-4 pr-9 text-sm font-medium outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="title">제목</option>
+              <option value="title">{t("common.title")}</option>
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           </div>
           <Input
             name="q"
             defaultValue={searchQuery}
-            placeholder="검색어를 입력하세요"
+            placeholder={t("common.searchPlaceholder")}
             className="h-10 flex-1 rounded-full shadow-none"
-            aria-label="검색어"
+            aria-label={t("common.searchPlaceholder")}
           />
           <Button type="submit" className="h-10 rounded-full px-5">
-            검색
+            {t("common.search")}
           </Button>
           <Button asChild variant="outline" size="icon" className="size-10 shrink-0 rounded-full">
-            <Link href={listQueryHref(pathname, extra, { page: 1 })} aria-label="검색 초기화">
+            <Link href={listQueryHref(pathname, extra, { page: 1 })} aria-label={t("common.searchReset")}>
               <RefreshCw />
             </Link>
           </Button>
@@ -81,13 +86,13 @@ export function PostList({
 
       {displayCount ? (
         <p className={cn("text-sm text-muted-foreground", searchable ? "mt-4" : null)}>
-          총 {paged?.total ?? rows.length}건
+          {t("common.totalCount", { count: paged?.total ?? rows.length })}
         </p>
       ) : null}
 
       {rows.length === 0 ? (
         <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
-          {searched ? "검색 결과가 없습니다." : empty}
+          {searched ? t("list.emptySearch") : emptyText}
         </p>
       ) : (
         <ul
@@ -97,7 +102,7 @@ export function PostList({
           )}
         >
           {rows.map((item, index) => {
-            const author = item.author?.trim() || authorFallback
+            const author = item.author?.trim() || authorName
             const number = paged ? (paged.page - 1) * paged.pageSize + index + 1 : index + 1
             return (
               <li key={`${item.href}-${index}`}>
@@ -116,9 +121,9 @@ export function PostList({
                     ) : null}
                   </div>
                   <p className="mt-1.5 text-xs text-muted-foreground">
-                    작성자 {author}
+                    {t("common.author")} {author}
                     <span className="mx-1.5 text-foreground/20">|</span>
-                    등록일 {formatBoardDateTime(item.createdAt)}
+                    {t("common.postedAt")} {formatBoardDateTime(item.createdAt, locale)}
                   </p>
                 </Link>
               </li>

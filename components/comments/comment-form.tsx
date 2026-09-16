@@ -6,6 +6,7 @@ import { createComment } from "@/app/comments/actions"
 import { CommentEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import type { CommentTargetType } from "@/types/comment"
 
 export function CommentForm({
@@ -31,6 +32,7 @@ export function CommentForm({
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [editorKey, setEditorKey] = useState(0)
+  const { t } = useI18n()
 
   async function onSubmit(formData: FormData) {
     setPending(true)
@@ -55,17 +57,17 @@ export function CommentForm({
       {signedIn ? (
         <input type="hidden" name="author_name" value={defaultName} />
       ) : (
-        <Input name="author_name" placeholder="이름" maxLength={40} required defaultValue={defaultName} aria-label="이름" />
+        <Input name="author_name" placeholder={t("comments.name")} maxLength={40} required defaultValue={defaultName} aria-label={t("comments.name")} />
       )}
       <CommentEditor
         key={editorKey}
         name="body"
         compact
-        placeholder={parentId ? "답글을 입력하세요" : "댓글을 입력하세요"}
+        placeholder={parentId ? t("comments.replyPlaceholder") : t("comments.placeholder")}
       />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "저장 중…" : parentId ? "답글 저장" : "댓글 저장"}
+        {pending ? t("comments.saving") : parentId ? t("comments.replySave") : t("comments.save")}
       </Button>
     </form>
   )

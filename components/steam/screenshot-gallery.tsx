@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
 export function ScreenshotGallery({
@@ -13,6 +14,7 @@ export function ScreenshotGallery({
 }) {
   const [index, setIndex] = useState<number | null>(null)
   const titleId = useId()
+  const { t } = useI18n()
   const open = index !== null
   const current = index !== null ? items[index] : null
 
@@ -43,7 +45,7 @@ export function ScreenshotGallery({
             type="button"
             className="group relative overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => setIndex(i)}
-            aria-label={`${title} 스크린샷 ${i + 1} 확대`}
+            aria-label={t("steam.screenshotZoom", { title, n: i + 1 })}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -59,7 +61,7 @@ export function ScreenshotGallery({
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 md:p-8">
           <button
             type="button"
-            aria-label="확대 이미지 닫기"
+            aria-label={t("steam.screenshotClose")}
             className="absolute inset-0 bg-foreground/70 backdrop-blur-sm"
             onClick={() => setIndex(null)}
           />
@@ -70,12 +72,12 @@ export function ScreenshotGallery({
             className="relative z-10 flex max-h-[min(92vh,52rem)] w-full max-w-5xl flex-col items-center"
           >
             <h2 id={titleId} className="sr-only">
-              {title} 스크린샷 {index! + 1} / {items.length}
+              {t("steam.screenshotCaption", { title, n: index! + 1, total: items.length })}
             </h2>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={current.full}
-              alt={`${title} 스크린샷 ${index! + 1}`}
+              alt={t("steam.screenshotAlt", { title, n: index! + 1 })}
               className="max-h-[min(82vh,46rem)] w-auto max-w-full rounded-xl object-contain shadow-2xl"
             />
             <div className="mt-3 flex items-center gap-2">
@@ -83,7 +85,7 @@ export function ScreenshotGallery({
                 <button
                   type="button"
                   className="inline-flex size-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm hover:bg-background"
-                  aria-label="이전 스크린샷"
+                  aria-label={t("steam.screenshotPrev")}
                   onClick={() => setIndex((value) => nextIndex(value, items.length, -1))}
                 >
                   <ChevronLeft className="size-5" />
@@ -96,7 +98,7 @@ export function ScreenshotGallery({
                 <button
                   type="button"
                   className="inline-flex size-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm hover:bg-background"
-                  aria-label="다음 스크린샷"
+                  aria-label={t("steam.screenshotNext")}
                   onClick={() => setIndex((value) => nextIndex(value, items.length, 1))}
                 >
                   <ChevronRight className="size-5" />
@@ -106,7 +108,7 @@ export function ScreenshotGallery({
             <button
               type="button"
               className="absolute -top-1 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm hover:bg-background md:-right-2"
-              aria-label="닫기"
+              aria-label={t("common.close")}
               onClick={() => setIndex(null)}
             >
               <X className="size-5" />

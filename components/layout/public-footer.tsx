@@ -1,43 +1,48 @@
 import { ArrowUpRight, Github, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import { BrandMark } from "@/components/layout/brand-mark"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { Badge } from "@/components/ui/badge"
+import { getT } from "@/lib/i18n/dictionary"
 import { SITE_CONTACT } from "@/lib/site/profile"
 import { listNavMenus } from "@/lib/menus/public"
 
-const columns = [
-  {
-    title: "둘러보기",
-    links: [
-      { href: "/", label: "홈" },
-      { href: "/work", label: "커리어" },
-      { href: "/games", label: "게임" },
-    ],
-  },
-  {
-    title: "PromptKit",
-    links: [
-      { href: "/login", label: "대시보드" },
-      { href: "/", label: "공개 프롬프트" },
-    ],
-  },
-  {
-    title: "CareerLog",
-    links: [
-      { href: "/work", label: "게시판" },
-      { href: "/work", label: "스킬" },
-    ],
-  },
-  {
-    title: "Steam",
-    links: [
-      { href: "/games", label: "라이브러리" },
-      { href: "/games", label: "리뷰" },
-    ],
-  },
-]
+function fallbackColumns(t: (key: string) => string) {
+  return [
+    {
+      title: t("footer.browse"),
+      links: [
+        { href: "/", label: t("common.home") },
+        { href: "/work", label: t("footer.career") },
+        { href: "/games", label: t("footer.games") },
+      ],
+    },
+    {
+      title: "PromptKit",
+      links: [
+        { href: "/login", label: t("footer.dashboard") },
+        { href: "/", label: t("footer.publicPrompts") },
+      ],
+    },
+    {
+      title: "CareerLog",
+      links: [
+        { href: "/work", label: t("footer.board") },
+        { href: "/work", label: t("footer.skills") },
+      ],
+    },
+    {
+      title: "Steam",
+      links: [
+        { href: "/games", label: t("footer.library") },
+        { href: "/games", label: t("footer.reviews") },
+      ],
+    },
+  ]
+}
 
 export async function PublicFooter() {
+  const { t } = getT()
   const dbFooter = await listNavMenus("footer")
   const footerColumns =
     dbFooter.length > 0
@@ -52,7 +57,7 @@ export async function PublicFooter() {
                   : [],
           }))
           .filter((column) => column.links.length > 0)
-      : columns
+      : fallbackColumns(t)
   return (
     <footer className="dark bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-5 py-14">
@@ -62,7 +67,7 @@ export async function PublicFooter() {
               <BrandMark wordmarkClassName="text-lg" />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              프롬프트, 커리어, Steam 라이브러리를 한 덱에 모은 개인 포트폴리오 허브입니다.
+              {t("footer.blurb")}
             </p>
             <div className="flex flex-wrap gap-2">
               {["Next.js", "Supabase", "Steam API"].map((label) => (
@@ -71,6 +76,7 @@ export async function PublicFooter() {
                 </Badge>
               ))}
             </div>
+            <LanguageSwitcher menuPlacement="up" />
           </div>
 
           <nav className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fill,minmax(7.5rem,max-content))] justify-items-start gap-x-10 gap-y-8">
@@ -98,7 +104,7 @@ export async function PublicFooter() {
           </nav>
 
           <div className="shrink-0 lg:w-56">
-            <p className="text-sm font-semibold">문의 및 연락</p>
+            <p className="text-sm font-semibold">{t("footer.contact")}</p>
             <ul className="mt-3 space-y-2.5 text-sm text-muted-foreground">
               <li>
                 <a

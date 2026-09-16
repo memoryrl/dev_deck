@@ -1,7 +1,11 @@
 import type { Metadata } from "next"
 import { Inter, Public_Sans } from "next/font/google"
+import { Suspense } from "react"
+import { I18nProvider } from "@/components/i18n/i18n-provider"
+import { LanguageRouteSync } from "@/components/i18n/language-route-sync"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
+import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -19,18 +23,27 @@ const publicSans = Public_Sans({
   preload: false,
 })
 
-export const metadata: Metadata = {
-  title: "DevDeck",
-  description: "PromptKit, CareerLog, Steam Tracker를 한곳에 모은 개인 포트폴리오 허브",
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = getT()
+  return {
+    title: "DevDeck",
+    description: t("meta.description"),
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const { locale, dictionary } = getT()
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>
         <ThemeProvider>
-          {children}
-          <ScrollToTop />
+          <I18nProvider locale={locale} dictionary={dictionary}>
+            <Suspense fallback={null}>
+              <LanguageRouteSync />
+            </Suspense>
+            {children}
+            <ScrollToTop />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

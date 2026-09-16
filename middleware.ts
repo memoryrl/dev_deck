@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { applyLocaleCookie } from "@/lib/i18n/middleware"
 import { updateSession } from "@/lib/supabase/middleware"
 
 export async function middleware(request: NextRequest) {
@@ -6,7 +7,8 @@ export async function middleware(request: NextRequest) {
   if (path === "/api/health" || path.startsWith("/api/cron/")) {
     return NextResponse.next()
   }
-  return updateSession(request)
+  const response = await updateSession(request)
+  return applyLocaleCookie(request, response)
 }
 
 export const config = {

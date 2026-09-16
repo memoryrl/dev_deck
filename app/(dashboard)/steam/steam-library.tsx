@@ -7,8 +7,10 @@ import { steamCoverSources } from "@/lib/steam/images"
 import { compareSteamGames, type SteamLibrarySort } from "@/lib/steam/sort"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { getT } from "@/lib/i18n/dictionary"
+import { formatLastPlayed } from "@/lib/i18n/format"
 import { listQueryHref, paginateItems } from "@/lib/pagination"
-import { cn, formatLastPlayed, formatPlaytime } from "@/lib/utils"
+import { cn, formatPlaytime } from "@/lib/utils"
 import type { GameReview, SteamGame, SteamGamesResponse, SteamProfile } from "@/types/steam"
 
 export function SteamLibrary({
@@ -26,6 +28,7 @@ export function SteamLibrary({
   page?: number
   sort?: SteamLibrarySort
 }) {
+  const { t } = getT()
   const reviewMap = new Map(reviews.map((review) => [review.app_id, review]))
   const games = [...(library?.games ?? [])].sort((a, b) => compareSteamGames(a, b, sort, reviewMap))
   const paged = paginateItems(games, page)
@@ -40,18 +43,10 @@ export function SteamLibrary({
     return <p className="text-sm text-destructive">{error}</p>
   }
   if (!library) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Steam 라이브러리를 불러오지 못했습니다. API 키와 Steam ID를 확인하세요.
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{t("steam.loadFailed")}</p>
   }
   if (games.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        게임이 없습니다. Steam 프로필을 공개로 두었는지, env의 STEAM_ID를 확인하세요.
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{t("steam.emptyLibrary")}</p>
   }
 
   return (
@@ -83,8 +78,9 @@ export function SteamLibrary({
 }
 
 function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort }) {
+  const { t } = getT()
   return (
-    <div role="tablist" aria-label="라이브러리 정렬" className="relative grid w-full grid-cols-3 rounded-full bg-secondary p-1">
+    <div role="tablist" aria-label={t("steam.sortAria")} className="relative grid w-full grid-cols-3 rounded-full bg-secondary p-1">
       <span
         aria-hidden
         className={cn(
@@ -95,9 +91,9 @@ function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort
       />
       {(
         [
-          ["playtime", "누적", "누적 시간"],
-          ["recent", "최근", "최근 플레이"],
-          ["two_weeks", "2주", "최근 2주"],
+          ["playtime", t("steam.rankShort"), t("steam.playtimeRank")],
+          ["recent", t("steam.recentShort"), t("steam.recent")],
+          ["two_weeks", t("steam.twoWeeksShort"), t("steam.twoWeeksLabel")],
         ] as const
       ).map(([key, shortLabel, label]) => (
         <Link
@@ -133,6 +129,8 @@ function LibraryHeader({
   deck: number
   latest?: SteamGame
 }) {
+  const { t, dictionary } = getT()
+  const lastPlayed = latest ? formatLastPlayed(latest.last_played_at, dictionary) : null
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -145,14 +143,14 @@ function LibraryHeader({
           />
         ) : null}
         <div>
-          <p className="font-display text-lg font-bold">{profile?.persona_name ?? "Steam 라이브러리"}</p>
+          <p className="font-display text-lg font-bold">{profile?.persona_name ?? t("games.title")}</p>
           <p className="text-sm text-muted-foreground">
-            {gameCount}게임 · 총 {formatPlaytime(total)}
+            {t("steam.gameCount", { count: gameCount })} · {t("steam.totalTime", { time: formatPlaytime(total) })}
             {profile?.profile_url ? (
               <>
                 {" · "}
                 <a href={profile.profile_url} target="_blank" rel="noreferrer" className="underline">
-                  프로필
+                  {t("steam.profile")}
                 </a>
               </>
             ) : null}
@@ -160,16 +158,12 @@ function LibraryHeader({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Stat label="누적" value={formatPlaytime(total)} />
-        <Stat label="최근 2주" value={twoWeeks > 0 ? formatPlaytime(twoWeeks) : "없음"} />
-        <Stat label="Deck" value={deck > 0 ? formatPlaytime(deck) : "없음"} />
+        <Stat label={t("steam.playtime")} value={formatPlaytime(total)} />
+        <Stat label={t("steam.twoWeeksLabel")} value={twoWeeks > 0 ? formatPlaytime(twoWeeks) : t("common.none")} />
+        <Stat label="Deck" value={deck > 0 ? formatPlaytime(deck) : t("common.none")} />
         <Stat
-          label="마지막 플레이"
-          value={
-            latest
-              ? `${latest.name} · ${formatLastPlayed(latest.last_played_at) ?? ""}`
-              : "없음"
-          }
+          label={t("steam.lastPlayed")}
+          value={latest ? `${latest.name} · ${lastPlayed ?? ""}` : t("common.none")}
         />
       </div>
     </div>
@@ -194,7 +188,8 @@ function GameItem({
   review?: GameReview
   hrefBase: "/steam" | "/games"
 }) {
-  const lastPlayed = formatLastPlayed(game.last_played_at)
+  const { t, dictionary } = getT()
+  const lastPlayed = formatLastPlayed(game.last_played_at, dictionary)
 
   return (
     <Link href={`${hrefBase}/${game.app_id}`}>
@@ -213,14 +208,14 @@ function GameItem({
           <h3 className="font-display text-lg font-bold">{game.name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {formatPlaytime(game.playtime_forever_minutes)}
-            {lastPlayed ? ` · ${lastPlayed} 플레이` : ""}
+            {lastPlayed ? ` · ${t("steam.played", { when: lastPlayed })}` : ""}
           </p>
           {game.playtime_deck_minutes > 0 || review?.is_favorite ? (
             <div className="mt-2 flex flex-wrap gap-2">
               {game.playtime_deck_minutes > 0 ? (
                 <Badge variant="secondary">Deck {formatPlaytime(game.playtime_deck_minutes)}</Badge>
               ) : null}
-              {review?.is_favorite ? <Badge variant="secondary">즐겨찾기</Badge> : null}
+              {review?.is_favorite ? <Badge variant="secondary">{t("steam.favorite")}</Badge> : null}
             </div>
           ) : null}
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from "react"
 import { ChevronDown, ChevronUp, RotateCcw } from "lucide-react"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "devdeck-article-font-scale"
@@ -62,6 +63,7 @@ function FontSizeDock({
   onReset: () => void
 }) {
   const sliderId = useId()
+  const { t } = useI18n()
   const atDefault = percent === DEFAULT
 
   return (
@@ -74,7 +76,7 @@ function FontSizeDock({
           onClick={onToggle}
           className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-xs font-semibold tracking-wide text-foreground/90"
         >
-          본문 크기
+          {t("article.fontSize")}
           {open ? <ChevronDown className="size-3.5 opacity-70" /> : <ChevronUp className="size-3.5 opacity-70" />}
         </button>
         <div
@@ -101,8 +103,8 @@ function FontSizeDock({
                     max={MAX}
                     step={STEP}
                     value={percent}
-                    aria-valuetext={percent === DEFAULT ? "원본" : `${percent}%`}
-                    aria-label="본문 글자 크기"
+                    aria-valuetext={percent === DEFAULT ? t("article.original") : `${percent}%`}
+                    aria-label={t("article.fontSizeAria")}
                     onChange={(event) => onChange(Number(event.target.value))}
                     tabIndex={open ? 0 : -1}
                     className="font-size-range relative z-10 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-foreground/15"
@@ -120,7 +122,7 @@ function FontSizeDock({
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
               >
                 <RotateCcw className="size-3" />
-                원래대로
+                {t("article.reset")}
               </button>
             </div>
           </div>

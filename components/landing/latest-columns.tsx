@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PostList } from "@/components/board/post-list"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
+import { getT } from "@/lib/i18n/dictionary"
 import type { CareerPost } from "@/types/career"
 import type { Prompt } from "@/types/prompt"
 
@@ -11,14 +12,15 @@ export function LatestColumns({
   prompts: Prompt[]
   posts: CareerPost[]
 }) {
+  const { t } = getT()
   return (
     <section className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
       <div className="grid gap-10 md:grid-cols-2">
         <div id="prompts">
           <h2 className="font-display text-2xl font-extrabold md:text-3xl">AI Prompt</h2>
-          <p className="mt-1 text-sm text-muted-foreground">최신 게시물</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("landing.latestPosts")}</p>
           {prompts.length === 0 ? (
-            <EmptyPlaceholder className="mt-5">아직 공개된 프롬프트가 없습니다.</EmptyPlaceholder>
+            <EmptyPlaceholder className="mt-5">{t("landing.emptyPrompts")}</EmptyPlaceholder>
           ) : (
             <PostList
               className="mt-5"
@@ -34,14 +36,14 @@ export function LatestColumns({
 
         <div id="career">
           <div className="flex items-end justify-between gap-3">
-            <h2 className="font-display text-2xl font-extrabold md:text-3xl">개발업무</h2>
+            <h2 className="font-display text-2xl font-extrabold md:text-3xl">{t("landing.devWork")}</h2>
             <Link href="/work" className="text-sm font-semibold underline">
-              더 보기
+              {t("common.more")}
             </Link>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">최신 게시물</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("landing.latestPosts")}</p>
           {posts.length === 0 ? (
-            <EmptyPlaceholder className="mt-5">아직 공개된 글이 없습니다.</EmptyPlaceholder>
+            <EmptyPlaceholder className="mt-5">{t("landing.emptyPosts")}</EmptyPlaceholder>
           ) : (
             <PostList
               className="mt-5"

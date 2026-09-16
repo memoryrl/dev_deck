@@ -5,6 +5,8 @@ import { useEffect, useId, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Home, LogOut, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
 import { UserMenu } from "@/components/layout/user-menu"
@@ -16,6 +18,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
   const [drawer, setDrawer] = useState(false)
   const pathname = usePathname()
   const titleId = useId()
+  const { t } = useI18n()
 
   useEffect(() => {
     setDrawer(false)
@@ -43,7 +46,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
         </Link>
         <div className="ml-auto flex items-center gap-1.5">
           <Button asChild variant="ghost" size="icon" className="rounded-full md:hidden">
-            <Link href="/" aria-label="홈페이지">
+            <Link href="/" aria-label={t("dashboard.homeAria")}>
               <Home className="size-5" />
             </Link>
           </Button>
@@ -59,7 +62,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
             className="relative z-[70] inline-flex size-10 items-center justify-center rounded-full hover:bg-foreground/[0.06] md:hidden"
             aria-expanded={drawer}
             aria-controls="dashboard-mobile-nav"
-            aria-label={drawer ? "메뉴 닫기" : "메뉴 열기"}
+            aria-label={drawer ? t("common.closeMenu") : t("common.openMenu")}
             onClick={() => setDrawer((value) => !value)}
           >
             {drawer ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -70,7 +73,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 top-14 z-50 md:hidden">
         <button
           type="button"
-          aria-label="메뉴 닫기"
+          aria-label={t("common.closeMenu")}
           className={cn(
             "absolute inset-0 bg-foreground/35 backdrop-blur-[2px] transition-opacity duration-300",
             drawer ? "pointer-events-auto opacity-100" : "opacity-0"
@@ -88,8 +91,11 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
           )}
         >
           <h2 id={titleId} className="sr-only">
-            관리자 메뉴
+            {t("dashboard.adminMenu")}
           </h2>
+          <div className="border-b px-3 py-3">
+            <LanguageSwitcher />
+          </div>
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             <Link
               href="/"
@@ -97,7 +103,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
               onClick={() => setDrawer(false)}
             >
               <Home className="size-4 opacity-70" />
-              홈페이지
+              {t("common.siteHome")}
             </Link>
             {ADMIN_NAV.map((item) => {
               const Icon = item.icon
@@ -113,7 +119,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
                   onClick={() => setDrawer(false)}
                 >
                   <Icon className="size-4 opacity-70" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               )
             })}
@@ -125,7 +131,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
                 className="flex w-full items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium"
               >
                 <LogOut className="size-4" />
-                로그아웃
+                {t("common.logout")}
               </button>
             </form>
             <ThemeToggle className="rounded-full" />

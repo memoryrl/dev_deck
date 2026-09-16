@@ -10,7 +10,8 @@ import { RichContent } from "@/components/editor/rich-content"
 import { currentViewer } from "@/lib/boards/access"
 import { getPublicCareerPostById, listPublicCareerPosts } from "@/lib/career/public"
 import { findNeighbors } from "@/lib/posts/neighbors"
-import { formatPeriod } from "@/lib/utils"
+import { getT } from "@/lib/i18n/dictionary"
+import { formatPeriod } from "@/lib/i18n/format"
 
 export default async function PublicCareerPage({
   params,
@@ -28,12 +29,13 @@ export default async function PublicCareerPage({
     (item) => item.title
   )
 
+  const { t } = getT()
   const view = (
     <>
       <Badge className="mt-6">{post.post_type}</Badge>
       <h1 className="mt-4 font-display text-4xl font-extrabold">{post.title}</h1>
       <p className="mt-3 text-sm text-muted-foreground">
-        {[post.company, post.role, formatPeriod(post.period_start, post.period_end)]
+        {[post.company, post.role, formatPeriod(post.period_start, post.period_end, t("date.present"))]
           .filter(Boolean)
           .join(" · ")}
       </p>

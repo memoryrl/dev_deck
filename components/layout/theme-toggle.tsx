@@ -5,9 +5,11 @@ import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n/i18n-provider"
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
+  const { t } = useI18n()
   const [ready, setReady] = useState(false)
 
   useEffect(() => setReady(true), [])
@@ -22,7 +24,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       size="icon"
       className={cn(className)}
       onClick={() => setTheme(dark ? "light" : "dark")}
-      aria-label={dark ? "라이트 모드" : "다크 모드"}
+      aria-label={dark ? t("theme.light") : t("theme.dark")}
     >
       {dark ? <Sun /> : <Moon />}
     </Button>

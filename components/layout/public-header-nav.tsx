@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/layout/brand-mark"
 import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
 import { MENU_ICON, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
@@ -139,17 +140,20 @@ function MegaHighlight({
   )
 }
 
-function fallbackNodes(edit: Record<string, string>): NavNode[] {
+function fallbackNodes(
+  edit: Record<string, string>,
+  t: (key: string) => string
+): NavNode[] {
   return publicMenus.map((menu) => ({
     id: menu.id,
-    label: menu.label,
+    label: t(menu.labelKey),
     href: null,
     children: menu.groups.flatMap((group) =>
       group.links.map((link) => ({
-        id: link.href + link.label,
-        label: link.label,
+        id: link.href + link.labelKey,
+        label: t(link.labelKey),
         href: edit[link.href as keyof typeof edit] ?? link.href,
-        note: link.note,
+        note: link.noteKey ? t(link.noteKey) : undefined,
       }))
     ),
   }))
@@ -167,13 +171,14 @@ export function PublicHeaderNav({
   const [photos, setPhotos] = useState<Partial<Record<SceneId, string>>>({})
   const rootRef = useRef<HTMLDivElement>(null)
   const labelId = useId()
+  const { t } = useI18n()
   const owner = Boolean(account?.isOwner)
   const edit = {
     __prompt__: owner ? "/promptkit" : "/login",
     __career__: owner ? "/career" : "/login",
     __steam__: owner ? "/steam" : "/login",
   }
-  const nodes = navNodes.length > 0 ? navNodes : fallbackNodes(edit)
+  const nodes = navNodes.length > 0 ? navNodes : fallbackNodes(edit, t)
   const activeNode = nodes.find((menu) => menu.id === open)
   const staticMega = publicMenus.find((menu) => menu.id === open)
   const scene: SceneId = (open as SceneId) && PHOTO_POOLS[open as SceneId] ? (open as SceneId) : "default"
@@ -281,7 +286,7 @@ export function PublicHeaderNav({
                 className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
                 onClick={() => setOpen(null)}
               >
-                로그인
+                {t("common.login")}
               </Link>
             )}
             <ThemeToggle className="rounded-full border-0 bg-transparent shadow-none hover:bg-foreground/[0.06]" />
@@ -303,7 +308,7 @@ export function PublicHeaderNav({
                 className="rounded-full bg-foreground px-3 py-1.5 text-sm font-medium text-background"
                 onClick={() => setOpen(null)}
               >
-                로그인
+                {t("common.login")}
               </Link>
             )}
             <button
@@ -311,7 +316,7 @@ export function PublicHeaderNav({
               className="relative z-[70] inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-foreground/[0.06]"
               aria-expanded={drawer}
               aria-controls="public-mobile-nav"
-              aria-label={drawer ? "메뉴 닫기" : "메뉴 열기"}
+              aria-label={drawer ? t("common.closeMenu") : t("common.openMenu")}
               onClick={() => {
                 setOpen(null)
                 setDrawer((value) => !value)
@@ -337,29 +342,29 @@ export function PublicHeaderNav({
                   scene={scene}
                   label={activeNode.label}
                   title={staticMega ? staticMega.highlight.title : activeNode.label}
-                  body={staticMega ? staticMega.highlight.body : "연결된 페이지와 게시판으로 이동합니다."}
-                  cta={staticMega ? staticMega.highlight.cta : activeNode.children[0]?.label ?? "바로가기"}
+                  body={staticMega ? t(staticMega.highlight.bodyKey) : t("mega.fallbackBody")}
+                  cta={staticMega ? t(staticMega.highlight.ctaKey) : activeNode.children[0]?.label ?? t("common.shortcut")}
                   icon={ActiveIcon}
                   onNavigate={() => setOpen(null)}
                 />
                 <div className="grid gap-1 p-3 sm:grid-cols-2 sm:p-4">
                   {staticMega
                     ? staticMega.groups.map((group) => (
-                        <div key={group.title} className="px-2 py-2">
+                        <div key={group.titleKey} className="px-2 py-2">
                           <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                            {group.title}
+                            {t(group.titleKey)}
                           </p>
                           <ul className="mt-2 space-y-0.5">
                             {group.links.map((link) => (
-                              <li key={link.href + link.label}>
+                              <li key={link.href + link.labelKey}>
                                 <Link
                                   href={edit[link.href as keyof typeof edit] ?? link.href}
                                   className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
                                   onClick={() => setOpen(null)}
                                 >
-                                  <span className="text-sm font-medium">{link.label}</span>
-                                  {link.note ? (
-                                    <span className="mt-0.5 block text-xs text-muted-foreground">{link.note}</span>
+                                  <span className="text-sm font-medium">{t(link.labelKey)}</span>
+                                  {link.noteKey ? (
+                                    <span className="mt-0.5 block text-xs text-muted-foreground">{t(link.noteKey)}</span>
                                   ) : null}
                                 </Link>
                               </li>
@@ -370,7 +375,7 @@ export function PublicHeaderNav({
                     : (
                         <div className="px-2 py-2 sm:col-span-2">
                           <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                            바로가기
+                            {t("common.shortcut")}
                           </p>
                           <ul className="mt-2 space-y-0.5">
                             {activeNode.children.map((link) => (

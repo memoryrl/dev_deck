@@ -17,6 +17,8 @@ DevDeck은 **AI 프롬프트(PromptKit)**, **회사 참여 개발·스킬 정리
 | 5 | [05-ui.md](./05-ui.md) | 라우트, 레이아웃, 화면 상태, 컴포넌트 |
 | 6 | [06-implementation.md](./06-implementation.md) | 단계별 구현 순서와 Agent 킥오프 프롬프트 |
 | 7 | [07-uploads.md](./07-uploads.md) | Uppy 첨부 컴포넌트, CKEditor 이미지 업로드/압축 설계 |
+| 8 | [08-landing-topology.md](./08-landing-topology.md) | 랜딩 히어로 3D 토폴로지 뷰 스위치 설계 |
+| 9 | [09-i18n.md](./09-i18n.md) | 공개·대시보드 UI 다국어 (ko/en, 쿠키·쿼리) |
 
 ## 핵심 결정 (요약)
 
@@ -30,6 +32,7 @@ DevDeck은 **AI 프롬프트(PromptKit)**, **회사 참여 개발·스킬 정리
 - **공개 프롬프트:** 비로그인 상세(`/p/[id]`) 허용. **목록만** 최근 6개. 공유 링크는 `is_public`이면 유지
 - **권한:** 관리자 `memoryrl@gmail.com`만 게시물 편집. 그 외 로그인은 회원(`/account`), 편집 없음
 - **테마:** 라이트 기본, 다크 토글 허용
+- **언어:** UI 크롬 `ko`/`en`. 쿠키 `lang` + `?lang=`. 본문(글·메뉴)은 작성 언어 유지
 - **카테고리:** 고정 목록이 아니라 문자열 입력 (기본값 `General`)
 - **원격:** 공개 GitHub [`memoryrl/dev_deck`](https://github.com/memoryrl/dev_deck). 포트폴리오 용도이므로 env·키·NDA 본문은 올리지 않는다.
 

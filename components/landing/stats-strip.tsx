@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/dictionary"
 import { formatPlaytime } from "@/lib/utils"
 
 export function StatsStrip({
@@ -13,15 +14,16 @@ export function StatsStrip({
   playtimeMinutes: number
   reviewCount: number
 }) {
+  const { t } = getT()
   const items = [
-    { label: "공개 프롬프트", value: String(promptCount) },
-    { label: "커리어 글", value: String(careerCount) },
+    { label: t("landing.statsPrompts"), value: String(promptCount) },
+    { label: t("landing.statsCareer"), value: String(careerCount) },
     {
-      label: "보유 게임",
+      label: t("landing.statsGames"),
       value: String(gameCount),
-      note: playtimeMinutes > 0 ? `누적 ${formatPlaytime(playtimeMinutes)}` : null,
+      note: playtimeMinutes > 0 ? t("landing.statsPlaytime", { time: formatPlaytime(playtimeMinutes) }) : null,
     },
-    { label: "공개 리뷰", value: String(reviewCount) },
+    { label: t("landing.statsReviews"), value: String(reviewCount) },
   ]
 
   return (

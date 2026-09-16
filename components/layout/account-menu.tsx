@@ -5,8 +5,9 @@ import { useEffect, useId, useRef, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
-import { roleLabel, type AccessRole } from "@/lib/access"
+import type { AccessRole } from "@/lib/access"
 
 export type AccountMenuUser = {
   name: string
@@ -31,6 +32,7 @@ export function AccountMenu({
   const rootRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
   const adminLinks = showAdminNav && user.isOwner
+  const { t } = useI18n()
 
   useEffect(() => {
     if (!open) return
@@ -69,14 +71,14 @@ export function AccountMenu({
         <UserAvatar name={user.name} src={user.avatarUrl} />
         {compact ? (
           <span className="sr-only">
-            {user.name} · {roleLabel(user.role)}
+            {user.name} · {t(`role.${user.role}`)}
           </span>
         ) : (
           <>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold leading-tight">{user.name}</span>
               <span className="block truncate text-[11px] leading-tight text-muted-foreground">
-                {roleLabel(user.role)}
+                {t(`role.${user.role}`)}
               </span>
             </span>
             <ChevronDown className={cn("size-3.5 shrink-0 opacity-50 transition-transform", open && "rotate-180")} />
@@ -95,14 +97,14 @@ export function AccountMenu({
               <p className="truncate text-sm font-semibold">{user.name}</p>
               {user.email ? <p className="truncate text-xs text-muted-foreground">{user.email}</p> : null}
               <p className="mt-1 inline-flex rounded-full bg-foreground/[0.08] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/80">
-                {roleLabel(user.role)}
+                {t(`role.${user.role}`)}
               </p>
             </div>
           </div>
           {adminLinks ? (
             <div className="border-t border-foreground/10 py-1.5">
               <p className="px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                관리자
+                {t("common.admin")}
               </p>
               {ADMIN_NAV.map((item) => {
                 const Icon = item.icon
@@ -115,7 +117,7 @@ export function AccountMenu({
                     onClick={() => setOpen(false)}
                   >
                     <Icon className="size-4 opacity-70" />
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 )
               })}
@@ -129,7 +131,7 @@ export function AccountMenu({
                 className="block px-3.5 py-2 text-sm font-medium hover:bg-foreground/[0.05]"
                 onClick={() => setOpen(false)}
               >
-                내 계정
+                {t("common.account")}
               </Link>
             </div>
           ) : null}
@@ -140,7 +142,7 @@ export function AccountMenu({
               className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground"
             >
               <LogOut className="size-4" />
-              로그아웃
+              {t("common.logout")}
             </button>
           </form>
         </div>

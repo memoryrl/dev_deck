@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { PublicContainer } from "@/components/layout/public-container"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 
 function Screen({
@@ -99,7 +100,7 @@ export function ArticleSkeleton() {
 
 export function SteamLibrarySkeleton() {
   return (
-    <Screen label="Steam 라이브러리를 불러오는 중" className="space-y-6">
+    <Screen label={getT().t("loading.steamLibrary")} className="space-y-6">
       <div className="flex items-center gap-3">
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="space-y-2">
@@ -120,7 +121,7 @@ export function SteamLibrarySkeleton() {
 
 export function SteamShowcaseSkeleton() {
   return (
-    <Screen label="Steam 섹션을 불러오는 중" className="mx-auto max-w-6xl px-5 pb-16">
+    <Screen label={getT().t("loading.steamSection")} className="mx-auto max-w-6xl px-5 pb-16">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-full" />
@@ -159,7 +160,7 @@ export function SteamShowcaseSkeleton() {
 
 export function LatestColumnsSkeleton() {
   return (
-    <Screen label="최신 글을 불러오는 중" className="mx-auto max-w-6xl px-5 py-16">
+    <Screen label={getT().t("loading.latest")} className="mx-auto max-w-6xl px-5 py-16">
       <div className="grid gap-10 md:grid-cols-2">
         {Array.from({ length: 2 }).map((_, column) => (
           <div key={column} className="space-y-4">
@@ -181,7 +182,7 @@ export function LatestColumnsSkeleton() {
 
 export function FormCardSkeleton() {
   return (
-    <Screen label="불러오는 중" className="mx-auto w-full max-w-6xl flex-1 px-5 py-20">
+    <Screen label={getT().t("loading.generic")} className="mx-auto w-full max-w-6xl flex-1 px-5 py-20">
       <div className="mx-auto w-full max-w-md space-y-4 rounded-xl border bg-card p-8">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-8 w-32" />
@@ -194,7 +195,7 @@ export function FormCardSkeleton() {
 
 export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" | "grid" | "article" }) {
   return (
-    <Screen label="대시보드를 불러오는 중" className="mx-auto max-w-5xl space-y-8">
+    <Screen label={getT().t("loading.dashboard")} className="mx-auto max-w-5xl space-y-8">
       <TitleSkeleton />
       {variant === "grid" ? <CardGridSkeleton /> : null}
       {variant === "list" ? <ListSkeleton /> : null}
@@ -205,7 +206,7 @@ export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" |
 
 export function HomeLandingSkeleton() {
   return (
-    <Screen label="랜딩 본문을 불러오는 중">
+    <Screen label={getT().t("loading.landing")}>
       <div className="mx-auto max-w-6xl px-5 pb-6 pt-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -230,7 +231,7 @@ export function PublicPageSkeleton({
   if (variant === "form") return <FormCardSkeleton />
   if (variant === "home") {
     return (
-      <Screen label="홈을 불러오는 중">
+      <Screen label={getT().t("loading.home")}>
         <div className="mx-auto max-w-6xl space-y-4 px-5 pb-28 pt-20">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-16 w-full max-w-2xl" />
@@ -247,7 +248,7 @@ export function PublicPageSkeleton({
 
   return (
     <PublicContainer>
-      <Screen label="페이지를 불러오는 중">
+      <Screen label={getT().t("loading.page")}>
         {variant === "article" ? (
           <ArticleSkeleton />
         ) : (

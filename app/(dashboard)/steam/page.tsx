@@ -3,6 +3,7 @@ import { listPublicGameReviews } from "@/lib/steam/reviews"
 import { parseListPage } from "@/lib/pagination"
 import { parseSteamLibrarySort } from "@/lib/steam/sort"
 import { ensureProfile } from "@/lib/supabase/server"
+import { getT } from "@/lib/i18n/dictionary"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview, SteamGamesResponse } from "@/types/steam"
 import { SteamLibrary } from "./steam-library"
@@ -24,7 +25,7 @@ export default async function SteamPage({
   try {
     library = await fetchOwnedGames()
   } catch {
-    error = "Steam 응답이 실패했습니다."
+    error = getT().t("steam.fetchFailed")
   }
 
   return (

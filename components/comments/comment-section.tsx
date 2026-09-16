@@ -3,9 +3,10 @@
 import { useState } from "react"
 import { CommentForm } from "@/components/comments/comment-form"
 import { RichContent } from "@/components/editor/rich-content"
+import { useI18n } from "@/components/i18n/i18n-provider"
+import { formatBoardDateTime } from "@/lib/i18n/format"
 import { maskIp } from "@/lib/comments/mask"
 import { countComments } from "@/lib/comments/tree"
-import { formatBoardDateTime } from "@/lib/utils"
 import type { CommentNode, CommentTargetType } from "@/types/comment"
 import { cn } from "@/lib/utils"
 
@@ -25,11 +26,12 @@ export function CommentSection({
   viewerName: string
 }) {
   const total = countComments(comments)
+  const { t } = useI18n()
 
   return (
     <section className="mt-12 border-t border-foreground/10 pt-8">
-      <h2 className="font-display text-2xl font-bold">댓글 {total}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">비회원도 작성할 수 있습니다. 저장 시 이름 옆에 IP와 지역이 표시됩니다.</p>
+      <h2 className="font-display text-2xl font-bold">{t("comments.title", { count: total })}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{t("comments.hint")}</p>
       <div className="mt-5 rounded-2xl border border-foreground/10 bg-background/60 p-4">
         <CommentForm
           targetType={targetType}
@@ -40,7 +42,7 @@ export function CommentSection({
         />
       </div>
       {comments.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
+        <p className="mt-6 text-sm text-muted-foreground">{t("comments.empty")}</p>
       ) : (
         <ul className="mt-6 divide-y border-y bg-white dark:bg-card">
           {comments.map((node) => (
@@ -80,6 +82,7 @@ function CommentItem({
 }) {
   const [reply, setReply] = useState(false)
   const indent = Math.min(depth, 8)
+  const { t, locale } = useI18n()
 
   return (
     <li
@@ -89,21 +92,21 @@ function CommentItem({
       <article className={cn("py-3", depth === 0 ? "px-4 sm:px-5" : "pr-2")}>
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted-foreground">
           <span>
-            작성자 <span className="text-sm font-semibold text-foreground">{node.author_name}</span>
+            {t("comments.author")} <span className="text-sm font-semibold text-foreground">{node.author_name}</span>
           </span>
           <span className="tabular-nums">{maskIp(node.ip_address)}</span>
           {node.ip_region ? <span>{node.ip_region}</span> : null}
-          <span>{formatBoardDateTime(node.created_at)}</span>
+          <span>{formatBoardDateTime(node.created_at, locale)}</span>
           <button
             type="button"
             className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => setReply((value) => !value)}
           >
-            {reply ? "취소" : "답글"}
+            {reply ? t("common.cancel") : t("common.reply")}
           </button>
         </div>
         {node.is_hidden ? (
-          <p className="mt-2 text-sm text-muted-foreground">숨긴 댓글입니다.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("comments.hidden")}</p>
         ) : (
           <div className="mt-2">
             <RichContent content={node.body} className="space-y-2 text-sm" />

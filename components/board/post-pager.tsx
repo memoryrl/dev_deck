@@ -1,12 +1,13 @@
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getT } from "@/lib/i18n/dictionary"
 import type { NeighborLink } from "@/lib/posts/neighbors"
 import { cn } from "@/lib/utils"
 
 export function PostPager({
   listHref,
-  listLabel = "목록으로",
+  listLabel,
   prev,
   next,
   placement = "top",
@@ -19,6 +20,7 @@ export function PostPager({
   placement?: "top" | "bottom"
   className?: string
 }) {
+  const { t } = getT()
   return (
     <nav
       className={cn(
@@ -26,35 +28,35 @@ export function PostPager({
         placement === "top" ? "mb-8" : "mt-10",
         className
       )}
-      aria-label="게시물 이동"
+      aria-label={t("common.postNav")}
     >
       <Button asChild variant="outline" size="sm">
-        <Link href={listHref}>{listLabel}</Link>
+        <Link href={listHref}>{listLabel ?? t("common.backToList")}</Link>
       </Button>
       <div className="flex items-center gap-2">
         {prev ? (
           <Button asChild variant="outline" size="sm">
             <Link href={prev.href} title={prev.title}>
               <ChevronLeft />
-              이전
+              {t("common.prev")}
             </Link>
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled>
             <ChevronLeft />
-            이전
+            {t("common.prev")}
           </Button>
         )}
         {next ? (
           <Button asChild variant="outline" size="sm">
             <Link href={next.href} title={next.title}>
-              다음
+              {t("common.next")}
               <ChevronRight />
             </Link>
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled>
-            다음
+            {t("common.next")}
             <ChevronRight />
           </Button>
         )}

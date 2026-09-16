@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Star } from "lucide-react"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
 export function StarRating({
@@ -15,6 +16,7 @@ export function StarRating({
   readOnly?: boolean
   className?: string
 }) {
+  const { t } = useI18n()
   const initial = clampRating(defaultValue)
   const [value, setValue] = useState(initial)
   const [hover, setHover] = useState<number | null>(null)
@@ -30,7 +32,7 @@ export function StarRating({
       {!readOnly ? <input type="hidden" name={name} value={value} /> : null}
       <div
         role={readOnly ? "img" : "radiogroup"}
-        aria-label="평점"
+        aria-label={t("rating.aria")}
         aria-valuenow={shown}
         aria-valuemin={0}
         aria-valuemax={5}
@@ -62,7 +64,7 @@ export function StarRating({
                     type="button"
                     role="radio"
                     aria-checked={value === index + 0.5}
-                    aria-label={`${index + 0.5}점`}
+                    aria-label={t("rating.points", { value: index + 0.5 })}
                     className="absolute inset-y-0 left-0 w-1/2"
                     onMouseEnter={() => setHover(index + 0.5)}
                     onFocus={() => setHover(index + 0.5)}
@@ -72,7 +74,7 @@ export function StarRating({
                     type="button"
                     role="radio"
                     aria-checked={value === index + 1}
-                    aria-label={`${index + 1}점`}
+                    aria-label={t("rating.points", { value: index + 1 })}
                     className="absolute inset-y-0 right-0 w-1/2"
                     onMouseEnter={() => setHover(index + 1)}
                     onFocus={() => setHover(index + 1)}
@@ -85,7 +87,7 @@ export function StarRating({
         })}
       </div>
       <span className="text-sm tabular-nums text-muted-foreground">
-        {shown > 0 ? `${shown} / 5` : "없음"}
+        {shown > 0 ? `${shown} / 5` : t("common.none")}
       </span>
     </div>
   )

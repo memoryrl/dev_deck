@@ -7,7 +7,9 @@ import { plainTextFromContent } from "@/lib/content"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
 import { steamCoverSources } from "@/lib/steam/images"
-import { cn, formatLastPlayed, formatPlaytime } from "@/lib/utils"
+import { cn, formatPlaytime } from "@/lib/utils"
+import { formatLastPlayed } from "@/lib/i18n/format"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import type { FeaturedGame } from "@/components/landing/steam-featured"
 import type { GameReview, SteamProfile } from "@/types/steam"
 
@@ -27,8 +29,9 @@ function RankMark({ rank, className }: { rank: number; className?: string }) {
 }
 
 function GameMeta({ game, kind }: { game: FeaturedGame; kind: "rank" | "recent" }) {
+  const { dictionary } = useI18n()
   if (kind === "recent") {
-    const lastPlayed = formatLastPlayed(game.last_played_at)
+    const lastPlayed = formatLastPlayed(game.last_played_at, dictionary)
     return lastPlayed ? <span className="shrink-0 text-xs text-white/80 md:text-sm">{lastPlayed}</span> : null
   }
   if (game.playtime_forever_minutes > 0) {
@@ -42,12 +45,13 @@ function GameMeta({ game, kind }: { game: FeaturedGame; kind: "rank" | "recent" 
 }
 
 function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "recent" }) {
+  const { t, dictionary } = useI18n()
   const [lead, ...rest] = games
   const side = rest.slice(0, 4)
   if (!lead) {
     return (
       <EmptyPlaceholder>
-        {kind === "recent" ? "최근 플레이한 게임이 없습니다." : "표시할 게임이 없습니다."}
+        {kind === "recent" ? t("steam.emptyRecent") : t("steam.emptyRank")}
       </EmptyPlaceholder>
     )
   }
@@ -97,7 +101,7 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
             </div>
             {kind === "recent" ? (
               <span className="shrink-0 text-xs text-muted-foreground">
-                {formatLastPlayed(game.last_played_at)}
+                {formatLastPlayed(game.last_played_at, dictionary)}
               </span>
             ) : game.playtime_forever_minutes > 0 ? (
               <span className="shrink-0 text-xs text-muted-foreground">
@@ -112,8 +116,9 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
 }
 
 function ReviewList({ reviews }: { reviews: GameReview[] }) {
+  const { t } = useI18n()
   if (reviews.length === 0) {
-    return <EmptyPlaceholder>아직 공개된 리뷰가 없습니다.</EmptyPlaceholder>
+    return <EmptyPlaceholder>{t("steam.emptyReviews")}</EmptyPlaceholder>
   }
 
   return (
@@ -139,10 +144,10 @@ function ReviewList({ reviews }: { reviews: GameReview[] }) {
             </div>
             {review.review_text ? (
               <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                {plainTextFromContent(review.review_text) || "한줄 리뷰가 아직 없습니다."}
+                {plainTextFromContent(review.review_text) || t("steam.noReviewText")}
               </p>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">한줄 리뷰가 아직 없습니다.</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t("steam.noReviewText")}</p>
             )}
           </div>
         </Link>
@@ -167,6 +172,7 @@ export function SteamSection({
   profile: SteamProfile | null
 }) {
   const [tab, setTab] = useState<Tab>("recent")
+  const { t } = useI18n()
   if (rankedGames.length === 0 && recentGames.length === 0 && reviews.length === 0) return null
 
   return (
@@ -181,16 +187,16 @@ export function SteamSection({
               className="h-10 w-10 rounded-full border object-cover"
             />
           ) : null}
-          <h2 className="font-display text-3xl font-extrabold">Steam</h2>
+          <h2 className="font-display text-3xl font-extrabold">{t("steam.title")}</h2>
         </div>
         <Link href="/games" className="text-sm font-semibold underline">
-          더 보기
+          {t("common.more")}
         </Link>
       </div>
 
       <div
         role="tablist"
-        aria-label="Steam 플레이 목록"
+        aria-label={t("steam.tablist")}
         className="relative mt-5 grid w-full grid-cols-2 rounded-full bg-secondary p-1"
       >
         <span
@@ -202,8 +208,8 @@ export function SteamSection({
         />
         {(
           [
-            ["recent", "최근", "최근 플레이"],
-            ["rank", "누적", "누적 시간 순위"],
+            ["recent", t("steam.recentShort"), t("steam.recent")],
+            ["rank", t("steam.rankShort"), t("steam.rank")],
           ] as const
         ).map(([key, shortLabel, label]) => (
           <button
@@ -225,8 +231,8 @@ export function SteamSection({
 
       {tab === "rank" && totalMinutes > 0 ? (
         <p className="mt-3 text-right text-sm text-muted-foreground">
-          누적 {formatPlaytime(totalMinutes)}
-          {twoWeekMinutes > 0 ? ` · 2주 ${formatPlaytime(twoWeekMinutes)}` : ""}
+          {t("steam.total", { time: formatPlaytime(totalMinutes) })}
+          {twoWeekMinutes > 0 ? ` · ${t("steam.twoWeeks", { time: formatPlaytime(twoWeekMinutes) })}` : ""}
         </p>
       ) : null}
 
@@ -244,7 +250,7 @@ export function SteamSection({
       </div>
 
       <div className="mt-12">
-        <h3 className="font-display text-xl font-extrabold md:text-2xl">최신 리뷰</h3>
+        <h3 className="font-display text-xl font-extrabold md:text-2xl">{t("steam.latestReviews")}</h3>
         <div className="mt-5">
           <ReviewList reviews={reviews} />
         </div>

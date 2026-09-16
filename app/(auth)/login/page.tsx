@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { getT } from "@/lib/i18n/dictionary"
 import { LoginButtons } from "./login-buttons"
 
 export default function LoginPage({
@@ -6,14 +7,15 @@ export default function LoginPage({
 }: {
   searchParams: { error?: string }
 }) {
+  const { t } = getT()
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 py-20">
       <Card className="mx-auto w-full max-w-md space-y-6 p-8">
         <div>
           <p className="text-sm font-semibold text-muted-foreground">DevDeck</p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold">로그인</h1>
+          <h1 className="mt-2 font-display text-3xl font-extrabold">{t("auth.title")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            로그인은 글·리뷰를 편집할 때만 필요합니다. 게임 목록은 로그인 없이 볼 수 있습니다.
+            {t("auth.lede")}
           </p>
         </div>
         {searchParams.error ? (

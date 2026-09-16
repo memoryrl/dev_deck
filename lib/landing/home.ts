@@ -7,7 +7,8 @@ import {
   listLatestPublicGameReviews,
 } from "@/lib/steam/reviews"
 import { plainTextFromContent } from "@/lib/content"
-import { formatPeriod } from "@/lib/utils"
+import { formatPeriod } from "@/lib/i18n/format"
+import { getT } from "@/lib/i18n/dictionary"
 import type { CareerPost, CareerSkill } from "@/types/career"
 import type { Prompt } from "@/types/prompt"
 import type { FeaturedGame } from "@/components/landing/steam-featured"
@@ -79,15 +80,22 @@ function latestIso(values: (string | null | undefined)[]) {
 }
 
 function pickFeatured(posts: CareerPost[], prompts: Prompt[]): FeaturedWork | null {
+  const { t } = getT()
+  const present = t("date.present")
   const project = posts.find((post) => post.post_type === "project") ?? posts[0]
   if (project) {
-    const bits = [project.company, project.role, formatPeriod(project.period_start, project.period_end)].filter(Boolean)
+    const bits = [project.company, project.role, formatPeriod(project.period_start, project.period_end, present)].filter(Boolean)
     return {
       kind: "career",
       href: `/work/${project.id}`,
       title: project.title,
       excerpt: excerptOf(project.excerpt ?? "", project.title),
-      badge: project.post_type === "project" ? "프로젝트" : project.post_type === "skill" ? "스킬" : "노트",
+      badge:
+        project.post_type === "project"
+          ? t("landing.badgeProject")
+          : project.post_type === "skill"
+            ? t("landing.badgeSkill")
+            : t("landing.badgeNote"),
       meta: bits.length > 0 ? bits.join(" · ") : null,
     }
   }
@@ -98,7 +106,7 @@ function pickFeatured(posts: CareerPost[], prompts: Prompt[]): FeaturedWork | nu
     href: `/p/${prompt.id}`,
     title: prompt.title,
     excerpt: excerptOf(prompt.content, prompt.title),
-    badge: "프롬프트",
+    badge: t("landing.badgePrompt"),
     meta: prompt.category,
   }
 }
@@ -119,7 +127,7 @@ function pickUmpc(
     return {
       href: `/games/${deck.app_id}`,
       title: deck.name,
-      body: "Steam Deck에서 플레이한 기록이 있습니다. 상세에서 세팅과 리뷰를 확인하세요.",
+      body: getT().t("landing.umpcFallback"),
     }
   }
   return null

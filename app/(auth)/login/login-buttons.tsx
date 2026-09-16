@@ -4,20 +4,22 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/utils"
+import { useI18n } from "@/components/i18n/i18n-provider"
 
-function oauthMessage(message: string) {
+function oauthMessage(message: string, t: (key: string) => string) {
   if (message.toLowerCase().includes("provider is not enabled")) {
-    return "Supabase에서 Google 로그인이 꺼져 있습니다. Authentication → Providers → Google을 Enable 하고 Client ID/Secret을 넣으세요."
+    return t("auth.googleDisabled")
   }
   return message
 }
 
 export function LoginButtons() {
   const [error, setError] = useState<string | null>(null)
+  const { t } = useI18n()
 
   async function signIn() {
     if (!isSupabaseConfigured()) {
-      setError("Supabase 환경변수가 없습니다.")
+      setError(t("auth.missingEnv"))
       return
     }
     const supabase = createClient()
@@ -29,7 +31,7 @@ export function LoginButtons() {
       },
     })
     if (oauthError) {
-      setError(oauthMessage(oauthError.message))
+      setError(oauthMessage(oauthError.message, t))
     }
   }
 
@@ -42,7 +44,7 @@ export function LoginButtons() {
         onClick={signIn}
       >
         <GoogleMark />
-        Google로 계속
+        {t("common.continueGoogle")}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

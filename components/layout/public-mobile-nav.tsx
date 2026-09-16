@@ -8,9 +8,9 @@ import { ADMIN_NAV } from "@/components/layout/admin-nav"
 import { UserAvatar } from "@/components/layout/account-menu"
 import { MENU_ICON, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
-import { roleLabel } from "@/lib/access"
-import type { SessionUserView } from "@/lib/auth/session-user"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
+import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
 
 export function PublicMobileNav({
@@ -26,6 +26,7 @@ export function PublicMobileNav({
 }) {
   const [section, setSection] = useState<string | null>(null)
   const titleId = useId()
+  const { t } = useI18n()
 
   useEffect(() => {
     if (!open) setSection(null)
@@ -49,7 +50,7 @@ export function PublicMobileNav({
     <div className="pointer-events-none fixed inset-x-0 bottom-0 top-14 z-50 lg:hidden">
       <button
         type="button"
-        aria-label="메뉴 닫기"
+        aria-label={t("common.closeMenu")}
         className={cn(
           "absolute inset-0 bg-foreground/35 backdrop-blur-[2px] transition-opacity duration-300",
           open ? "pointer-events-auto opacity-100" : "opacity-0"
@@ -67,7 +68,7 @@ export function PublicMobileNav({
         )}
       >
         <h2 id={titleId} className="sr-only">
-          사이트 메뉴
+          {t("common.siteMenu")}
         </h2>
         {account ? (
           <div className="flex items-center gap-3 border-b px-4 py-4">
@@ -75,7 +76,7 @@ export function PublicMobileNav({
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{account.name}</p>
               {account.email ? <p className="truncate text-xs text-muted-foreground">{account.email}</p> : null}
-              <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{roleLabel(account.role)}</p>
+              <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{t(`role.${account.role}`)}</p>
             </div>
           </div>
         ) : null}
@@ -133,7 +134,7 @@ export function PublicMobileNav({
           {account?.isOwner ? (
             <div className="mt-3 border-t border-foreground/10 pt-3">
               <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                관리자
+                {t("common.admin")}
               </p>
               {ADMIN_NAV.map((item) => {
                 const Icon = item.icon
@@ -145,7 +146,7 @@ export function PublicMobileNav({
                     onClick={onClose}
                   >
                     <Icon className="size-4 opacity-70" />
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 )
               })}
@@ -157,7 +158,7 @@ export function PublicMobileNav({
               className="mt-2 flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
               onClick={onClose}
             >
-              내 계정
+              {t("common.account")}
             </Link>
           ) : null}
         </nav>
@@ -170,7 +171,7 @@ export function PublicMobileNav({
                 className="flex w-full items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium"
               >
                 <LogOut className="size-4" />
-                로그아웃
+                {t("common.logout")}
               </button>
             </form>
           ) : (
@@ -179,7 +180,7 @@ export function PublicMobileNav({
               className="flex-1 rounded-full bg-foreground px-4 py-2.5 text-center text-sm font-medium text-background"
               onClick={onClose}
             >
-              로그인
+              {t("common.login")}
             </Link>
           )}
           <ThemeToggle className="rounded-full" />

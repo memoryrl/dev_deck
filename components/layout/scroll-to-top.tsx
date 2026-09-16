@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { ChevronUp } from "lucide-react"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
 const SHOW_AFTER = 320
 
 export function ScrollToTop() {
   const [visible, setVisible] = useState(false)
+  const { t } = useI18n()
 
   useEffect(() => {
     const sync = () => setVisible(window.scrollY > SHOW_AFTER)
@@ -19,7 +21,7 @@ export function ScrollToTop() {
   return (
     <button
       type="button"
-      aria-label="맨 위로"
+      aria-label={t("common.scrollTop")}
       onClick={() => {
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
         window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" })

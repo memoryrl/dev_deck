@@ -1,3 +1,6 @@
+"use client"
+
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn, formatPlaytime } from "@/lib/utils"
 
 export function TwoWeekBadge({
@@ -7,6 +10,7 @@ export function TwoWeekBadge({
   minutes: number | null | undefined
   className?: string
 }) {
+  const { t } = useI18n()
   if (!minutes) return null
   return (
     <span
@@ -15,7 +19,7 @@ export function TwoWeekBadge({
         className
       )}
     >
-      2주 {formatPlaytime(minutes)}
+      {t("steam.twoWeeks", { time: formatPlaytime(minutes) })}
     </span>
   )
 }

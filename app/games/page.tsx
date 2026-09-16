@@ -6,17 +6,19 @@ import { parseListPage } from "@/lib/pagination"
 import { fetchOwnedGames } from "@/lib/steam/client"
 import { listPublicGameReviews } from "@/lib/steam/reviews"
 import { parseSteamLibrarySort } from "@/lib/steam/sort"
+import { getT } from "@/lib/i18n/dictionary"
 
 export default function PublicGamesPage({
   searchParams,
 }: {
   searchParams?: { page?: string; sort?: string }
 }) {
+  const { t } = getT()
   return (
     <PublicContainer>
-      <h1 className="font-display text-4xl font-extrabold">Steam 라이브러리</h1>
+      <h1 className="font-display text-4xl font-extrabold">{t("games.title")}</h1>
       <p className="mt-2 text-muted-foreground">
-        보유 게임, 플레이 기록, 한줄 리뷰. 보기는 로그인 없이 가능합니다.
+        {t("games.lede")}
       </p>
       <div className="mt-8">
         <Suspense fallback={<SteamLibrarySkeleton />}>
@@ -38,7 +40,7 @@ async function GamesLibrary({
     listPublicGameReviews(),
     fetchOwnedGames()
       .then((library) => ({ library, error: null as string | null }))
-      .catch(() => ({ library: null, error: "Steam 응답이 실패했습니다." })),
+      .catch(() => ({ library: null, error: getT().t("steam.fetchFailed") })),
   ])
   return (
     <SteamLibrary

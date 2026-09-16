@@ -1,9 +1,13 @@
+"use client"
+
 import { Badge } from "@/components/ui/badge"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { ScreenshotGallery } from "@/components/steam/screenshot-gallery"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
+import { dateLocaleTag, formatLastPlayed } from "@/lib/i18n/format"
 import { steamHeroSources } from "@/lib/steam/images"
-import { formatLastPlayed, formatPlaytime } from "@/lib/utils"
+import { formatPlaytime } from "@/lib/utils"
 import type {
   SteamAchievementSummary,
   SteamAppCatalog,
@@ -11,11 +15,11 @@ import type {
   SteamGame,
 } from "@/types/steam"
 
-const DECK_LABEL: Record<SteamDeckCompat, string> = {
-  verified: "Deck 인증",
-  playable: "Deck 플레이 가능",
-  unsupported: "Deck 미지원",
-  unknown: "Deck 미확인",
+const DECK_KEY: Record<SteamDeckCompat, string> = {
+  verified: "steam.deckVerified",
+  playable: "steam.deckPlayable",
+  unsupported: "steam.deckUnsupported",
+  unknown: "steam.deckUnknown",
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
@@ -51,7 +55,8 @@ export function GameCatalog({
   catalog: SteamAppCatalog | null
   achievements: SteamAchievementSummary | null
 }) {
-  const lastPlayed = formatLastPlayed(game?.last_played_at ?? null)
+  const { t, locale, dictionary } = useI18n()
+  const lastPlayed = formatLastPlayed(game?.last_played_at ?? null, dictionary)
   const platforms = game ? platformMinutes(game) : []
   const os = catalog
     ? [
@@ -85,7 +90,7 @@ export function GameCatalog({
             rel="noreferrer"
             className="text-sm font-semibold underline"
           >
-            Steam 상점
+            {t("steam.store")}
           </a>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -93,9 +98,9 @@ export function GameCatalog({
             <Badge variant="secondary">Deck {formatPlaytime(game.playtime_deck_minutes)}</Badge>
           ) : null}
           {catalog?.deck_compat ? (
-            <Badge variant="secondary">{DECK_LABEL[catalog.deck_compat]}</Badge>
+            <Badge variant="secondary">{t(DECK_KEY[catalog.deck_compat])}</Badge>
           ) : null}
-          {catalog?.coming_soon ? <Badge variant="outline">출시 예정</Badge> : null}
+          {catalog?.coming_soon ? <Badge variant="outline">{t("steam.comingSoon")}</Badge> : null}
           {os.map((item) => (
             <Badge key={item} variant="outline">
               {item}
@@ -106,14 +111,14 @@ export function GameCatalog({
 
       {game || lastPlayed ? (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-          {game ? <Fact label="누적" value={formatPlaytime(game.playtime_forever_minutes)} /> : null}
+          {game ? <Fact label={t("steam.playtime")} value={formatPlaytime(game.playtime_forever_minutes)} /> : null}
           {game?.playtime_2weeks_minutes ? (
-            <Fact label="최근 2주" value={formatPlaytime(game.playtime_2weeks_minutes)} />
+            <Fact label={t("steam.twoWeeksLabel")} value={formatPlaytime(game.playtime_2weeks_minutes)} />
           ) : null}
-          {lastPlayed ? <Fact label="마지막 플레이" value={lastPlayed} /> : null}
+          {lastPlayed ? <Fact label={t("steam.lastPlayed")} value={lastPlayed} /> : null}
           {achievementTotal ? (
             <Fact
-              label="업적"
+              label={t("steam.achievements")}
               value={
                 achievements
                   ? `${achievements.unlocked} / ${achievements.total}`
@@ -133,7 +138,7 @@ export function GameCatalog({
       {achievements && achievements.total > 0 ? (
         <div>
           <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span>업적 진행</span>
+            <span>{t("steam.achievementProgress")}</span>
             <span>
               {achievements.unlocked} / {achievements.total}
             </span>
@@ -155,19 +160,19 @@ export function GameCatalog({
         <dl className="grid gap-2 text-sm md:grid-cols-2">
           {makers.length > 0 ? (
             <div>
-              <dt className="text-muted-foreground">개발 / 퍼블리셔</dt>
+              <dt className="text-muted-foreground">{t("steam.developers")}</dt>
               <dd className="font-medium">{makers.join(", ")}</dd>
             </div>
           ) : null}
           {catalog?.genres.length ? (
             <div>
-              <dt className="text-muted-foreground">장르</dt>
+              <dt className="text-muted-foreground">{t("steam.genres")}</dt>
               <dd className="font-medium">{catalog.genres.join(", ")}</dd>
             </div>
           ) : null}
           {catalog?.release_date ? (
             <div>
-              <dt className="text-muted-foreground">출시</dt>
+              <dt className="text-muted-foreground">{t("steam.release")}</dt>
               <dd className="font-medium">{catalog.release_date}</dd>
             </div>
           ) : null}
@@ -179,8 +184,8 @@ export function GameCatalog({
           ) : null}
           {catalog?.recommendations ? (
             <div>
-              <dt className="text-muted-foreground">Steam 평가 수</dt>
-              <dd className="font-medium">{catalog.recommendations.toLocaleString("ko-KR")}</dd>
+              <dt className="text-muted-foreground">{t("steam.recommendations")}</dt>
+              <dd className="font-medium">{catalog.recommendations.toLocaleString(dateLocaleTag(locale))}</dd>
             </div>
           ) : null}
         </dl>

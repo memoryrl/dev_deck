@@ -2,32 +2,33 @@
 
 import Link from "next/link"
 import { Briefcase, Gamepad2, Sparkles } from "lucide-react"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { usePageActivity } from "@/components/landing/use-page-activity"
 import { Card } from "@/components/ui/card"
 
-const modules = [
+const MODULE_META = [
   {
     href: "/#prompts",
     title: "PromptKit",
-    body: "바이브 코딩 프롬프트를 저장하고 한 번에 복사합니다.",
+    bodyKey: "landing.modulePrompt",
     icon: Sparkles,
     tint: "from-[hsl(var(--lux-champagne)/0.18)]",
   },
   {
     href: "/work",
     title: "CareerLog",
-    body: "참여 프로젝트와 스킬을 게시판·블로그로 정리합니다.",
+    bodyKey: "landing.moduleCareer",
     icon: Briefcase,
     tint: "from-[hsl(var(--lux-cognac)/0.14)]",
   },
   {
     href: "/games",
     title: "Steam Tracker",
-    body: "보유 게임과 리뷰를 공개 포트폴리오로 보여 줍니다.",
+    bodyKey: "landing.moduleSteam",
     icon: Gamepad2,
     tint: "from-[hsl(var(--lux-espresso)/0.1)]",
   },
-]
+] as const
 
 function ModuleCard({
   href,
@@ -35,7 +36,13 @@ function ModuleCard({
   body,
   icon: Icon,
   tint,
-}: (typeof modules)[number]) {
+}: {
+  href: string
+  title: string
+  body: string
+  icon: (typeof MODULE_META)[number]["icon"]
+  tint: string
+}) {
   return (
     <Link href={href} className="w-[min(22rem,78vw)] shrink-0">
       <Card className={`h-full overflow-hidden bg-gradient-to-br ${tint} to-card transition hover:-translate-y-0.5`}>
@@ -48,6 +55,8 @@ function ModuleCard({
 }
 
 export function ModuleMarquee() {
+  const { t } = useI18n()
+  const modules = MODULE_META.map((mod) => ({ ...mod, body: t(mod.bodyKey) }))
   const loop = [...modules, ...modules]
   const pageActive = usePageActivity()
 

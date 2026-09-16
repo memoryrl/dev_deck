@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { FeaturedWorkCard } from "@/components/landing/featured-work"
 import { HeroVisual } from "@/components/landing/hero-visual"
+import { HeroSection } from "@/components/landing/hero-topology/hero-section"
 import { ContactCta } from "@/components/landing/contact-cta"
 import { LatestColumns } from "@/components/landing/latest-columns"
 import { ModuleMarquee } from "@/components/landing/module-marquee"
@@ -13,46 +14,71 @@ import { HomeLandingSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
 import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
+import { getT } from "@/lib/i18n/dictionary"
+import { buildLandingTopology } from "@/lib/landing/topology"
 
 export default function HomePage() {
   return (
     <main className="flex-1">
       <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-24 -top-28 size-[32rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-sand)/0.9),transparent_64%)] blur-2xl" />
-          <div className="absolute -right-16 top-0 size-[28rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-champagne)/0.28),transparent_64%)] blur-2xl" />
-          <div className="absolute bottom-0 left-1/3 size-[22rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-cognac)/0.16),transparent_64%)] blur-2xl" />
-        </div>
-        <HeroVisual />
-        <div className="relative z-10 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
-          <p className="text-sm font-semibold text-muted-foreground">Personal Developer Hub</p>
-          <h1 className="mt-4 max-w-2xl bg-gradient-to-br from-foreground via-foreground to-foreground/55 bg-clip-text font-display text-5xl font-extrabold leading-tight text-transparent md:text-6xl">
-            프롬프트, 커리어, 게임을 한 덱에서.
-          </h1>
-          <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            AI 바이브 코딩 템플릿, 회사 참여 이력, Steam 라이브러리를 공개 포트폴리오로 보여 줍니다.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild>
-              <Link href="/work">커리어 보기</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/#prompts">프롬프트 보기</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/games">게임 보기</Link>
-            </Button>
-            <Suspense>
-              <HeroLoginLink />
-            </Suspense>
-          </div>
-        </div>
+        {/* 데이터가 필요한 스위치+토폴로지는 별도 Suspense로 감싸 히어로 카피는
+            즉시 페인트되게 한다. 폴백은 실제 클래식 히어로와 동일한 마크업이라
+            데이터가 늦게 와도 레이아웃이 튀지 않는다 (08-landing-topology.md 5절). */}
+        <Suspense fallback={<ClassicHeroContent />}>
+          <HeroSectionResolved />
+        </Suspense>
       </section>
 
       <Suspense fallback={<HomeLandingSkeleton />}>
         <HomeLanding />
       </Suspense>
     </main>
+  )
+}
+
+async function HeroSectionResolved() {
+  const topology = await buildLandingTopology()
+  return (
+    <HeroSection topology={topology}>
+      <ClassicHeroContent />
+    </HeroSection>
+  )
+}
+
+function ClassicHeroContent() {
+  const { t } = getT()
+  return (
+    <>
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 -top-28 size-[32rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-sand)/0.9),transparent_64%)] blur-2xl" />
+        <div className="absolute -right-16 top-0 size-[28rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-champagne)/0.28),transparent_64%)] blur-2xl" />
+        <div className="absolute bottom-0 left-1/3 size-[22rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-cognac)/0.16),transparent_64%)] blur-2xl" />
+      </div>
+      <HeroVisual />
+      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
+          <p className="text-sm font-semibold text-muted-foreground">{t("landing.kicker")}</p>
+          <h1 className="mt-4 max-w-2xl bg-gradient-to-br from-foreground via-foreground to-foreground/55 bg-clip-text font-display text-5xl font-extrabold leading-tight text-transparent md:text-6xl">
+            {t("landing.headline")}
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+            {t("landing.lede")}
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild>
+              <Link href="/work">{t("landing.viewCareer")}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/#prompts">{t("landing.viewPrompts")}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/games">{t("landing.viewGames")}</Link>
+          </Button>
+          <Suspense>
+            <HeroLoginLink />
+          </Suspense>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -90,10 +116,11 @@ function takeLatest<T>(items: T[], featuredHref: string | undefined, hrefOf: (it
 
 async function HeroLoginLink() {
   const viewer = await currentViewer()
+  const { t } = getT()
   if (viewer.user) return null
   return (
     <Button asChild variant="ghost">
-      <Link href="/login">로그인</Link>
+      <Link href="/login">{t("common.login")}</Link>
     </Button>
   )
 }

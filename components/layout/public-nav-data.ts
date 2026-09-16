@@ -16,77 +16,77 @@ export const SCENE_LINE: Record<MegaId, string> = {
 
 export const publicMenus: {
   id: MegaId
-  label: string
-  highlight: { title: string; body: string; href: string; cta: string }
-  groups: { title: string; links: { href: string; label: string; note?: string }[] }[]
+  labelKey: string
+  highlight: { title: string; bodyKey: string; href: string; ctaKey: string }
+  groups: { titleKey: string; links: { href: string; labelKey: string; noteKey?: string }[] }[]
 }[] = [
   {
     id: "prompt",
-    label: "AI Prompt",
+    labelKey: "mega.prompt.label",
     highlight: {
       title: "PromptKit",
-      body: "바이브 코딩 프롬프트를 저장하고, 한 번에 복사해 재사용합니다.",
+      bodyKey: "mega.prompt.body",
       href: "/#prompts",
-      cta: "최근 프롬프트",
+      ctaKey: "mega.prompt.cta",
     },
     groups: [
       {
-        title: "둘러보기",
+        titleKey: "mega.browse",
         links: [
-          { href: "/#prompts", label: "공개 프롬프트", note: "랜딩 최근 목록" },
-          { href: "/", label: "허브 홈" },
+          { href: "/#prompts", labelKey: "mega.prompt.public", noteKey: "mega.prompt.publicNote" },
+          { href: "/", labelKey: "mega.prompt.home" },
         ],
       },
       {
-        title: "편집",
-        links: [{ href: "__prompt__", label: "프롬프트 관리", note: "관리자 전용" }],
+        titleKey: "mega.edit",
+        links: [{ href: "__prompt__", labelKey: "mega.prompt.manage", noteKey: "mega.adminOnly" }],
       },
     ],
   },
   {
     id: "career",
-    label: "커리어로그",
+    labelKey: "mega.career.label",
     highlight: {
       title: "CareerLog",
-      body: "참여 프로젝트와 스킬을 게시판·블로그로 정리합니다.",
+      bodyKey: "mega.career.body",
       href: "/work",
-      cta: "커리어 게시판",
+      ctaKey: "mega.career.cta",
     },
     groups: [
       {
-        title: "둘러보기",
+        titleKey: "mega.browse",
         links: [
-          { href: "/work", label: "전체 글" },
-          { href: "/#career", label: "최근 커리어" },
-          { href: "/#skills", label: "스킬" },
+          { href: "/work", labelKey: "mega.career.all" },
+          { href: "/#career", labelKey: "mega.career.recent" },
+          { href: "/#skills", labelKey: "mega.career.skills" },
         ],
       },
       {
-        title: "편집",
-        links: [{ href: "__career__", label: "글·스킬 관리", note: "관리자 전용" }],
+        titleKey: "mega.edit",
+        links: [{ href: "__career__", labelKey: "mega.career.manage", noteKey: "mega.adminOnly" }],
       },
     ],
   },
   {
     id: "games",
-    label: "게임리뷰",
+    labelKey: "mega.games.label",
     highlight: {
       title: "Steam Tracker",
-      body: "보유 게임과 한줄 리뷰를 공개 포트폴리오로 보여 줍니다.",
+      bodyKey: "mega.games.body",
       href: "/games",
-      cta: "라이브러리",
+      ctaKey: "mega.games.cta",
     },
     groups: [
       {
-        title: "둘러보기",
+        titleKey: "mega.browse",
         links: [
-          { href: "/games", label: "게임 목록" },
-          { href: "/#games", label: "추천 게임" },
+          { href: "/games", labelKey: "mega.games.list" },
+          { href: "/#games", labelKey: "mega.games.featured" },
         ],
       },
       {
-        title: "편집",
-        links: [{ href: "__steam__", label: "리뷰 관리", note: "관리자 전용" }],
+        titleKey: "mega.edit",
+        links: [{ href: "__steam__", labelKey: "mega.games.manage", noteKey: "mega.adminOnly" }],
       },
     ],
   },
