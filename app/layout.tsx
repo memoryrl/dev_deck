@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter, Public_Sans } from "next/font/google"
 import { Suspense } from "react"
 import { I18nProvider } from "@/components/i18n/i18n-provider"
@@ -22,6 +22,11 @@ const publicSans = Public_Sans({
   display: "swap",
   preload: false,
 })
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = getT()

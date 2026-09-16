@@ -11,7 +11,7 @@ function HeaderFallback() {
 
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen max-w-full flex-col overflow-x-clip">
       <Suspense fallback={<HeaderFallback />}>
         <PublicHeader />
       </Suspense>

@@ -135,7 +135,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
 
   return (
     <div
-      className={cn("relative md:h-[640px]", isDragging && "select-none [&_*]:cursor-grabbing")}
+      className={cn("relative overflow-x-clip md:h-[640px]", isDragging && "select-none [&_*]:cursor-grabbing")}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

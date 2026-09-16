@@ -47,7 +47,7 @@ async function HeroSectionResolved() {
 
 function ClassicHeroFallback() {
   return (
-    <div className="relative">
+    <div className="relative overflow-x-clip">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 -top-28 size-[32rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-sand)/0.9),transparent_64%)] blur-2xl" />
         <div className="absolute -right-16 top-0 size-[28rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-champagne)/0.28),transparent_64%)] blur-2xl" />
