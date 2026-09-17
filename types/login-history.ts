@@ -11,3 +11,10 @@ export type LoginHistoryEntry = {
   user_agent: string | null
   created_at: string
 }
+
+export type PageViewEntry = {
+  id: string
+  visit_id: string
+  path: string
+  created_at: string
+}

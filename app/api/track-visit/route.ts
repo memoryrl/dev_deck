@@ -1,7 +1,7 @@
 import { cookies, headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { hasRecentSessionLog, recordVisitHistory } from "@/lib/auth/login-history"
-import { VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
+import { findRecentSessionId, recordPageView, recordVisitHistory } from "@/lib/auth/login-history"
+import { VISIT_ID_COOKIE, VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
@@ -9,17 +9,38 @@ import { isSupabaseConfigured } from "@/lib/utils"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-function jsonWithVisitCookie(body: object) {
+function jsonWithVisitCookies(body: object, visitId: string | null) {
   const res = NextResponse.json(body)
   res.cookies.set(VISIT_LOG_COOKIE, "1", visitLogCookieOptions())
+  if (visitId) res.cookies.set(VISIT_ID_COOKIE, visitId, visitLogCookieOptions())
   return res
 }
 
-export async function POST() {
-  const jar = cookies()
-  if (jar.get(VISIT_LOG_COOKIE)) return NextResponse.json({ skipped: true })
+async function readPath(request: Request) {
+  try {
+    const body = await request.json()
+    if (typeof body?.path === "string") return body.path.slice(0, 500)
+  } catch {
+    // 바디 없이 호출된 경우도 있다(구버전 클라이언트) — 기본값으로 처리
+  }
+  return "/"
+}
 
-  if (!isSupabaseConfigured()) return jsonWithVisitCookie({ ok: false })
+// 세션(login_history 행)을 만들거나 재사용하고, 그 세션의 첫 페이지뷰를 기록한다.
+// 이후 같은 세션의 페이지 이동은 이 라우트를 다시 타지 않고 훨씬 가벼운
+// /api/track-pageview로 간다(dd_visit_id 쿠키가 있을 때) — docs/10-login-history.md.
+export async function POST(request: Request) {
+  const jar = cookies()
+  const path = await readPath(request)
+
+  if (jar.get(VISIT_LOG_COOKIE)) {
+    // 쿠키 레이스 등으로 세션은 이미 있는데 여기로 온 경우 — 페이지뷰만 남긴다.
+    const existingId = jar.get(VISIT_ID_COOKIE)?.value ?? null
+    if (existingId) await recordPageView({ visitId: existingId, path }).catch(() => {})
+    return NextResponse.json({ skipped: true })
+  }
+
+  if (!isSupabaseConfigured()) return jsonWithVisitCookies({ ok: false }, null)
 
   try {
     const supabase = createClient()
@@ -27,11 +48,15 @@ export async function POST() {
       data: { user },
     } = await supabase.auth.getUser()
     const ip = clientIpFromHeaders()
-    if (await hasRecentSessionLog({ userId: user?.id ?? null, ipAddress: ip })) {
-      return jsonWithVisitCookie({ skipped: true })
+
+    const recentId = await findRecentSessionId({ userId: user?.id ?? null, ipAddress: ip })
+    if (recentId) {
+      await recordPageView({ visitId: recentId, path })
+      return jsonWithVisitCookies({ skipped: true }, recentId)
     }
+
     const region = await resolveIpRegion(ip)
-    await recordVisitHistory({
+    const visitId = await recordVisitHistory({
       userId: user?.id ?? null,
       email: user?.email ?? null,
       provider: (user?.app_metadata?.provider as string | undefined) ?? null,
@@ -39,8 +64,9 @@ export async function POST() {
       ipRegion: region,
       userAgent: headers().get("user-agent"),
     })
-    return jsonWithVisitCookie({ ok: true })
+    if (visitId) await recordPageView({ visitId, path })
+    return jsonWithVisitCookies({ ok: true }, visitId)
   } catch {
-    return jsonWithVisitCookie({ ok: false })
+    return jsonWithVisitCookies({ ok: false }, null)
   }
 }

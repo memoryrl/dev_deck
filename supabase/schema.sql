@@ -701,3 +701,34 @@ CREATE POLICY login_history_delete_owner ON devdeck.login_history
   USING (devdeck.is_owner());
 
 GRANT ALL ON TABLE devdeck.login_history TO anon, authenticated, service_role;
+
+-- Page view detail per session (login_history.id를 세션 식별자로 재사용) —
+-- see supabase/patch-page-views.sql, docs/10-login-history.md
+CREATE TABLE IF NOT EXISTS devdeck.page_views (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  visit_id UUID NOT NULL REFERENCES devdeck.login_history(id) ON DELETE CASCADE,
+  path TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS page_views_visit_idx
+  ON devdeck.page_views (visit_id, created_at);
+
+ALTER TABLE devdeck.page_views ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS page_views_select_owner ON devdeck.page_views;
+CREATE POLICY page_views_select_owner ON devdeck.page_views
+  FOR SELECT TO authenticated
+  USING (devdeck.is_owner());
+
+DROP POLICY IF EXISTS page_views_insert ON devdeck.page_views;
+CREATE POLICY page_views_insert ON devdeck.page_views
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS page_views_delete_owner ON devdeck.page_views;
+CREATE POLICY page_views_delete_owner ON devdeck.page_views
+  FOR DELETE TO authenticated
+  USING (devdeck.is_owner());
+
+GRANT ALL ON TABLE devdeck.page_views TO anon, authenticated, service_role;

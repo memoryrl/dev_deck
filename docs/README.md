@@ -31,6 +31,7 @@ UI 크롬은 한국어와 English를 쿠키·쿼리로 유지합니다. 글·댓
 | 7 | [07-uploads.md](./07-uploads.md) | CKEditor 이미지와 Uppy 첨부가 Storage로 가는 길 |
 | 8 | [08-landing-topology.md](./08-landing-topology.md) | 아이소메트릭 오피스, 로봇, 카메라·클릭 안내 |
 | 9 | [09-i18n.md](./09-i18n.md) | `ko` / `en` 쿠키 SSR. i18next 없이 사전 JSON |
+| 10 | [10-login-history.md](./10-login-history.md) | 로그인·접속·페이지뷰 이력, 세션 식별자와 성능 근거 |
 
 ---
 

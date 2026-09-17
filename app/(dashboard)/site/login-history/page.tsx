@@ -1,14 +1,14 @@
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
+import { LoginHistoryRow } from "@/app/(dashboard)/site/login-history/login-history-row"
 import { ListPager } from "@/components/layout/list-pager"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
-import { listLoginHistory, type LoginHistorySearchField } from "@/lib/auth/login-history"
+import { countPageViewsByVisit, listLoginHistory, type LoginHistorySearchField } from "@/lib/auth/login-history"
 import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
-import { cn, formatBoardDateTime } from "@/lib/utils"
 import type { LoginHistoryEventType } from "@/types/login-history"
 
 const TYPE_OPTIONS: { value: LoginHistoryEventType | "all"; label: string }[] = [
@@ -43,6 +43,7 @@ export default async function LoginHistoryPage({
   const activeType = isEventType(searchParams?.type) ? searchParams.type : undefined
   const field = isSearchField(searchParams?.field) ? searchParams.field : "email"
   const history = await listLoginHistory({ page, eventType: activeType, q, field })
+  const pageCounts = await countPageViewsByVisit(history.rows.map((entry) => entry.id))
   const extra = { type: activeType, field: field === "email" ? undefined : field }
   const searched = Boolean(q)
 
@@ -52,7 +53,7 @@ export default async function LoginHistoryPage({
         <h1 className="font-display text-3xl font-extrabold">로그인 · 접속 이력</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           구글 로그인 성공 시점과, 회원·비회원 구분 없이 사이트에 접속한 시점을 함께 기록합니다. 접속 IP와
-          지역 정보를 확인할 수 있습니다.
+          지역 정보, 그 세션이 본 페이지 목록까지 확인할 수 있습니다.
         </p>
       </div>
 
@@ -101,50 +102,13 @@ export default async function LoginHistoryPage({
             <ul className="mt-2 divide-y border-y bg-white dark:bg-card">
               {history.rows.map((entry, index) => {
                 const number = history.total - ((history.page - 1) * history.pageSize + index)
-                const isMember = Boolean(entry.user_id)
                 return (
-                  <li key={entry.id} className="flex flex-col gap-1.5 px-4 py-4 sm:px-5">
-                    <div className="flex flex-col gap-1.5 md:flex-row md:items-baseline md:justify-between md:gap-4">
-                      <p className="min-w-0 text-[15px] leading-snug">
-                        <span className="text-muted-foreground">No. {number}</span>
-                        <span className="mx-2 text-foreground/20">|</span>
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs font-semibold",
-                            entry.event_type === "login"
-                              ? "bg-foreground/10 text-foreground"
-                              : "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          {entry.event_type === "login" ? "로그인" : "접속"}
-                        </span>
-                        <span className="mx-2 text-foreground/20">|</span>
-                        <span className="font-semibold text-foreground">
-                          {isMember ? (entry.email ?? "(이메일 없음)") : "비회원"}
-                        </span>
-                        {entry.provider ? (
-                          <>
-                            <span className="mx-2 text-foreground/20">|</span>
-                            <span>{entry.provider}</span>
-                          </>
-                        ) : null}
-                      </p>
-                      <p className="shrink-0 text-xs text-muted-foreground md:text-right">
-                        IP {entry.ip_address || "-"}
-                        {entry.ip_region ? (
-                          <>
-                            <span className="mx-1.5 text-foreground/20">|</span>
-                            {entry.ip_region}
-                          </>
-                        ) : null}
-                        <span className="mx-1.5 text-foreground/20">|</span>
-                        {formatBoardDateTime(entry.created_at)}
-                      </p>
-                    </div>
-                    {entry.user_agent ? (
-                      <p className="truncate text-xs text-muted-foreground/70">{entry.user_agent}</p>
-                    ) : null}
-                  </li>
+                  <LoginHistoryRow
+                    key={entry.id}
+                    entry={entry}
+                    number={number}
+                    pageCount={pageCounts[entry.id] ?? 0}
+                  />
                 )
               })}
             </ul>
