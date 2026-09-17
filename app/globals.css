@@ -78,7 +78,7 @@
 }
 
 .prose-deck {
-  font-size: calc(15px * var(--article-font-scale, 1));
+  font-size: calc(1em * var(--article-font-scale, 1));
 }
 
 .prose-deck :where(h1, h2, h3, h4, h5, h6) {

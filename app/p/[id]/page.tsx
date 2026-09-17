@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { PromptForm } from "@/app/(dashboard)/promptkit/prompt-form"
 import { ArticleEditPanel } from "@/components/board/article-edit-panel"
@@ -9,12 +10,15 @@ import { PublicContainer } from "@/components/layout/public-container"
 import { PromptBodyToggle } from "@/components/prompts/prompt-body-toggle"
 import { ResultPreview } from "@/components/prompts/result-preview"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
+import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { currentViewer } from "@/lib/boards/access"
 import { plainTextFromContent } from "@/lib/content"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import { resolveResultEmbed } from "@/lib/embeds/result-preview"
 import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
+import type { Prompt } from "@/types/prompt"
 
 export default async function PublicPromptPage({
   params,
@@ -23,25 +27,34 @@ export default async function PublicPromptPage({
 }) {
   const prompt = await getPublicPromptById(params.id)
   if (!prompt) notFound()
-  const { isOwner } = await currentViewer()
-  const resultEmbed = prompt.result_html?.trim() ? await resolveResultEmbed(prompt.result_html) : null
-  const neighbors = findNeighbors(
-    await listPublicPrompts(),
-    prompt.id,
-    (item) => item.id,
-    (item) => `/p/${item.id}`,
-    (item) => item.title
-  )
 
-  const view = (
+  return (
+    <PublicContainer as="article">
+      <ArticleReader>
+        <Suspense fallback={<PagerSkeleton />}>
+          <NeighborsPager prompt={prompt} />
+        </Suspense>
+        <Suspense fallback={<PromptArticle prompt={prompt} />}>
+          <OwnerAwarePrompt prompt={prompt} />
+        </Suspense>
+        <Suspense fallback={<PagerSkeleton className="mt-10" />}>
+          <NeighborsPager prompt={prompt} placement="bottom" />
+        </Suspense>
+        <Suspense fallback={<CommentSectionSkeleton />}>
+          <ArticleComments targetType="prompt" targetId={prompt.id} returnTo={`/p/${prompt.id}`} />
+        </Suspense>
+      </ArticleReader>
+    </PublicContainer>
+  )
+}
+
+function PromptArticle({ prompt }: { prompt: Prompt }) {
+  return (
     <>
       <Badge className="mt-6">{prompt.category}</Badge>
       <div className="mt-4 flex items-start justify-between gap-4">
         <h1 className="min-w-0 font-display text-4xl font-extrabold">{prompt.title}</h1>
-        <CopyButton
-          className="shrink-0"
-          text={plainTextFromContent(prompt.content) || prompt.content}
-        />
+        <CopyButton className="shrink-0" text={plainTextFromContent(prompt.content) || prompt.content} />
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         {(prompt.tags ?? []).map((tag) => (
@@ -51,7 +64,9 @@ export default async function PublicPromptPage({
       <section className="mt-8">
         <p className="text-sm font-semibold text-muted-foreground">예상 결과물</p>
         {prompt.result_html?.trim() ? (
-          <ResultPreview html={prompt.result_html} embed={resultEmbed} />
+          <Suspense fallback={<Skeleton className="mt-4 h-48 w-full rounded-xl" />}>
+            <ResultPreviewSection html={prompt.result_html} />
+          </Suspense>
         ) : (
           <EmptyPlaceholder className="mt-4">아직 등록된 결과물이 없습니다.</EmptyPlaceholder>
         )}
@@ -59,23 +74,34 @@ export default async function PublicPromptPage({
       <PromptBodyToggle content={prompt.content} />
     </>
   )
+}
 
+async function ResultPreviewSection({ html }: { html: string }) {
+  const embed = await resolveResultEmbed(html)
+  return <ResultPreview html={html} embed={embed} />
+}
+
+async function NeighborsPager({ prompt, placement }: { prompt: Prompt; placement?: "bottom" }) {
+  const allPrompts = await listPublicPrompts()
+  const neighbors = findNeighbors(
+    allPrompts,
+    prompt.id,
+    (item) => item.id,
+    (item) => `/p/${item.id}`,
+    (item) => item.title
+  )
+  return <PostPager placement={placement} listHref="/b/prompts" {...neighbors} />
+}
+
+// 본문 컴포넌트를 fallback과 결과에서 각각 새로 만든다. 같은 JSX 객체를 폴백과
+// children에 재사용하면 Suspense가 폴백을 걷을 때 본문까지 같이 언마운트된다.
+async function OwnerAwarePrompt({ prompt }: { prompt: Prompt }) {
+  const { isOwner } = await currentViewer()
+  const article = <PromptArticle prompt={prompt} />
+  if (!isOwner) return article
   return (
-    <PublicContainer as="article">
-      <ArticleReader>
-        <PostPager listHref="/b/prompts" {...neighbors} />
-        {isOwner ? (
-          <ArticleEditPanel
-            form={<PromptForm prompt={prompt} returnTo={`/p/${prompt.id}`} deleteTo="/b/prompts" />}
-          >
-            {view}
-          </ArticleEditPanel>
-        ) : (
-          view
-        )}
-        <PostPager placement="bottom" listHref="/b/prompts" {...neighbors} />
-        <ArticleComments targetType="prompt" targetId={prompt.id} returnTo={`/p/${prompt.id}`} />
-      </ArticleReader>
-    </PublicContainer>
+    <ArticleEditPanel form={<PromptForm prompt={prompt} returnTo={`/p/${prompt.id}`} deleteTo="/b/prompts" />}>
+      {article}
+    </ArticleEditPanel>
   )
 }

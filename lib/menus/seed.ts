@@ -1,4 +1,4 @@
-import { forgetMemoryCache } from "@/lib/cache/memory"
+import { forgetMemoryCache, MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { AccessRole } from "@/lib/access"
@@ -126,9 +126,21 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
 /**
  * menus 테이블이 비어 있을 때만 기본 메뉴를 채웁니다.
  * (관리자 세션 + menus_write RLS 필요)
+ *
+ * "이미 채워져 있나"는 메뉴 화면을 열 때마다 다시 물어볼 필요가 없다 — 한 번 rows가
+ * 있는 걸 확인하면 그 결과를 잠깐 메모리에 남겨서, 메뉴 화면 재방문마다 DB 왕복 하나가
+ * 그냥 사라지게 한다(체감 전환 지연의 일부였다).
  */
 export async function ensureDefaultMenus() {
   if (!isSupabaseConfigured()) return { seeded: false as const, reason: "not_configured" as const }
+
+  const alreadySeeded = await withMemoryCache(memoryKey.menusSeeded, MEMORY_TTL.menusSeeded, async () => {
+    const supabase = createClient()
+    const { count, error } = await supabase.from("menus").select("*", { count: "exact", head: true })
+    if (error) return false
+    return (count ?? 0) > 0
+  })
+  if (alreadySeeded) return { seeded: false as const, reason: "already_has_rows" as const }
 
   const supabase = createClient()
   const { count, error: countError } = await supabase

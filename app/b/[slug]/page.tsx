@@ -1,7 +1,9 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PostList, type PostListRow } from "@/components/board/post-list"
 import { PublicPostForm } from "@/components/board/public-post-form"
+import { ListSkeleton } from "@/components/layout/skeletons"
 import { PublicContainer } from "@/components/layout/public-container"
 import { Card } from "@/components/ui/card"
 import { boardPath, roleAtLeast } from "@/lib/access"
@@ -12,6 +14,7 @@ import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery, type PagedResult } from "@/lib/pagination"
 import { listPromptsPage, withPromptThumbnails } from "@/lib/prompts/public"
 import { listGameReviewsPage } from "@/lib/steam/reviews"
+import type { Board } from "@/types/board"
 
 export default async function PublicBoardPage({
   params,
@@ -20,36 +23,24 @@ export default async function PublicBoardPage({
   params: { slug: string }
   searchParams?: { page?: string; q?: string }
 }) {
-  const board = await getBoardBySlug(params.slug)
+  // board와 role은 서로 결과를 안 쓴다 — 동시에 보내고, 게이트 판정만 둘 다 모인 뒤에 한다.
+  const [board, role] = await Promise.all([getBoardBySlug(params.slug), currentAccessRole()])
   if (!board || !board.is_active) notFound()
-
-  const role = await currentAccessRole()
   if (!roleAtLeast(role, board.view_role)) notFound()
 
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const system = isSystemBoard(board)
   const canWrite = !system && roleAtLeast(role, board.write_role)
-  const pathname = boardPath(board.slug)
-  const paged = system
-    ? await listSystemPublicPage(board.kind, page, q)
-    : await listGenericBoardPage(board.id, board.slug, page, q)
 
   return (
     <PublicContainer>
       <h1 className="font-display text-4xl font-extrabold">{board.name}</h1>
       {board.description ? <p className="mt-2 text-muted-foreground">{board.description}</p> : null}
 
-      <PostList
-        className="mt-8"
-        searchable
-        pathname={pathname}
-        searchQuery={q}
-        paged={paged}
-        empty="아직 글이 없습니다."
-        items={paged.rows}
-        layout={board.kind === "prompts" ? "cards" : "list"}
-      />
+      <Suspense fallback={<ListSkeleton />}>
+        <BoardPostList board={board} page={page} q={q} />
+      </Suspense>
 
       {canWrite ? (
         <Card className="mt-10">
@@ -66,6 +57,27 @@ export default async function PublicBoardPage({
         </p>
       ) : null}
     </PublicContainer>
+  )
+}
+
+async function BoardPostList({ board, page, q }: { board: Board; page: number; q: string }) {
+  const system = isSystemBoard(board)
+  const pathname = boardPath(board.slug)
+  const paged = system
+    ? await listSystemPublicPage(board.kind, page, q)
+    : await listGenericBoardPage(board.id, board.slug, page, q)
+
+  return (
+    <PostList
+      className="mt-8"
+      searchable
+      pathname={pathname}
+      searchQuery={q}
+      paged={paged}
+      empty="아직 글이 없습니다."
+      items={paged.rows}
+      layout={board.kind === "prompts" ? "cards" : "list"}
+    />
   )
 }
 

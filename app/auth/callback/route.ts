@@ -3,7 +3,7 @@ import { recordLoginHistory, recordPageView } from "@/lib/auth/login-history"
 import { postLoginPath } from "@/lib/auth/roles"
 import { VISIT_ID_COOKIE, VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, upsertProfile } from "@/lib/supabase/server"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -22,6 +22,14 @@ export async function GET(request: Request) {
     user = sessionUser
 
     if (sessionUser) {
+      // devdeck.profiles는 로그인 시점에 딱 한 번만 upsert한다 — 예전엔 대시보드
+      // 페이지마다(ensureProfile) 매번 다시 했는데, 그게 페이지 전환마다 겹치는
+      // 지연의 큰 부분이었다. 로그인 기록과 마찬가지로 실패해도 로그인 자체는 막지 않는다.
+      try {
+        await upsertProfile(sessionUser)
+      } catch {
+        // 무시
+      }
       // 로그인 기록은 부가 기능이다 — 실패해도 로그인/리다이렉트 자체는 막지 않는다.
       try {
         const ip = clientIpFromHeaders()

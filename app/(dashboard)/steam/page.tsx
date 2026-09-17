@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { fetchOwnedGames } from "@/lib/steam/client"
 import { listPublicGameReviews } from "@/lib/steam/reviews"
 import { parseListPage } from "@/lib/pagination"
@@ -6,38 +7,44 @@ import { ensureProfile } from "@/lib/supabase/server"
 import { getT } from "@/lib/i18n/dictionary"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview, SteamGamesResponse } from "@/types/steam"
+import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
 import { SteamLibrary } from "./steam-library"
 
-export default async function SteamPage({
+export default function SteamPage({
   searchParams,
 }: {
   searchParams?: { page?: string; sort?: string }
 }) {
-  let reviews: GameReview[] = []
-  let library: SteamGamesResponse | null = null
-  let error: string | null = null
-
-  if (isSupabaseConfigured()) {
-    await ensureProfile()
-    reviews = await listPublicGameReviews()
-  }
-
-  try {
-    library = await fetchOwnedGames()
-  } catch {
-    error = getT().t("steam.fetchFailed")
-  }
-
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="mb-6 font-display text-3xl font-extrabold">Steam Tracker</h1>
-      <SteamLibrary
-        reviews={reviews}
-        library={library}
-        error={error}
-        page={parseListPage(searchParams?.page)}
-        sort={parseSteamLibrarySort(searchParams?.sort)}
-      />
+      <Suspense fallback={<SteamLibrarySkeleton />}>
+        <SteamLibraryBody
+          page={parseListPage(searchParams?.page)}
+          sort={parseSteamLibrarySort(searchParams?.sort)}
+        />
+      </Suspense>
     </div>
+  )
+}
+
+async function SteamLibraryBody({
+  page,
+  sort,
+}: {
+  page: number
+  sort: ReturnType<typeof parseSteamLibrarySort>
+}) {
+  const [, reviews, steamResult] = await Promise.all([
+    isSupabaseConfigured() ? ensureProfile() : Promise.resolve(null),
+    isSupabaseConfigured() ? listPublicGameReviews() : Promise.resolve([] as GameReview[]),
+    fetchOwnedGames()
+      .then((data) => ({ library: data, error: null as string | null }))
+      .catch(() => ({ library: null as SteamGamesResponse | null, error: getT().t("steam.fetchFailed") })),
+  ])
+  const { library, error } = steamResult
+
+  return (
+    <SteamLibrary reviews={reviews} library={library} error={error} page={page} sort={sort} />
   )
 }

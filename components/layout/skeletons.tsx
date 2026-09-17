@@ -180,6 +180,47 @@ export function LatestColumnsSkeleton() {
   )
 }
 
+export function CommentSectionSkeleton() {
+  return (
+    <div className="mt-10 space-y-4">
+      <Skeleton className="h-7 w-24" />
+      <Skeleton className="h-28 w-full rounded-lg" />
+      <div className="divide-y border-y">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={index} className="space-y-2 py-4">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function PagerSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center justify-between gap-2", className ?? "mb-8")}>
+      <Skeleton className="h-8 w-24 rounded-md" />
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-8 rounded-md" />
+        <Skeleton className="h-8 w-8 rounded-md" />
+      </div>
+    </div>
+  )
+}
+
+export function EditorFormSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-9 w-full" />
+      <Skeleton className="h-9 w-2/3" />
+      <Skeleton className="h-52 w-full rounded-lg" />
+      <Skeleton className="h-10 w-24 rounded-md" />
+    </div>
+  )
+}
+
 export function FormCardSkeleton() {
   return (
     <Screen label={getT().t("loading.generic")} className="mx-auto w-full max-w-6xl flex-1 px-5 py-20">

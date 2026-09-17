@@ -1,9 +1,11 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { ArticleEditPanel } from "@/components/board/article-edit-panel"
 import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { PublicPostForm } from "@/components/board/public-post-form"
 import { ArticleComments } from "@/components/comments/article-comments"
+import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { PublicContainer } from "@/components/layout/public-container"
 import { RichContent } from "@/components/editor/rich-content"
 import { boardPath, roleAtLeast } from "@/lib/access"
@@ -12,29 +14,29 @@ import { commentRoleFor } from "@/lib/boards/permissions"
 import { getBoardBySlug, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
 import { findNeighbors } from "@/lib/posts/neighbors"
+import type { Board, BoardPost } from "@/types/board"
 
 export default async function PublicBoardPostPage({
   params,
 }: {
   params: { slug: string; id: string }
 }) {
-  const board = await getBoardBySlug(params.slug)
-  const post = await getBoardPost(params.id)
+  // board·post·viewer 셋 다 서로 결과를 안 쓰지만, view_role 판정(비공개 게시판 여부)이
+  // viewer에 달려있어서 이 셋은 "보여줄지 말지" 자체를 가르는 공통 게이트다 — 그래서
+  // 여기서 같이 기다린다. 이웃글 목록만 그 판정과 무관해서 따로 뗄 수 있다.
+  const [board, post, viewer] = await Promise.all([
+    getBoardBySlug(params.slug),
+    getBoardPost(params.id),
+    currentViewer(),
+  ])
   if (!board || !board.is_active || isSystemBoard(board) || !post || post.board_id !== board.id) notFound()
 
-  const { role, isOwner, userId } = await currentViewer()
+  const { role, isOwner, userId } = viewer
   if (!roleAtLeast(role, board.view_role)) notFound()
 
   const canWrite =
     roleAtLeast(role, board.write_role) && (isOwner || post.user_id === userId)
   const listHref = boardPath(board.slug)
-  const neighbors = findNeighbors(
-    await listBoardPosts(board.id),
-    post.id,
-    (item) => item.id,
-    (item) => `${listHref}/${item.id}`,
-    (item) => item.title
-  )
 
   const view = (
     <>
@@ -48,7 +50,9 @@ export default async function PublicBoardPostPage({
   return (
     <PublicContainer as="article">
       <ArticleReader>
-        <PostPager listHref={listHref} {...neighbors} />
+        <Suspense fallback={<PagerSkeleton />}>
+          <NeighborsPager board={board} post={post} listHref={listHref} />
+        </Suspense>
         {canWrite ? (
           <ArticleEditPanel
             form={
@@ -65,14 +69,40 @@ export default async function PublicBoardPostPage({
         ) : (
           view
         )}
-        <PostPager placement="bottom" listHref={listHref} {...neighbors} />
-        <ArticleComments
-          targetType="board"
-          targetId={post.id}
-          returnTo={`${listHref}/${post.id}`}
-          commentRole={commentRoleFor(board)}
-        />
+        <Suspense fallback={<PagerSkeleton className="mt-10" />}>
+          <NeighborsPager board={board} post={post} listHref={listHref} placement="bottom" />
+        </Suspense>
+        <Suspense fallback={<CommentSectionSkeleton />}>
+          <ArticleComments
+            targetType="board"
+            targetId={post.id}
+            returnTo={`${listHref}/${post.id}`}
+            commentRole={commentRoleFor(board)}
+          />
+        </Suspense>
       </ArticleReader>
     </PublicContainer>
   )
+}
+
+async function NeighborsPager({
+  board,
+  post,
+  listHref,
+  placement,
+}: {
+  board: Board
+  post: BoardPost
+  listHref: string
+  placement?: "bottom"
+}) {
+  const posts = await listBoardPosts(board.id)
+  const neighbors = findNeighbors(
+    posts,
+    post.id,
+    (item) => item.id,
+    (item) => `${listHref}/${item.id}`,
+    (item) => item.title
+  )
+  return <PostPager placement={placement} listHref={listHref} {...neighbors} />
 }

@@ -1,9 +1,11 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { CareerForm } from "@/app/(dashboard)/career/career-form"
 import { ArticleEditPanel } from "@/components/board/article-edit-panel"
 import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { ArticleComments } from "@/components/comments/article-comments"
+import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { PublicContainer } from "@/components/layout/public-container"
 import { Badge } from "@/components/ui/badge"
 import { RichContent } from "@/components/editor/rich-content"
@@ -12,6 +14,7 @@ import { getPublicCareerPostById, listPublicCareerPosts } from "@/lib/career/pub
 import { findNeighbors } from "@/lib/posts/neighbors"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatPeriod } from "@/lib/i18n/format"
+import type { CareerPost } from "@/types/career"
 
 export default async function PublicCareerPage({
   params,
@@ -20,17 +23,30 @@ export default async function PublicCareerPage({
 }) {
   const post = await getPublicCareerPostById(params.id)
   if (!post) notFound()
-  const { isOwner } = await currentViewer()
-  const neighbors = findNeighbors(
-    await listPublicCareerPosts(),
-    post.id,
-    (item) => item.id,
-    (item) => `/work/${item.id}`,
-    (item) => item.title
-  )
 
+  return (
+    <PublicContainer as="article">
+      <ArticleReader>
+        <Suspense fallback={<PagerSkeleton />}>
+          <NeighborsPager post={post} />
+        </Suspense>
+        <Suspense fallback={<CareerArticle post={post} />}>
+          <OwnerAwareCareer post={post} />
+        </Suspense>
+        <Suspense fallback={<PagerSkeleton className="mt-10" />}>
+          <NeighborsPager post={post} placement="bottom" />
+        </Suspense>
+        <Suspense fallback={<CommentSectionSkeleton />}>
+          <ArticleComments targetType="career" targetId={post.id} returnTo={`/work/${post.id}`} />
+        </Suspense>
+      </ArticleReader>
+    </PublicContainer>
+  )
+}
+
+function CareerArticle({ post }: { post: CareerPost }) {
   const { t } = getT()
-  const view = (
+  return (
     <>
       <Badge className="mt-6">{post.post_type}</Badge>
       <h1 className="mt-4 font-display text-4xl font-extrabold">{post.title}</h1>
@@ -49,21 +65,27 @@ export default async function PublicCareerPage({
       </div>
     </>
   )
+}
 
+async function NeighborsPager({ post, placement }: { post: CareerPost; placement?: "bottom" }) {
+  const allPosts = await listPublicCareerPosts()
+  const neighbors = findNeighbors(
+    allPosts,
+    post.id,
+    (item) => item.id,
+    (item) => `/work/${item.id}`,
+    (item) => item.title
+  )
+  return <PostPager placement={placement} listHref="/work" {...neighbors} />
+}
+
+async function OwnerAwareCareer({ post }: { post: CareerPost }) {
+  const { isOwner } = await currentViewer()
+  const article = <CareerArticle post={post} />
+  if (!isOwner) return article
   return (
-    <PublicContainer as="article">
-      <ArticleReader>
-        <PostPager listHref="/work" {...neighbors} />
-        {isOwner ? (
-          <ArticleEditPanel form={<CareerForm post={post} returnTo={`/work/${post.id}`} deleteTo="/work" />}>
-            {view}
-          </ArticleEditPanel>
-        ) : (
-          view
-        )}
-        <PostPager placement="bottom" listHref="/work" {...neighbors} />
-        <ArticleComments targetType="career" targetId={post.id} returnTo={`/work/${post.id}`} />
-      </ArticleReader>
-    </PublicContainer>
+    <ArticleEditPanel form={<CareerForm post={post} returnTo={`/work/${post.id}`} deleteTo="/work" />}>
+      {article}
+    </ArticleEditPanel>
   )
 }

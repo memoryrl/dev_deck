@@ -1,7 +1,9 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
 import { LoginHistoryRow } from "@/app/(dashboard)/site/login-history/login-history-row"
 import { ListPager } from "@/components/layout/list-pager"
+import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
@@ -31,21 +33,16 @@ function isSearchField(value: string | undefined): value is LoginHistorySearchFi
   return value === "email" || value === "ip" || value === "region"
 }
 
-export default async function LoginHistoryPage({
+export default function LoginHistoryPage({
   searchParams,
 }: {
   searchParams?: { page?: string; type?: string; q?: string; field?: string }
 }) {
-  await ensureProfile()
   const { t } = getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const activeType = isEventType(searchParams?.type) ? searchParams.type : undefined
   const field = isSearchField(searchParams?.field) ? searchParams.field : "email"
-  const history = await listLoginHistory({ page, eventType: activeType, q, field })
-  const pageCounts = await countPageViewsByVisit(history.rows.map((entry) => entry.id))
-  const extra = { type: activeType, field: field === "email" ? undefined : field }
-  const searched = Boolean(q)
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -91,35 +88,60 @@ export default async function LoginHistoryPage({
         </Button>
       </form>
 
-      <div>
-        <h2 className="font-display text-xl font-bold">총 {history.total}건</h2>
-        {history.total === 0 ? (
-          <p className="mt-5 text-sm text-muted-foreground">
-            {searched ? t("list.emptySearch") : "아직 기록이 없습니다."}
-          </p>
-        ) : (
-          <>
-            <ul className="mt-2 divide-y border-y bg-white dark:bg-card">
-              {history.rows.map((entry, index) => {
-                const number = history.total - ((history.page - 1) * history.pageSize + index)
-                return (
-                  <LoginHistoryRow
-                    key={entry.id}
-                    entry={entry}
-                    number={number}
-                    pageCount={pageCounts[entry.id] ?? 0}
-                  />
-                )
-              })}
-            </ul>
-            <ListPager
-              pathname="/site/login-history"
-              result={history}
-              extraParams={{ ...extra, q: q || undefined }}
-            />
-          </>
-        )}
-      </div>
+      <Suspense fallback={<ListSkeleton withSearch={false} />}>
+        <LoginHistoryList page={page} q={q} activeType={activeType} field={field} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function LoginHistoryList({
+  page,
+  q,
+  activeType,
+  field,
+}: {
+  page: number
+  q: string
+  activeType?: LoginHistoryEventType
+  field: LoginHistorySearchField
+}) {
+  await ensureProfile()
+  const { t } = getT()
+  const history = await listLoginHistory({ page, eventType: activeType, q, field })
+  const pageCounts = await countPageViewsByVisit(history.rows.map((entry) => entry.id))
+  const extra = { type: activeType, field: field === "email" ? undefined : field }
+  const searched = Boolean(q)
+
+  return (
+    <div>
+      <h2 className="font-display text-xl font-bold">총 {history.total}건</h2>
+      {history.total === 0 ? (
+        <p className="mt-5 text-sm text-muted-foreground">
+          {searched ? t("list.emptySearch") : "아직 기록이 없습니다."}
+        </p>
+      ) : (
+        <>
+          <ul className="mt-2 divide-y border-y bg-white dark:bg-card">
+            {history.rows.map((entry, index) => {
+              const number = history.total - ((history.page - 1) * history.pageSize + index)
+              return (
+                <LoginHistoryRow
+                  key={entry.id}
+                  entry={entry}
+                  number={number}
+                  pageCount={pageCounts[entry.id] ?? 0}
+                />
+              )
+            })}
+          </ul>
+          <ListPager
+            pathname="/site/login-history"
+            result={history}
+            extraParams={{ ...extra, q: q || undefined }}
+          />
+        </>
+      )}
     </div>
   )
 }
