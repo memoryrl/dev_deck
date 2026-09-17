@@ -24,6 +24,8 @@ const CRAWLER_UA =
 // 더 구체적인 경로를 앞에 둔다.
 const SCREEN_ROUTES: { pattern: RegExp; label: string }[] = [
   { pattern: /^\/$/, label: "홈" },
+  { pattern: /^\/status\/\d{3}\/?$/, label: "오류 페이지" },
+  { pattern: /^\/opensource\/?$/, label: "오픈소스 사용정보" },
   { pattern: /^\/login\/?$/, label: "로그인" },
   { pattern: /^\/account\/?$/, label: "계정" },
   { pattern: /^\/work\/?$/, label: "커리어 목록" },

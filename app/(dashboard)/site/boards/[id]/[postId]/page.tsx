@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { BoardPostAdminForm } from "@/app/(dashboard)/site/boards/[id]/post-form"
 import { PostPager } from "@/components/board/post-pager"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { EditorFormSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { getBoardById, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { findNeighbors } from "@/lib/posts/neighbors"
@@ -19,7 +20,11 @@ export default function SiteBoardPostPage({
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager boardId={params.id} postId={params.postId} listHref={listHref} />
       </Suspense>
-      <h1 className="font-display text-3xl font-extrabold">글 수정</h1>
+      <Suspense
+        fallback={<PageTitleBanner title="글 수정" breadcrumb={[{ label: "게시판", href: "/site/boards" }]} />}
+      >
+        <BoardPostTitleSection boardId={params.id} />
+      </Suspense>
       <Suspense fallback={<EditorFormSkeleton />}>
         <BoardPostFormSection boardId={params.id} postId={params.postId} />
       </Suspense>
@@ -50,6 +55,19 @@ async function NeighborsPager({
     (item) => item.title
   )
   return <PostPager listHref={listHref} placement={placement} {...neighbors} />
+}
+
+async function BoardPostTitleSection({ boardId }: { boardId: string }) {
+  const board = await getBoardById(boardId)
+  return (
+    <PageTitleBanner
+      title="글 수정"
+      breadcrumb={[
+        { label: "게시판", href: "/site/boards" },
+        { label: board?.name ?? "게시판", href: `/site/boards/${boardId}` },
+      ]}
+    />
+  )
 }
 
 async function BoardPostFormSection({ boardId, postId }: { boardId: string; postId: string }) {

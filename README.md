@@ -28,6 +28,7 @@ AI로 일하는 방식, 회사 프로젝트에서 쌓인 역할, Steam에서 보
 | **CareerLog** | [`/work`](https://devdeck-blue.vercel.app/work) | 참여 프로젝트, 스킬, 노트. 회사·역할·기간이 붙은 게시판과 블로그 본문입니다. |
 | **Steam Tracker** | [`/games`](https://devdeck-blue.vercel.app/games) | 보유 게임, 누적 플레이타임, 별점과 한줄 리뷰, UMPC 프리셋. |
 | **게시판** | `/b/[slug]` | 사이트 메뉴로 연 범용 게시판. 댓글과 글 크기 조절 리더가 따라갑니다. |
+| **오픈소스** | [`/opensource`](https://devdeck-blue.vercel.app/opensource) | Frontend / Backend에서 쓰는 패키지명, 버전, 라이선스. |
 
 헤더는 넓은 화면에서 메가메뉴, 좁은 화면에서 슬라이드 메뉴입니다. 컬러는 Ink / Umber / Gold / Stone / Parchment 다섯 색을 제품 토큰으로 씁니다.
 

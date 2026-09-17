@@ -7,6 +7,7 @@ import { getBoardById } from "@/lib/boards/public"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
 import { isBlankContent, plainTextFromContent, sanitizeRichHtml } from "@/lib/content"
+import { checkRateLimit } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CommentTargetType } from "@/types/comment"
 
@@ -25,6 +26,13 @@ function revalidateTarget(type: CommentTargetType, id: string) {
 
 export async function createComment(formData: FormData) {
   if (!isSupabaseConfigured()) return { ok: false as const, error: "저장소를 사용할 수 없습니다." }
+
+  // 비회원도 쓸 수 있는 공개 폼이라 세션 기반 제한이 불가능하다 — IP당 짧은
+  // 창구로 스팸 플러딩만 막는다.
+  const ip = clientIpFromHeaders()
+  if (!checkRateLimit(`comment:${ip}`, 5, 5 * 60 * 1000)) {
+    return { ok: false as const, error: "댓글을 너무 자주 작성했습니다. 잠시 후 다시 시도해주세요." }
+  }
 
   const targetType = String(formData.get("target_type") ?? "") as CommentTargetType
   const targetId = String(formData.get("target_id") ?? "").trim()
@@ -77,7 +85,6 @@ export async function createComment(formData: FormData) {
     }
   }
 
-  const ip = clientIpFromHeaders()
   const region = await resolveIpRegion(ip)
   const { error } = await supabase.from("comments").insert({
     target_type: targetType,

@@ -1,11 +1,13 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
+import { AccessDeniedPage } from "@/components/errors/access-denied-page"
 import { ArticleEditPanel } from "@/components/board/article-edit-panel"
 import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { PublicPostForm } from "@/components/board/public-post-form"
 import { ArticleComments } from "@/components/comments/article-comments"
 import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
 import { RichContent } from "@/components/editor/rich-content"
 import { boardPath, roleAtLeast } from "@/lib/access"
@@ -32,7 +34,7 @@ export default async function PublicBoardPostPage({
   if (!board || !board.is_active || isSystemBoard(board) || !post || post.board_id !== board.id) notFound()
 
   const { role, isOwner, userId } = viewer
-  if (!roleAtLeast(role, board.view_role)) notFound()
+  if (!roleAtLeast(role, board.view_role)) return <AccessDeniedPage role={role} />
 
   const canWrite =
     roleAtLeast(role, board.write_role) && (isOwner || post.user_id === userId)
@@ -40,7 +42,7 @@ export default async function PublicBoardPostPage({
 
   const view = (
     <>
-      <h1 className="mt-6 font-display text-4xl font-extrabold">{post.title}</h1>
+      <PageTitleBanner title={post.title} breadcrumb={[{ label: board.name, href: listHref }]} className="mt-6" />
       <div className="mt-8">
         <RichContent content={post.content} />
       </div>

@@ -76,7 +76,25 @@
     "board": "게시판",
     "skills": "스킬",
     "library": "라이브러리",
-    "reviews": "리뷰"
+    "reviews": "리뷰",
+    "opensource": "오픈소스 사용정보"
+  },
+  "oss": {
+    "title": "오픈소스 사용정보",
+    "lede": "본 페이지는 현재 서비스에 적용된 Frontend와 Backend의 오픈소스와 라이선스 정보를 안내합니다.",
+    "goBack": "이전 돌아가기",
+    "frontend": "Frontend",
+    "backend": "Backend",
+    "package": "패키지명",
+    "version": "버전",
+    "license": "라이선스"
+  },
+  "errors": {
+    "home": "홈으로",
+    "goBack": "이전 돌아가기",
+    "retry": "다시 시도",
+    "login": "로그인",
+    "digest": "오류 번호 {{digest}}"
   },
   "landing": {
     "kicker": "Personal Developer Hub",
@@ -238,7 +256,12 @@
   "list": {
     "emptyPosts": "아직 글이 없습니다.",
     "emptySearch": "검색 결과가 없습니다.",
-    "emptyPublic": "아직 공개된 글이 없습니다."
+    "emptyPublic": "아직 공개된 글이 없습니다.",
+    "no": "번호",
+    "category": "분류",
+    "write": "글쓰기",
+    "closeWrite": "접기",
+    "boardCaption": "게시글 목록"
   },
   "comments": {
     "title": "댓글 {{count}}",

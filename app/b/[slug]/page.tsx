@@ -1,11 +1,13 @@
-import { Suspense } from "react"
+import { Suspense, type ReactNode } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { AccessDeniedPage } from "@/components/errors/access-denied-page"
 import { PostList, type PostListRow } from "@/components/board/post-list"
 import { PublicPostForm } from "@/components/board/public-post-form"
+import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
 import { ListSkeleton } from "@/components/layout/skeletons"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
-import { Card } from "@/components/ui/card"
 import { boardPath, roleAtLeast } from "@/lib/access"
 import { currentAccessRole } from "@/lib/boards/access"
 import { getBoardBySlug, listBoardPostsPage } from "@/lib/boards/public"
@@ -14,6 +16,7 @@ import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery, type PagedResult } from "@/lib/pagination"
 import { listPromptsPage, withPromptThumbnails } from "@/lib/prompts/public"
 import { listGameReviewsPage } from "@/lib/steam/reviews"
+import { getT } from "@/lib/i18n/dictionary"
 import type { Board } from "@/types/board"
 
 export default async function PublicBoardPage({
@@ -26,8 +29,9 @@ export default async function PublicBoardPage({
   // board와 role은 서로 결과를 안 쓴다 — 동시에 보내고, 게이트 판정만 둘 다 모인 뒤에 한다.
   const [board, role] = await Promise.all([getBoardBySlug(params.slug), currentAccessRole()])
   if (!board || !board.is_active) notFound()
-  if (!roleAtLeast(role, board.view_role)) notFound()
+  if (!roleAtLeast(role, board.view_role)) return <AccessDeniedPage role={role} />
 
+  const { t } = getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const system = isSystemBoard(board)
@@ -35,32 +39,60 @@ export default async function PublicBoardPage({
 
   return (
     <PublicContainer>
-      <h1 className="font-display text-4xl font-extrabold">{board.name}</h1>
-      {board.description ? <p className="mt-2 text-muted-foreground">{board.description}</p> : null}
+      <PageTitleBanner title={board.name} />
+      {board.description ? <p className="mt-6 text-muted-foreground">{board.description}</p> : null}
 
-      <Suspense fallback={<ListSkeleton />}>
-        <BoardPostList board={board} page={page} q={q} />
-      </Suspense>
-
-      {canWrite ? (
-        <Card className="mt-10">
-          <h2 className="mb-4 font-display text-xl font-bold">글쓰기</h2>
-          <PublicPostForm boardId={board.id} slug={board.slug} />
-        </Card>
-      ) : !system && board.write_role === "member" && role === "visitor" ? (
-        <p className="mt-10 text-sm text-muted-foreground">
-          글을 쓰려면{" "}
-          <Link href="/login" className="font-semibold text-foreground underline">
-            로그인
-          </Link>
-          하세요.
-        </p>
-      ) : null}
+      <div className="mt-8 space-y-4">
+        {canWrite ? (
+          <WritePanel label={t("list.write")} closeLabel={t("list.closeWrite")}>
+            <Suspense fallback={<ListSkeleton />}>
+              <BoardPostList
+                board={board}
+                page={page}
+                q={q}
+                endAction={<WriteToggle />}
+                composer={
+                  <WriteForm>
+                    <PublicPostForm boardId={board.id} slug={board.slug} />
+                  </WriteForm>
+                }
+              />
+            </Suspense>
+          </WritePanel>
+        ) : (
+          <>
+            {!system && board.write_role === "member" && role === "visitor" ? (
+              <p className="text-sm text-muted-foreground">
+                글을 쓰려면{" "}
+                <Link href="/login" className="font-semibold text-foreground underline">
+                  {t("common.login")}
+                </Link>
+                하세요.
+              </p>
+            ) : null}
+            <Suspense fallback={<ListSkeleton />}>
+              <BoardPostList board={board} page={page} q={q} />
+            </Suspense>
+          </>
+        )}
+      </div>
     </PublicContainer>
   )
 }
 
-async function BoardPostList({ board, page, q }: { board: Board; page: number; q: string }) {
+async function BoardPostList({
+  board,
+  page,
+  q,
+  endAction,
+  composer,
+}: {
+  board: Board
+  page: number
+  q: string
+  endAction?: ReactNode
+  composer?: ReactNode
+}) {
   const system = isSystemBoard(board)
   const pathname = boardPath(board.slug)
   const paged = system
@@ -69,7 +101,6 @@ async function BoardPostList({ board, page, q }: { board: Board; page: number; q
 
   return (
     <PostList
-      className="mt-8"
       searchable
       pathname={pathname}
       searchQuery={q}
@@ -77,6 +108,8 @@ async function BoardPostList({ board, page, q }: { board: Board; page: number; q
       empty="아직 글이 없습니다."
       items={paged.rows}
       layout={board.kind === "prompts" ? "cards" : "list"}
+      endAction={endAction}
+      composer={composer}
     />
   )
 }

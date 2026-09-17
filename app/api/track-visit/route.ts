@@ -4,6 +4,7 @@ import { findRecentSessionId, recordPageView, recordVisitHistory } from "@/lib/a
 import { VISIT_ID_COOKIE, VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient } from "@/lib/supabase/server"
+import { checkRateLimit } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
@@ -30,6 +31,13 @@ async function readPath(request: Request) {
 // 이후 같은 세션의 페이지 이동은 이 라우트를 다시 타지 않고 훨씬 가벼운
 // /api/track-pageview로 간다(dd_visit_id 쿠키가 있을 때) — docs/10-login-history.md.
 export async function POST(request: Request) {
+  const ip = clientIpFromHeaders()
+  // 세션당 한 번만 타는 라우트다(재사용 가능하면 곧장 반환). 쿠키가 없는
+  // 반복 호출(스크립트성 플러딩)로부터 외부 지역조회 API·DB insert를 보호한다.
+  if (!checkRateLimit(`track-visit:${ip}`, 15, 10 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 })
+  }
+
   const jar = cookies()
   const path = await readPath(request)
 
@@ -47,7 +55,6 @@ export async function POST(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    const ip = clientIpFromHeaders()
 
     const recentId = await findRecentSessionId({ userId: user?.id ?? null, ipAddress: ip })
     if (recentId) {

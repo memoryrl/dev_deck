@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { persistHealthLog, runSupabaseHealthCheck } from "@/lib/supabase-health-check"
 
@@ -13,7 +14,14 @@ function isAuthorizedCron(request: NextRequest): boolean {
     ? authHeader.slice("Bearer ".length).trim()
     : authHeader
 
-  return token.length > 0 && token === cronSecret
+  if (!token) return false
+
+  // 길이가 다르면 timingSafeEqual이 예외를 던지므로 먼저 걸러낸다 — 길이 자체는
+  // 타이밍으로 유추해도 시크릿 값 추측에 쓸모가 없으니 괜찮다.
+  const tokenBuf = Buffer.from(token)
+  const secretBuf = Buffer.from(cronSecret)
+  if (tokenBuf.length !== secretBuf.length) return false
+  return timingSafeEqual(tokenBuf, secretBuf)
 }
 
 /**

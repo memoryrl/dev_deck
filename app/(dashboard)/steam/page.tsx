@@ -7,6 +7,7 @@ import { ensureProfile } from "@/lib/supabase/server"
 import { getT } from "@/lib/i18n/dictionary"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview, SteamGamesResponse } from "@/types/steam"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
 import { SteamLibrary } from "./steam-library"
 
@@ -17,7 +18,7 @@ export default function SteamPage({
 }) {
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="mb-6 font-display text-3xl font-extrabold">Steam Tracker</h1>
+      <PageTitleBanner title="Steam Tracker" className="mb-6" />
       <Suspense fallback={<SteamLibrarySkeleton />}>
         <SteamLibraryBody
           page={parseListPage(searchParams?.page)}

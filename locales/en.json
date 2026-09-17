@@ -76,7 +76,25 @@
     "board": "Board",
     "skills": "Skills",
     "library": "Library",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "opensource": "Open source licenses"
+  },
+  "oss": {
+    "title": "Open Source Licenses",
+    "lede": "This page lists the open-source packages and licenses used in the Frontend and Backend of this site.",
+    "goBack": "Go back",
+    "frontend": "Frontend",
+    "backend": "Backend",
+    "package": "Package",
+    "version": "Version",
+    "license": "License"
+  },
+  "errors": {
+    "home": "Home",
+    "goBack": "Go back",
+    "retry": "Try again",
+    "login": "Sign in",
+    "digest": "Error ID {{digest}}"
   },
   "landing": {
     "kicker": "Personal Developer Hub",
@@ -238,7 +256,12 @@
   "list": {
     "emptyPosts": "No posts yet.",
     "emptySearch": "No search results.",
-    "emptyPublic": "No public posts yet."
+    "emptyPublic": "No public posts yet.",
+    "no": "No.",
+    "category": "Type",
+    "write": "Write",
+    "closeWrite": "Close",
+    "boardCaption": "Post list"
   },
   "comments": {
     "title": "Comments {{count}}",

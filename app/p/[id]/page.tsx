@@ -6,6 +6,7 @@ import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { ArticleComments } from "@/components/comments/article-comments"
 import { CopyButton } from "@/components/layout/copy-button"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
 import { PromptBodyToggle } from "@/components/prompts/prompt-body-toggle"
 import { ResultPreview } from "@/components/prompts/result-preview"
@@ -51,12 +52,14 @@ export default async function PublicPromptPage({
 function PromptArticle({ prompt }: { prompt: Prompt }) {
   return (
     <>
-      <Badge className="mt-6">{prompt.category}</Badge>
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <h1 className="min-w-0 font-display text-4xl font-extrabold">{prompt.title}</h1>
-        <CopyButton className="shrink-0" text={plainTextFromContent(prompt.content) || prompt.content} />
-      </div>
+      <PageTitleBanner
+        title={prompt.title}
+        breadcrumb={[{ label: "프롬프트", href: "/b/prompts" }]}
+        actions={<CopyButton text={plainTextFromContent(prompt.content) || prompt.content} />}
+        className="mt-6"
+      />
       <div className="mt-5 flex flex-wrap gap-2">
+        <Badge>{prompt.category}</Badge>
         {(prompt.tags ?? []).map((tag) => (
           <Badge key={tag}>{tag}</Badge>
         ))}

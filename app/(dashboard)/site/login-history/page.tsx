@@ -3,6 +3,7 @@ import Link from "next/link"
 import { RefreshCw } from "lucide-react"
 import { LoginHistoryRow } from "@/app/(dashboard)/site/login-history/login-history-row"
 import { ListPager } from "@/components/layout/list-pager"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
@@ -46,13 +47,11 @@ export default function LoginHistoryPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">로그인 · 접속 이력</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          구글 로그인 성공 시점과, 회원·비회원 구분 없이 사이트에 접속한 시점을 함께 기록합니다. 접속 IP와
-          지역 정보, 그 세션이 본 페이지 목록까지 확인할 수 있습니다.
-        </p>
-      </div>
+      <PageTitleBanner title="로그인 · 접속 이력" />
+      <p className="text-sm text-muted-foreground">
+        구글 로그인 성공 시점과, 회원·비회원 구분 없이 사이트에 접속한 시점을 함께 기록합니다. 접속 IP와
+        지역 정보, 그 세션이 본 페이지 목록까지 확인할 수 있습니다.
+      </p>
 
       <form action="/site/login-history" className="flex flex-wrap items-center gap-2">
         <CustomSelect

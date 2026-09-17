@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
@@ -8,7 +9,7 @@ import { SkillManager } from "./skill-manager"
 export default function CareerSkillsPage() {
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 font-display text-3xl font-extrabold">스킬</h1>
+      <PageTitleBanner title="스킬" breadcrumb={[{ label: "CareerLog", href: "/career" }]} className="mb-6" />
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <CareerSkillsBody />
       </Suspense>

@@ -2,6 +2,8 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { recordPageView } from "@/lib/auth/login-history"
 import { VISIT_ID_COOKIE } from "@/lib/auth/visit-window"
+import { clientIpFromHeaders } from "@/lib/comments/ip"
+import { checkRateLimit } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
@@ -15,6 +17,13 @@ export async function POST(request: Request) {
 
   const visitId = cookies().get(VISIT_ID_COOKIE)?.value
   if (!visitId) return NextResponse.json({ skipped: true })
+
+  // 정상적인 탐색이면 페이지 이동마다 한 번이라 넉넉하게 잡아도 충분하다 —
+  // 스크립트성 플러딩으로 page_views가 무한정 쌓이는 것만 막는다.
+  const ip = clientIpFromHeaders()
+  if (!checkRateLimit(`track-pageview:${ip}`, 120, 10 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 })
+  }
 
   let path = "/"
   try {

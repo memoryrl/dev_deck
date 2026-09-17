@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { BoardForm } from "@/app/(dashboard)/site/boards/board-form"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -12,13 +13,11 @@ import { ensureProfile } from "@/lib/supabase/server"
 export default function SiteBoardsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">게시판</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          PromptKit·CareerLog·Steam 시스템 게시판과 범용 게시판을 함께 관리합니다. 읽기 권한은
-          방문객·회원·관리자 단계입니다.
-        </p>
-      </div>
+      <PageTitleBanner title="게시판" />
+      <p className="text-sm text-muted-foreground">
+        PromptKit·CareerLog·Steam 시스템 게시판과 범용 게시판을 함께 관리합니다. 읽기 권한은
+        방문객·회원·관리자 단계입니다.
+      </p>
       <Card>
         <h2 className="mb-4 font-display text-xl font-bold">새 게시판</h2>
         <BoardForm />

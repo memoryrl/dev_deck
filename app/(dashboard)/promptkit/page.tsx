@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import { PromptForm } from "./prompt-form"
 import { PostList } from "@/components/board/post-list"
+import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
-import { Card } from "@/components/ui/card"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { listPromptsPage } from "@/lib/prompts/public"
 import { ensureProfile } from "@/lib/supabase/server"
@@ -18,13 +19,15 @@ export default function PromptKitPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-extrabold">PromptKit</h1>
-      </div>
-      <Card>
-        <h2 className="mb-4 font-display text-xl font-bold">새 프롬프트</h2>
-        <PromptForm />
-      </Card>
+      <PageTitleBanner title="PromptKit" />
+      <WritePanel label="새 프롬프트" closeLabel="접기">
+        <div className="flex justify-end">
+          <WriteToggle />
+        </div>
+        <WriteForm>
+          <PromptForm />
+        </WriteForm>
+      </WritePanel>
       <Suspense fallback={<ListSkeleton />}>
         <PromptKitList page={page} q={q} />
       </Suspense>

@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { SteamLibrary } from "@/app/(dashboard)/steam/steam-library"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
 import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
 import { parseListPage } from "@/lib/pagination"
@@ -16,8 +17,8 @@ export default function PublicGamesPage({
   const { t } = getT()
   return (
     <PublicContainer>
-      <h1 className="font-display text-4xl font-extrabold">{t("games.title")}</h1>
-      <p className="mt-2 text-muted-foreground">
+      <PageTitleBanner title={t("games.title")} />
+      <p className="mt-6 text-muted-foreground">
         {t("games.lede")}
       </p>
       <div className="mt-8">

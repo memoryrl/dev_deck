@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { BoardForm } from "@/app/(dashboard)/site/boards/board-form"
 import { BoardPostAdminForm } from "@/app/(dashboard)/site/boards/[id]/post-form"
 import { PostList } from "@/components/board/post-list"
+import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton, TitleSkeleton } from "@/components/layout/skeletons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,33 +45,33 @@ async function BoardHeaderAndSettings({ id }: { id: string }) {
 
   return (
     <>
-      <div>
-        <Link href="/site/boards" className="text-sm font-semibold underline">
-          게시판 목록
-        </Link>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{kindLabel(board.kind)}</Badge>
-            </div>
-            <h1 className="mt-2 font-display text-3xl font-extrabold">{board.name}</h1>
-          </div>
-          {system ? (
-            <Link href={systemDashboardHref(board.kind)}>
-              <Button variant="outline">대시보드에서 편집</Button>
-            </Link>
-          ) : null}
-        </div>
-      </div>
+      <PageTitleBanner
+        title={board.name}
+        breadcrumb={[{ label: "게시판", href: "/site/boards" }]}
+        actions={
+          <>
+            <Badge variant="secondary">{kindLabel(board.kind)}</Badge>
+            {system ? (
+              <Link href={systemDashboardHref(board.kind)}>
+                <Button variant="outline">대시보드에서 편집</Button>
+              </Link>
+            ) : null}
+          </>
+        }
+      />
       <Card>
         <h2 className="mb-4 font-display text-xl font-bold">설정</h2>
         <BoardForm board={board} />
       </Card>
       {!system ? (
-        <Card>
-          <h2 className="mb-4 font-display text-xl font-bold">새 글</h2>
-          <BoardPostAdminForm boardId={board.id} />
-        </Card>
+        <WritePanel label="새 글" closeLabel="접기">
+          <div className="flex justify-end">
+            <WriteToggle />
+          </div>
+          <WriteForm>
+            <BoardPostAdminForm boardId={board.id} />
+          </WriteForm>
+        </WritePanel>
       ) : null}
     </>
   )

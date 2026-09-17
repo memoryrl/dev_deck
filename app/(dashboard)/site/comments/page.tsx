@@ -4,6 +4,7 @@ import { CommentAdminActions, ProfanityDeleteButton } from "@/app/(dashboard)/si
 import { ProfanityWordsPanel } from "@/app/(dashboard)/site/comments/profanity-words-panel"
 import { ProfanityWordForm } from "@/app/(dashboard)/site/comments/word-form"
 import { ListPager } from "@/components/layout/list-pager"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { RichContent } from "@/components/editor/rich-content"
 import { commentTargetHref, commentTargetLabel, listAllComments, listProfanityWords } from "@/lib/comments/public"
@@ -22,12 +23,10 @@ export default function SiteCommentsPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">댓글 관리</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          모든 게시글·게임 상세 댓글을 조회하고 숨기거나 삭제합니다. 욕설 단어는 저장 시 자동 치환됩니다.
-        </p>
-      </div>
+      <PageTitleBanner title="댓글 관리" />
+      <p className="text-sm text-muted-foreground">
+        모든 게시글·게임 상세 댓글을 조회하고 숨기거나 삭제합니다. 욕설 단어는 저장 시 자동 치환됩니다.
+      </p>
 
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <ProfanityWordsSection wordPage={wordPage} commentPage={commentPage} />

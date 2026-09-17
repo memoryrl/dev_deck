@@ -32,14 +32,21 @@ function isPrivateIp(ip: string) {
   return false
 }
 
+// x-forwarded-for의 "첫 번째" 값은 클라이언트가 직접 보낸 것이라 위조 가능하다
+// (레이트리밋 키·감사로그로 쓰이므로 이걸 그대로 믿으면 둘 다 우회당한다).
+// x-real-ip는 우리 쪽 엣지/프록시가 직접 세팅하는 단일 값이라 더 신뢰할 수 있고,
+// x-forwarded-for를 써야 한다면 우리 프록시에 가장 가까운(=체인의 마지막) hop이
+// 그나마 신뢰도가 높다 — Vercel 등 단일 리버스 프록시 뒤에 있다는 전제.
 export function clientIpFromHeaders() {
   const h = headers()
-  const forwarded = h.get("x-forwarded-for")
-  const raw =
-    forwarded?.split(",")[0]?.trim() ||
-    h.get("x-real-ip")?.trim() ||
-    h.get("cf-connecting-ip")?.trim() ||
-    ""
+  const realIp = h.get("x-real-ip")?.trim()
+  const forwardedChain = h.get("x-forwarded-for")
+  const lastForwarded = forwardedChain
+    ?.split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+    .pop()
+  const raw = realIp || lastForwarded || h.get("cf-connecting-ip")?.trim() || ""
   return raw || "0.0.0.0"
 }
 

@@ -6,6 +6,7 @@ import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { ArticleComments } from "@/components/comments/article-comments"
 import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
 import { Badge } from "@/components/ui/badge"
 import { RichContent } from "@/components/editor/rich-content"
@@ -48,14 +49,14 @@ function CareerArticle({ post }: { post: CareerPost }) {
   const { t } = getT()
   return (
     <>
-      <Badge className="mt-6">{post.post_type}</Badge>
-      <h1 className="mt-4 font-display text-4xl font-extrabold">{post.title}</h1>
-      <p className="mt-3 text-sm text-muted-foreground">
+      <PageTitleBanner title={post.title} breadcrumb={[{ label: "CareerLog", href: "/work" }]} className="mt-6" />
+      <p className="mt-4 text-sm text-muted-foreground">
         {[post.company, post.role, formatPeriod(post.period_start, post.period_end, t("date.present"))]
           .filter(Boolean)
           .join(" · ")}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
+        <Badge>{post.post_type}</Badge>
         {[...(post.skills ?? []), ...(post.tags ?? [])].map((item) => (
           <Badge key={item}>{item}</Badge>
         ))}

@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import { CareerForm } from "../career-form"
 import { PostPager } from "@/components/board/post-pager"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { EditorFormSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import { createClient } from "@/lib/supabase/server"
@@ -18,7 +19,7 @@ export default function CareerDetailPage({
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager id={params.id} />
       </Suspense>
-      <h1 className="mb-6 mt-6 font-display text-3xl font-extrabold">글 수정</h1>
+      <PageTitleBanner title="글 수정" breadcrumb={[{ label: "CareerLog", href: "/career" }]} className="mb-6 mt-6" />
       <Suspense fallback={<EditorFormSkeleton />}>
         <CareerFormSection id={params.id} />
       </Suspense>

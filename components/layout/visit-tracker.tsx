@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
-import { VISIT_ID_COOKIE, VISIT_WINDOW_MS } from "@/lib/auth/visit-window"
+import { VISIT_WINDOW_MS } from "@/lib/auth/visit-window"
 
 const STORAGE_KEY = "dd_visit_logged"
 let sessionStarting = false
@@ -24,12 +24,6 @@ function markLoggedThisTab() {
   } catch {
     // sessionStorage를 쓸 수 없어도 서버 쿠키 가드가 한 번 더 막는다
   }
-}
-
-function readCookie(name: string) {
-  if (typeof document === "undefined") return null
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : null
 }
 
 function sendPageView(path: string) {
@@ -69,7 +63,10 @@ export function VisitTracker() {
       return
     }
 
-    if (readCookie(VISIT_ID_COOKIE)) sendPageView(pathname)
+    // dd_visit_id는 httpOnly라 여기서 값을 확인할 수 없다 — 그냥 보내면
+    // 서버(/api/track-pageview)가 쿠키 유무를 스스로 확인해 없으면 조용히
+    // 무시한다(세션이 아직 없는 첫 렌더 타이밍 등).
+    sendPageView(pathname)
   }, [pathname])
 
   return null

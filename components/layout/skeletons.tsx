@@ -46,23 +46,26 @@ export function CardGridSkeleton({ count = 6 }: { count?: number }) {
   )
 }
 
-export function ListSkeleton({ count = 5, withSearch = true }: { count?: number; withSearch?: boolean }) {
+export function ListSkeleton({ count = 8, withSearch = true }: { count?: number; withSearch?: boolean }) {
   return (
     <div>
       {withSearch ? (
         <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-24 rounded-full" />
-          <Skeleton className="h-10 flex-1 rounded-full" />
-          <Skeleton className="h-10 w-16 rounded-full" />
-          <Skeleton className="size-10 rounded-full" />
+          <Skeleton className="h-9 w-24 rounded-sm" />
+          <Skeleton className="h-9 flex-1 rounded-sm" />
+          <Skeleton className="h-9 w-16 rounded-sm" />
+          <Skeleton className="size-9 rounded-sm" />
         </div>
       ) : null}
-      <Skeleton className={withSearch ? "mt-4 h-4 w-16" : "h-4 w-16"} />
-      <div className="mt-2 divide-y border-y bg-white dark:bg-card">
+      <Skeleton className={withSearch ? "mt-3 h-3 w-16" : "h-3 w-16"} />
+      <div className="mt-3 border-y border-foreground/15">
+        <Skeleton className="h-9 w-full rounded-none" />
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="space-y-2 px-4 py-4 sm:px-5">
-            <Skeleton className="h-5 w-3/4 max-w-full" />
-            <Skeleton className="h-3 w-56 max-w-full" />
+          <div key={index} className="flex items-center gap-4 border-b border-foreground/8 px-3 py-3">
+            <Skeleton className="h-4 w-8" />
+            <Skeleton className="h-4 flex-1 max-w-md" />
+            <Skeleton className="hidden h-3 w-20 sm:block" />
+            <Skeleton className="h-3 w-24" />
           </div>
         ))}
       </div>

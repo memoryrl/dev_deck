@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { PostList } from "@/components/board/post-list"
+import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { PublicContainer } from "@/components/layout/public-container"
 import { listCareerPostsPage } from "@/lib/career/public"
@@ -17,8 +18,8 @@ export default function WorkBoardPage({
 
   return (
     <PublicContainer>
-      <h1 className="font-display text-4xl font-extrabold">{t("work.title")}</h1>
-      <p className="mt-2 text-muted-foreground">{t("work.lede")}</p>
+      <PageTitleBanner title={t("work.title")} />
+      <p className="mt-6 text-muted-foreground">{t("work.lede")}</p>
       <div className="mt-8">
         <Suspense fallback={<ListSkeleton />}>
           <WorkPostList page={page} q={q} empty={t("list.emptyPublic")} />

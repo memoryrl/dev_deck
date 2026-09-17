@@ -70,5 +70,16 @@ export function sanitizeRichHtml(html: string) {
       },
     },
     allowedSchemes: ["http", "https", "mailto"],
+    // target="_blank" 링크는 rel="noopener noreferrer"를 강제한다 — 없으면
+    // 새 탭에서 열린 페이지가 window.opener로 원래 탭을 조작할 수 있다(리버스
+    // 탭내빙).
+    transformTags: {
+      a: (tagName, attribs) => {
+        if (attribs.target === "_blank") {
+          attribs.rel = "noopener noreferrer"
+        }
+        return { tagName, attribs }
+      },
+    },
   })
 }

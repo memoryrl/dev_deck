@@ -141,7 +141,12 @@ export async function PublicFooter() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 DevDeck. Created by nckim. All rights reserved.</p>
-          <p>Personal Developer Hub</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>Personal Developer Hub</p>
+            <Link href="/opensource" className="hover:text-foreground">
+              {t("footer.opensource")}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
