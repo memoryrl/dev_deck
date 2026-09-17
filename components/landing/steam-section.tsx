@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
+import { ScrollReveal } from "@/components/landing/scroll-reveal"
 import { plainTextFromContent } from "@/lib/content"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { TwoWeekBadge } from "@/components/steam/two-week-badge"
@@ -58,58 +59,61 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:grid-rows-2">
-      <Link
-        href={`/games/${lead.app_id}`}
-        className="group relative flex h-full min-h-96 flex-col overflow-hidden rounded-2xl bg-[#171a21] md:row-span-2"
-      >
-        <SteamCover
-          src={steamCoverSources(lead.app_id, lead.header_image_url)}
-          appId={lead.app_id}
-          alt=""
-          className="h-96 w-full md:absolute md:inset-0 md:h-full"
-        />
-        <RankMark rank={1} className="h-10 w-10 text-sm font-extrabold" />
-        <TwoWeekBadge minutes={lead.playtime_2weeks_minutes} />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-4 pt-16 text-white">
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-display text-xl font-bold leading-tight">{lead.name}</h3>
-            </div>
-            <GameMeta game={lead} kind={kind} />
-          </div>
-        </div>
-      </Link>
-      {side.map((game, index) => (
+      <ScrollReveal variant="scale" duration={750} className="h-full md:row-span-2">
         <Link
-          key={game.app_id}
-          href={`/games/${game.app_id}`}
-          className="group overflow-hidden rounded-2xl border bg-card shadow-sm"
+          href={`/games/${lead.app_id}`}
+          className="group relative flex h-full min-h-96 flex-col overflow-hidden rounded-2xl bg-[#171a21]"
         >
-          <div className="relative">
-            <SteamCover
-              src={steamCoverSources(game.app_id, game.header_image_url)}
-              appId={game.app_id}
-              alt=""
-              className="h-48 w-full"
-            />
-            <RankMark rank={index + 2} className="h-8 w-8 text-xs font-bold" />
-            <TwoWeekBadge minutes={game.playtime_2weeks_minutes} />
-          </div>
-          <div className="flex items-end justify-between gap-3 p-3">
-            <div className="min-w-0">
-              <h3 className="truncate font-display text-sm font-bold">{game.name}</h3>
+          <SteamCover
+            src={steamCoverSources(lead.app_id, lead.header_image_url)}
+            appId={lead.app_id}
+            alt=""
+            className="h-96 w-full md:absolute md:inset-0 md:h-full"
+          />
+          <RankMark rank={1} className="h-10 w-10 text-sm font-extrabold" />
+          <TwoWeekBadge minutes={lead.playtime_2weeks_minutes} />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-4 pt-16 text-white">
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-display text-xl font-bold leading-tight">{lead.name}</h3>
+              </div>
+              <GameMeta game={lead} kind={kind} />
             </div>
-            {kind === "recent" ? (
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {formatLastPlayed(game.last_played_at, dictionary)}
-              </span>
-            ) : game.playtime_forever_minutes > 0 ? (
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {formatPlaytime(game.playtime_forever_minutes)}
-              </span>
-            ) : null}
           </div>
         </Link>
+      </ScrollReveal>
+      {side.map((game, index) => (
+        <ScrollReveal key={game.app_id} variant="up" delay={index * 90} duration={550}>
+          <Link
+            href={`/games/${game.app_id}`}
+            className="group block overflow-hidden rounded-2xl border bg-card shadow-sm"
+          >
+            <div className="relative">
+              <SteamCover
+                src={steamCoverSources(game.app_id, game.header_image_url)}
+                appId={game.app_id}
+                alt=""
+                className="h-48 w-full"
+              />
+              <RankMark rank={index + 2} className="h-8 w-8 text-xs font-bold" />
+              <TwoWeekBadge minutes={game.playtime_2weeks_minutes} />
+            </div>
+            <div className="flex items-end justify-between gap-3 p-3">
+              <div className="min-w-0">
+                <h3 className="truncate font-display text-sm font-bold">{game.name}</h3>
+              </div>
+              {kind === "recent" ? (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatLastPlayed(game.last_played_at, dictionary)}
+                </span>
+              ) : game.playtime_forever_minutes > 0 ? (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatPlaytime(game.playtime_forever_minutes)}
+                </span>
+              ) : null}
+            </div>
+          </Link>
+        </ScrollReveal>
       ))}
     </div>
   )
@@ -123,34 +127,35 @@ function ReviewList({ reviews }: { reviews: GameReview[] }) {
 
   return (
     <div className="space-y-3">
-      {reviews.map((review) => (
-        <Link
-          key={review.id}
-          href={`/games/${review.app_id}`}
-          className="flex gap-4 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm transition hover:bg-muted/40"
-        >
-          <SteamCover
-            src={steamCoverSources(review.app_id)}
-            appId={review.app_id}
-            alt=""
-            className="h-[7.5rem] w-[13.5rem] shrink-0 rounded-lg"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="truncate font-display text-base font-bold">{review.game_title}</h3>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {review.updated_at.slice(0, 10).replaceAll("-", ".")}
-              </span>
+      {reviews.map((review, index) => (
+        <ScrollReveal key={review.id} variant="up" delay={Math.min(index, 4) * 80} duration={550}>
+          <Link
+            href={`/games/${review.app_id}`}
+            className="flex gap-4 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm transition hover:bg-muted/40"
+          >
+            <SteamCover
+              src={steamCoverSources(review.app_id)}
+              appId={review.app_id}
+              alt=""
+              className="h-[7.5rem] w-[13.5rem] shrink-0 rounded-lg"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="truncate font-display text-base font-bold">{review.game_title}</h3>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {review.updated_at.slice(0, 10).replaceAll("-", ".")}
+                </span>
+              </div>
+              {review.review_text ? (
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                  {plainTextFromContent(review.review_text) || t("steam.noReviewText")}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">{t("steam.noReviewText")}</p>
+              )}
             </div>
-            {review.review_text ? (
-              <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                {plainTextFromContent(review.review_text) || t("steam.noReviewText")}
-              </p>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">{t("steam.noReviewText")}</p>
-            )}
-          </div>
-        </Link>
+          </Link>
+        </ScrollReveal>
       ))}
     </div>
   )

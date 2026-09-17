@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/landing/hero-topology/hero-section"
 import { ContactCta } from "@/components/landing/contact-cta"
 import { LatestColumns } from "@/components/landing/latest-columns"
 import { ModuleMarquee } from "@/components/landing/module-marquee"
+import { ScrollReveal } from "@/components/landing/scroll-reveal"
 import { SkillShowcase } from "@/components/landing/skill-showcase"
 import { StatsStrip } from "@/components/landing/stats-strip"
 import { SteamSection } from "@/components/landing/steam-section"
@@ -96,21 +97,37 @@ async function HomeLanding() {
 
   return (
     <>
-      <StatsStrip {...data.stats} />
-      <ModuleMarquee modules={modules} />
-      <FeaturedWorkCard work={data.featured} />
-      <LatestColumns prompts={prompts} posts={posts} />
-      <UmpcActivity umpc={data.umpc} activity={data.activity} />
-      <SteamSection
-        rankedGames={data.steam.rankedGames}
-        recentGames={data.steam.recentGames}
-        totalMinutes={data.steam.totalMinutes}
-        twoWeekMinutes={data.steam.twoWeekMinutes}
-        reviews={data.steam.latestReviews}
-        profile={data.steam.profile}
-      />
-      <SkillShowcase skills={data.skills} />
-      <ContactCta />
+      <ScrollReveal variant="up" duration={600}>
+        <StatsStrip {...data.stats} />
+      </ScrollReveal>
+      <ScrollReveal variant="fade">
+        <ModuleMarquee modules={modules} />
+      </ScrollReveal>
+      <ScrollReveal variant="scale">
+        <FeaturedWorkCard work={data.featured} />
+      </ScrollReveal>
+      <ScrollReveal variant="up">
+        <LatestColumns prompts={prompts} posts={posts} />
+      </ScrollReveal>
+      <ScrollReveal variant="up">
+        <UmpcActivity umpc={data.umpc} activity={data.activity} />
+      </ScrollReveal>
+      <ScrollReveal variant="scale">
+        <SteamSection
+          rankedGames={data.steam.rankedGames}
+          recentGames={data.steam.recentGames}
+          totalMinutes={data.steam.totalMinutes}
+          twoWeekMinutes={data.steam.twoWeekMinutes}
+          reviews={data.steam.latestReviews}
+          profile={data.steam.profile}
+        />
+      </ScrollReveal>
+      <ScrollReveal variant="up">
+        <SkillShowcase skills={data.skills} />
+      </ScrollReveal>
+      <ScrollReveal variant="scale">
+        <ContactCta />
+      </ScrollReveal>
     </>
   )
 }

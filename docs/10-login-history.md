@@ -11,10 +11,12 @@
 - IP·지역(도시·국가)·User-Agent
 - **이번 추가:** 같은 세션 안에서 이동한 페이지 경로 목록 (펼쳐보기)
 - 목록 필터(전체/로그인/접속), 이메일·IP·지역 검색, 페이지네이션
+- 페이지 더보기: 화면 이름 + 경로 한 줄 (`PromptKit (/promptkit)`)
+- 행 배지: 외부 사용자 / Vercel 봇 / 크롤러 / 로컬 (User-Agent·IP로 구분, 차단은 하지 않음)
 
 **제외**
 
-- 봇/크롤러 자동 판별·차단 (User-Agent 패턴은 화면에서 사람이 눈으로 구분)
+- 봇/크롤러 자동 차단 (화면에서 구분만 한다)
 - 오래된 기록 자동 삭제(보존 기간 정책) — 트래픽이 커지면 `app/api/cron/*` 패턴으로 추가
 - 페이지 체류 시간, 스크롤 등 상세 행동 분석
 
@@ -76,7 +78,7 @@ RLS: SELECT는 관리자만. INSERT는 `anon, authenticated` 모두(비회원 �
 
 ### 3.5 관리자 화면
 
-`/site/login-history`의 각 행은 이제 "페이지 N건" 배지를 보여준다(같은 페이지 목록 조회 시 `visit_id`별로 묶어서 한 번에 카운트, N+1 쿼리 없음). 클릭하면 그 세션이 방문한 경로 목록을 펼쳐 보여준다(경로 + 시각). 펼침 상태는 클라이언트 컴포넌트(`login-history-row.tsx`)가 담당하고, 목록은 Server Action(`fetchPageViews`)으로 그때 가져온다 — 처음부터 모든 행의 상세를 미리 불러오지 않는다.
+`/site/login-history`의 각 행은 "페이지 N건" 배지를 보여준다(같은 페이지 목록 조회 시 `visit_id`별로 묶어서 한 번에 카운트, N+1 쿼리 없음). 클릭하면 그 세션이 본 화면 이름과 경로를 한 줄로 펼친다. 행마다 외부 사용자·Vercel 봇·크롤러·로컬 배지를 붙인다(`lib/auth/visit-labels.ts`). 펼침은 클라이언트(`login-history-row.tsx`), 목록은 Server Action(`fetchPageViews`)으로 그때 가져온다.
 
 ## 4. 파일
 
@@ -86,6 +88,7 @@ supabase/schema.sql                        동일 DDL 반영
 
 types/login-history.ts                     LoginHistoryEntry, PageViewEntry
 lib/auth/visit-window.ts                   VISIT_ID_COOKIE 추가
+lib/auth/visit-labels.ts                   화면 이름, 외부 사용자/Vercel 봇 구분
 lib/auth/login-history.ts                  recordPageView, listPageViews,
                                             countPageViewsByVisit, findRecentSessionId
 app/api/track-visit/route.ts               세션 생성 + 첫 페이지뷰, dd_visit_id 쿠키

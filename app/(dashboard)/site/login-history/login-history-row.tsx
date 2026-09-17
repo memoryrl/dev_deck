@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChevronDown, Loader2 } from "lucide-react"
 import { fetchPageViews } from "@/app/(dashboard)/site/login-history/actions"
+import { classifyVisit, screenLabelFromPath } from "@/lib/auth/visit-labels"
 import { cn, formatBoardDateTime } from "@/lib/utils"
 import type { LoginHistoryEntry, PageViewEntry } from "@/types/login-history"
 
@@ -19,6 +20,7 @@ export function LoginHistoryRow({
   const [pages, setPages] = useState<PageViewEntry[] | null>(null)
   const [loading, setLoading] = useState(false)
   const isMember = Boolean(entry.user_id)
+  const audience = classifyVisit(entry)
 
   async function toggle() {
     if (!open && pages === null) {
@@ -45,6 +47,19 @@ export function LoginHistoryRow({
             )}
           >
             {entry.event_type === "login" ? "로그인" : "접속"}
+          </span>
+          <span className="mx-2 text-foreground/20">|</span>
+          <span
+            title={audience.hint}
+            className={cn(
+              "rounded-full px-2 py-0.5 text-xs font-semibold",
+              audience.kind === "user" && "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
+              audience.kind === "vercel" && "bg-amber-500/15 text-amber-800 dark:text-amber-300",
+              audience.kind === "bot" && "bg-orange-500/15 text-orange-800 dark:text-orange-300",
+              audience.kind === "local" && "bg-muted text-muted-foreground"
+            )}
+          >
+            {audience.label}
           </span>
           <span className="mx-2 text-foreground/20">|</span>
           <span className="font-semibold text-foreground">{isMember ? (entry.email ?? "(이메일 없음)") : "비회원"}</span>
@@ -92,12 +107,27 @@ export function LoginHistoryRow({
           ) : null}
         </div>
       ) : null}
+      {audience.kind !== "user" ? (
+        <p
+          className={cn(
+            "text-[11px] leading-snug",
+            audience.kind === "vercel" && "text-amber-700 dark:text-amber-400",
+            audience.kind === "bot" && "text-orange-700 dark:text-orange-400",
+            audience.kind === "local" && "text-sky-700 dark:text-sky-400"
+          )}
+        >
+          {audience.hint}
+        </p>
+      ) : null}
 
       {open && pages ? (
         <ul className="mt-1 space-y-1 rounded-lg bg-muted/40 p-2.5 text-xs">
           {pages.map((page) => (
             <li key={page.id} className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate font-mono text-foreground/80">{page.path}</span>
+              <p className="min-w-0 truncate">
+                <span className="font-medium text-foreground">{screenLabelFromPath(page.path)}</span>
+                <span className="ml-1.5 font-mono text-muted-foreground">({page.path})</span>
+              </p>
               <span className="shrink-0 text-muted-foreground">{formatBoardDateTime(page.created_at)}</span>
             </li>
           ))}

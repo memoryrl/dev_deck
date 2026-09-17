@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { BookOpen, Briefcase, Compass, Gamepad2, Sparkles, Users } from "lucide-react"
 import { usePageActivity } from "@/components/landing/use-page-activity"
+import { ScrollReveal } from "@/components/landing/scroll-reveal"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { TopologyModuleNode } from "@/lib/landing/topology"
@@ -104,8 +105,10 @@ export function ModuleMarquee({ modules }: { modules: ModuleMarqueeItem[] }) {
   return (
     <section className="relative mx-auto max-w-6xl overflow-x-clip px-5 py-14">
       <div className="grid gap-4 md:hidden">
-        {cards.map((card) => (
-          <ModuleCard key={card.id} {...card} className="w-full" />
+        {cards.map((card, index) => (
+          <ScrollReveal key={card.id} variant="up" delay={index * 90} duration={550}>
+            <ModuleCard {...card} className="w-full" />
+          </ScrollReveal>
         ))}
       </div>
       <div className="group relative hidden overflow-hidden md:block">
