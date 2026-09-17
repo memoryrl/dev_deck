@@ -656,3 +656,48 @@ CREATE POLICY profanity_owner ON devdeck.profanity_words
 GRANT ALL ON TABLE devdeck.comments TO anon, authenticated, service_role;
 GRANT ALL ON TABLE devdeck.profanity_words TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION devdeck.mask_profanity(text) TO anon, authenticated, service_role;
+
+-- Login + visit history (OAuth sign-ins AND anonymous page visits) —
+-- see supabase/patch-login-history.sql
+CREATE TABLE IF NOT EXISTS devdeck.login_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  email TEXT,
+  provider TEXT,
+  event_type TEXT NOT NULL DEFAULT 'login'
+    CHECK (event_type IN ('login', 'visit')),
+  ip_address TEXT NOT NULL,
+  ip_region TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS login_history_created_idx
+  ON devdeck.login_history (created_at DESC);
+CREATE INDEX IF NOT EXISTS login_history_user_idx
+  ON devdeck.login_history (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS login_history_event_type_idx
+  ON devdeck.login_history (event_type, created_at DESC);
+
+ALTER TABLE devdeck.login_history ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS login_history_select_owner ON devdeck.login_history;
+CREATE POLICY login_history_select_owner ON devdeck.login_history
+  FOR SELECT TO authenticated
+  USING (devdeck.is_owner());
+
+DROP POLICY IF EXISTS login_history_insert_self ON devdeck.login_history;
+DROP POLICY IF EXISTS login_history_insert ON devdeck.login_history;
+CREATE POLICY login_history_insert ON devdeck.login_history
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    (user_id IS NULL AND event_type = 'visit')
+    OR (user_id = auth.uid())
+  );
+
+DROP POLICY IF EXISTS login_history_delete_owner ON devdeck.login_history;
+CREATE POLICY login_history_delete_owner ON devdeck.login_history
+  FOR DELETE TO authenticated
+  USING (devdeck.is_owner());
+
+GRANT ALL ON TABLE devdeck.login_history TO anon, authenticated, service_role;

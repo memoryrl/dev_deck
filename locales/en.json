@@ -62,7 +62,8 @@
     "boards": "Boards",
     "comments": "Comments",
     "menus": "Menus",
-    "uploads": "Uploads"
+    "uploads": "Uploads",
+    "loginHistory": "Access History"
   },
   "footer": {
     "blurb": "A personal portfolio hub for prompts, career notes, and a Steam library.",

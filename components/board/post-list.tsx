@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { ChevronDown, RefreshCw } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 import { ListPager } from "@/components/layout/list-pager"
 import { Button } from "@/components/ui/button"
+import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { listQueryHref, type PagedResult } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
@@ -59,16 +60,13 @@ export function PostList({
               <input key={key} type="hidden" name={key} value={String(value)} />
             )
           )}
-          <div className="relative shrink-0">
-            <select
-              defaultValue="title"
-              aria-label={t("common.searchField")}
-              className="h-10 appearance-none rounded-full border border-input bg-background pl-4 pr-9 text-sm font-medium outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="title">{t("common.title")}</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
+          <CustomSelect
+            defaultValue="title"
+            options={[{ value: "title", label: t("common.title") }]}
+            aria-label={t("common.searchField")}
+            className="shrink-0"
+            triggerClassName="h-10 rounded-full bg-background pl-4 pr-3 font-medium"
+          />
           <Input
             name="q"
             defaultValue={searchQuery}

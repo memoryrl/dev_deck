@@ -7,6 +7,7 @@ import { ACCESS_ROLES, roleAtLeast, roleLabel, type AccessRole } from "@/lib/acc
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { CustomSelect } from "@/components/ui/custom-select"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { Board } from "@/types/board"
@@ -105,18 +106,13 @@ export function MenusWorkspace({
       <Card className="flex flex-col gap-4 p-4 sm:p-5 lg:sticky lg:top-6">
         <div>
           <Label htmlFor="menu-role-preview">미리보기 권한</Label>
-          <select
+          <CustomSelect
             id="menu-role-preview"
             value={role}
-            onChange={(event) => setRole(event.target.value as AccessRole)}
-            className="mt-1.5 flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            {ACCESS_ROLES.map((item) => (
-              <option key={item} value={item}>
-                {roleLabel(item)} 에게 보이는 메뉴
-              </option>
-            ))}
-          </select>
+            onValueChange={(next) => setRole(next as AccessRole)}
+            options={ACCESS_ROLES.map((item) => ({ value: item, label: `${roleLabel(item)} 에게 보이는 메뉴` }))}
+            className="mt-1.5"
+          />
           <p className="mt-1.5 text-xs text-muted-foreground">
             선택한 역할 기준으로 트리에 표시되는 메뉴가 달라집니다.
           </p>

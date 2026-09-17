@@ -5,6 +5,7 @@ import { useState } from "react"
 import { deleteMenu, upsertMenu } from "@/app/(dashboard)/site/actions"
 import { ACCESS_ROLES, roleLabel } from "@/lib/access"
 import { Button } from "@/components/ui/button"
+import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -75,64 +76,53 @@ export function MenuForm({
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <Label htmlFor={`board-${formId}`}>연결 게시판</Label>
-          <select
+          <CustomSelect
             id={`board-${formId}`}
             name="board_id"
             defaultValue={menu?.board_id ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            <option value="">없음 (직접 링크)</option>
-            {boards.map((board) => (
-              <option key={board.id} value={board.id}>
-                {board.name} (/{board.slug})
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "없음 (직접 링크)" },
+              ...boards.map((board) => ({ value: board.id, label: `${board.name} (/${board.slug})` })),
+            ]}
+          />
         </div>
         <div>
           <Label htmlFor={`parent-${formId}`}>상위 메뉴</Label>
-          <select
+          <CustomSelect
             id={`parent-${formId}`}
             name="parent_id"
             defaultValue={menu?.parent_id ?? defaultParentId ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            <option value="">최상위</option>
-            {parents.map((item) => (
-              <option key={item.id} value={item.id}>
-                [{item.location === "header" ? "헤더" : "푸터"}] {item.label}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "최상위" },
+              ...parents.map((item) => ({
+                value: item.id,
+                label: `[${item.location === "header" ? "헤더" : "푸터"}] ${item.label}`,
+              })),
+            ]}
+          />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <div>
           <Label htmlFor={`location-${formId}`}>위치</Label>
-          <select
+          <CustomSelect
             id={`location-${formId}`}
             name="location"
             defaultValue={menu?.location ?? defaultLocation ?? "header"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            <option value="header">헤더</option>
-            <option value="footer">푸터</option>
-          </select>
+            options={[
+              { value: "header", label: "헤더" },
+              { value: "footer", label: "푸터" },
+            ]}
+          />
         </div>
         <div>
           <Label htmlFor={`view-${formId}`}>보이는 권한</Label>
-          <select
+          <CustomSelect
             id={`view-${formId}`}
             name="view_role"
             defaultValue={menu?.view_role ?? "visitor"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            {ACCESS_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {roleLabel(role)} 이상
-              </option>
-            ))}
-          </select>
+            options={ACCESS_ROLES.map((role) => ({ value: role, label: `${roleLabel(role)} 이상` }))}
+          />
         </div>
         <div>
           <Label htmlFor={`sort-${formId}`}>정렬</Label>

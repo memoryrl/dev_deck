@@ -6,6 +6,7 @@ import { deleteBoard, upsertBoard } from "@/app/(dashboard)/site/actions"
 import { ACCESS_ROLES, roleLabel } from "@/lib/access"
 import { isSystemBoard, kindLabel } from "@/lib/boards/kind"
 import { Button } from "@/components/ui/button"
+import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -69,46 +70,34 @@ export function BoardForm({ board }: { board?: Board }) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <Label htmlFor="view_role">읽기 권한</Label>
-          <select
+          <CustomSelect
             id="view_role"
             name="view_role"
             defaultValue={board?.view_role ?? "visitor"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            {ACCESS_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {roleLabel(role)}
-              </option>
-            ))}
-          </select>
+            options={ACCESS_ROLES.map((role) => ({ value: role, label: roleLabel(role) }))}
+          />
         </div>
         <div>
           <Label htmlFor="write_role">쓰기 권한</Label>
-          <select
+          <CustomSelect
             id="write_role"
             name="write_role"
             defaultValue={board?.write_role ?? "owner"}
             disabled={system}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm disabled:opacity-60"
-          >
-            <option value="owner">{roleLabel("owner")}</option>
-            {!system ? <option value="member">{roleLabel("member")}</option> : null}
-          </select>
+            options={[
+              { value: "owner", label: roleLabel("owner") },
+              ...(!system ? [{ value: "member", label: roleLabel("member") }] : []),
+            ]}
+          />
         </div>
         <div>
           <Label htmlFor="comment_role">댓글 권한</Label>
-          <select
+          <CustomSelect
             id="comment_role"
             name="comment_role"
             defaultValue={board?.comment_role ?? "visitor"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          >
-            {ACCESS_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {roleLabel(role)}
-              </option>
-            ))}
-          </select>
+            options={ACCESS_ROLES.map((role) => ({ value: role, label: roleLabel(role) }))}
+          />
         </div>
         <div>
           <Label htmlFor="sort_order">정렬</Label>

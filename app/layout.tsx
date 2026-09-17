@@ -5,6 +5,7 @@ import { I18nProvider } from "@/components/i18n/i18n-provider"
 import { LanguageRouteSync } from "@/components/i18n/language-route-sync"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
+import { VisitTracker } from "@/components/layout/visit-tracker"
 import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Suspense>
             {children}
             <ScrollToTop />
+            <VisitTracker />
           </I18nProvider>
         </ThemeProvider>
       </body>

@@ -5,6 +5,7 @@ import { useState } from "react"
 import { createCareerPost, deleteCareerPost, updateCareerPost } from "./actions"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
+import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -44,16 +45,16 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
       </div>
       <div>
         <Label htmlFor="post_type">종류</Label>
-        <select
+        <CustomSelect
           id="post_type"
           name="post_type"
           defaultValue={post?.post_type ?? "project"}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-        >
-          <option value="project">project</option>
-          <option value="skill">skill</option>
-          <option value="note">note</option>
-        </select>
+          options={[
+            { value: "project", label: "project" },
+            { value: "skill", label: "skill" },
+            { value: "note", label: "note" },
+          ]}
+        />
       </div>
       <div>
         <Label htmlFor="excerpt">요약</Label>

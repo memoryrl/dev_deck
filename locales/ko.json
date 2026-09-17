@@ -62,7 +62,8 @@
     "boards": "게시판",
     "comments": "댓글",
     "menus": "메뉴",
-    "uploads": "업로드"
+    "uploads": "업로드",
+    "loginHistory": "접속 이력"
   },
   "footer": {
     "blurb": "프롬프트, 커리어, Steam 라이브러리를 한 덱에 모은 개인 포트폴리오 허브입니다.",
