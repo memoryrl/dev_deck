@@ -32,7 +32,9 @@ function HeroBlobs() {
 }
 
 // 좌측 카피는 고정. 클래식은 히어로 전체 위에 카드를 우측 하단에 얹고, 토폴로지는
-// 같은 히어로 박스 전체를 3D 오피스로 채운다. 캔버스·팝업 위 드래그는 캐러셀이 가로채지 않는다.
+// 같은 히어로 박스 전체를 3D 오피스로 채운다. 캔버스·팝업 위 드래그는 캐러셀이
+// 가로채지 않고, 세로 이동이 가로보다 크면(스크롤 의도) 스와이프 자체를 포기해서
+// 모바일 세로 스크롤과도 부딪히지 않는다.
 export function HeroSection({ topology, children }: { topology: TopologyData; children: ReactNode }) {
   const { t } = useI18n()
   const [slide, setSlide] = useState<Slide>(0)
@@ -42,30 +44,34 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
   const [dragOffset, setDragOffset] = useState(0)
 
   const trackRef = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ startX: number; pointerId: number; dragging: boolean; offset: number } | null>(null)
+  const drag = useRef<{
+    startX: number
+    startY: number
+    pointerId: number
+    dragging: boolean
+    aborted: boolean
+    offset: number
+  } | null>(null)
 
   useEffect(() => {
     const media = window.matchMedia(DESKTOP_QUERY)
-
-    const sync = () => {
-      setIsDesktop(media.matches)
-      if (!media.matches) {
-        setSlide(0)
-        return
-      }
-      try {
-        if (window.localStorage.getItem(STORAGE_KEY) === "topology") {
-          setSlide(1)
-          setVisitedTopology(true)
-        }
-      } catch {
-        // localStorage 접근 불가(프라이빗 모드 등) — 기본값(클래식) 유지
-      }
-    }
-
+    const sync = () => setIsDesktop(media.matches)
     sync()
     media.addEventListener("change", sync)
     return () => media.removeEventListener("change", sync)
+  }, [])
+
+  // 마지막으로 보던 슬라이드 복원 — 이제 모바일에서도 같은 캐러셀을 쓰므로
+  // 화면 크기와 무관하게 한 번만 복원한다(예전엔 데스크톱 전용이었다).
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(STORAGE_KEY) === "topology") {
+        setSlide(1)
+        setVisitedTopology(true)
+      }
+    } catch {
+      // localStorage 접근 불가(프라이빗 모드 등) — 기본값(클래식) 유지
+    }
   }, [])
 
   function commit(next: Slide) {
@@ -79,29 +85,42 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!isDesktop) return
     const target = event.target as HTMLElement
     if (target.closest("a, button, canvas, .topology-dock")) return
-    drag.current = { startX: event.clientX, pointerId: event.pointerId, dragging: false, offset: 0 }
+    drag.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      pointerId: event.pointerId,
+      dragging: false,
+      aborted: false,
+      offset: 0,
+    }
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const state = drag.current
-    if (!state) return
-    const delta = event.clientX - state.startX
+    if (!state || state.aborted) return
+    const deltaX = event.clientX - state.startX
+    const deltaY = event.clientY - state.startY
 
     if (!state.dragging) {
-      if (Math.abs(delta) < DRAG_START_PX) return
+      // 세로 이동이 가로보다 크면 스크롤 의도로 보고 이 제스처를 포기한다 —
+      // preventDefault를 안 해서 브라우저 기본 세로 스크롤이 그대로 진행된다.
+      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > DRAG_START_PX) {
+        state.aborted = true
+        return
+      }
+      if (Math.abs(deltaX) < DRAG_START_PX) return
       state.dragging = true
       setIsDragging(true)
       event.currentTarget.setPointerCapture(state.pointerId)
-      if (delta < 0) setVisitedTopology(true)
+      if (deltaX < 0) setVisitedTopology(true)
     }
 
     event.preventDefault()
-    const atStart = slide === 0 && delta > 0
-    const atEnd = slide === 1 && delta < 0
-    state.offset = atStart || atEnd ? delta * 0.35 : delta
+    const atStart = slide === 0 && deltaX > 0
+    const atEnd = slide === 1 && deltaX < 0
+    state.offset = atStart || atEnd ? deltaX * 0.35 : deltaX
     setDragOffset(state.offset)
   }
 
@@ -127,7 +146,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
   const width = trackRef.current?.clientWidth || 1
   const dragPercent = (dragOffset / width) * 100
   const translatePercent = -slide * 100 + dragPercent
-  const topologyProgress = isDesktop ? Math.min(1, Math.max(0, slide - dragPercent / 100)) : 0
+  const topologyProgress = Math.min(1, Math.max(0, slide - dragPercent / 100))
   const veilStyle = {
     opacity: topologyProgress,
     transition: isDragging ? "none" : "opacity 0.35s ease-out",
@@ -135,49 +154,53 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
 
   return (
     <div
-      className={cn("relative overflow-x-clip md:h-[640px]", isDragging && "select-none [&_*]:cursor-grabbing")}
+      className={cn(
+        "relative h-[560px] touch-pan-y overflow-x-clip md:h-[640px]",
+        isDragging && "select-none [&_*]:cursor-grabbing"
+      )}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      <div className="absolute inset-0 hidden overflow-hidden md:block">
-          <div
-            ref={trackRef}
-            className={cn("flex h-full w-full", !isDragging && "transition-transform duration-350 ease-out")}
-            style={{ transform: `translateX(${translatePercent}%)` }}
-          >
-            <div className="relative h-full w-full shrink-0">
-              <HeroBlobs />
-              <HeroVisual />
-            </div>
-            <div className="relative h-full w-full shrink-0">
-              {visitedTopology ? (
-                <TopologyPanel
-                  data={topology}
-                  className="h-full md:h-full"
-                  panPixels={100}
-                  active={isDesktop && slide === 1}
-                />
-              ) : (
-                <div className="h-full bg-[#efe6d8]" />
-              )}
-            </div>
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          ref={trackRef}
+          className={cn("flex h-full w-full", !isDragging && "transition-transform duration-350 ease-out")}
+          style={{ transform: `translateX(${translatePercent}%)` }}
+        >
+          <div className="relative h-full w-full shrink-0">
+            <HeroBlobs />
+            <HeroVisual />
+          </div>
+          <div className="relative h-full w-full shrink-0">
+            {visitedTopology ? (
+              <TopologyPanel
+                data={topology}
+                className="h-full"
+                panPixels={isDesktop ? 100 : 0}
+                active={slide === 1}
+              />
+            ) : (
+              <div className="h-full bg-[#efe6d8]" />
+            )}
           </div>
         </div>
-      <div className="md:hidden">
-        <HeroBlobs />
-        <HeroVisual />
       </div>
 
-      <div className="pointer-events-none relative z-20 mx-auto max-w-6xl px-5 pb-44 pt-20 md:h-full md:pb-28 md:pt-28">
+      {/* 카피는 항상 absolute — 화면 크기와 무관하게 히어로 박스 높이(h-[560px]/
+          md:h-[640px])에 영향을 주지 않는다. 이전엔 모바일에서 카피가 일반 흐름
+          안에 있어서 그 높이가 곧 히어로 박스 높이였는데(토폴로지가 없었으니
+          가능했던 방식), 이제 모바일에도 고정 높이 캔버스가 필요해서 그 전제가
+          깨졌다. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
         <div
           className={cn(
             "group relative w-fit max-w-2xl origin-top-left transition-transform duration-350 ease-out",
-            slide === 1 && "is-topology md:scale-[0.62]"
+            slide === 1 && "is-topology scale-[0.55] md:scale-[0.62]"
           )}
         >
-          <div aria-hidden className="hero-copy-veil hidden md:block" style={veilStyle} />
+          <div aria-hidden className="hero-copy-veil" style={veilStyle} />
           <div className="pointer-events-auto relative">{children}</div>
         </div>
       </div>
@@ -187,7 +210,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
         onClick={() => commit(0)}
         disabled={slide === 0}
         aria-label={t("landing.classic")}
-        className="absolute left-3 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-background/70 p-2 shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background disabled:pointer-events-none disabled:opacity-30 md:inline-flex"
+        className="absolute left-3 top-1/2 z-30 inline-flex -translate-y-1/2 rounded-full bg-background/70 p-2 shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background disabled:pointer-events-none disabled:opacity-30"
       >
         <ChevronLeft className="size-5" />
       </button>
@@ -197,13 +220,13 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
         disabled={slide === 1}
         aria-label={t("landing.topology")}
         className={cn(
-          "absolute right-5 top-1/2 z-30 hidden -translate-y-1/2 rounded-full bg-background/80 p-2.5 shadow-sm backdrop-blur-md transition-colors hover:bg-background disabled:pointer-events-none disabled:opacity-30 md:inline-flex",
+          "absolute right-5 top-1/2 z-30 inline-flex -translate-y-1/2 rounded-full bg-background/80 p-2.5 shadow-sm backdrop-blur-md transition-colors hover:bg-background disabled:pointer-events-none disabled:opacity-30",
           slide === 0 ? "hero-topology-cue" : "ring-1 ring-foreground/10"
         )}
       >
         <ChevronRight className="size-5" />
       </button>
-      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 hidden justify-center gap-2 md:flex">
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center gap-2">
         {([0, 1] as const).map((index) => (
           <button
             key={index}

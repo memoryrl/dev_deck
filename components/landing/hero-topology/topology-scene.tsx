@@ -330,6 +330,8 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
     },
   ]
 
+  // 1.75→1.5: 모바일도 이 씬을 띄우게 되면서 저가형 기기 GPU 필레이트 부담을
+  // 낮췄다 — 체감 해상도 차이는 거의 없고 프레임은 더 안정적이다.
   return (
     <Canvas
       orthographic
@@ -341,7 +343,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         far: 200,
         up: [0, 1, 0],
       }}
-      dpr={[1, 1.75]}
+      dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false }}
       style={{
         width: "100%",

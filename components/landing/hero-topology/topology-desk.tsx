@@ -304,9 +304,11 @@ export function TopologyDesk({
             guideTitle={t("landing.robotGuideTitle", { label: module.label })}
             guideDescription={module.guideDescription}
           />
-          {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도. */}
+          {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도.
+              모바일 탭 오차를 감안해 데스크톱 전용이던 시절보다 조금 더 넉넉하게 잡는다
+              (페어 간격 1.62보다 한참 작아 옆 책상 히트박스와는 안 겹친다). */}
           <mesh position={[0, 0.6, -0.05]} visible={false}>
-            <boxGeometry args={[0.8, 1.5, 0.85]} />
+            <boxGeometry args={[1.05, 1.7, 1.1]} />
           </mesh>
         </group>
       )}
