@@ -56,6 +56,7 @@
     "owner": "관리자"
   },
   "nav": {
+    "dashboard": "대시보드",
     "promptkit": "PromptKit",
     "career": "CareerLog",
     "steam": "Steam Tracker",
@@ -63,7 +64,11 @@
     "comments": "댓글",
     "menus": "메뉴",
     "uploads": "업로드",
-    "loginHistory": "접속 이력"
+    "members": "회원",
+    "loginHistory": "접속 이력",
+    "settings": "설정",
+    "system": "시스템",
+    "designSystem": "디자인 시스템"
   },
   "footer": {
     "blurb": "프롬프트, 커리어, Steam 라이브러리를 한 덱에 모은 개인 포트폴리오 허브입니다.",
@@ -289,6 +294,93 @@
   "dashboard": {
     "adminMenu": "관리자 메뉴",
     "homeAria": "홈페이지"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "대시보드",
+      "visitorStats": "방문자 통계",
+      "today": "오늘",
+      "week": "최근 7일",
+      "month": "최근 30일",
+      "contentStatus": "콘텐츠 현황",
+      "posts": "게시글",
+      "comments": "댓글",
+      "prompts": "프롬프트",
+      "uploads": "업로드",
+      "memberStatus": "회원 현황",
+      "members": "가입 회원",
+      "recentActivity": "최근 활동",
+      "viewAll": "전체 보기",
+      "quickLinks": "빠른 링크",
+      "comment": "댓글",
+      "visit": "접속",
+      "post": "게시글",
+      "login": "로그인",
+      "siteAccess": "사이트 접속",
+      "anonymous": "익명"
+    },
+    "members": {
+      "title": "회원 관리",
+      "description": "사이트에 가입한 회원 목록입니다. 회원의 활동 내역을 확인할 수 있습니다.",
+      "searchPlaceholder": "이름 또는 사용자명 검색",
+      "total": "총 {{count}}명",
+      "empty": "아직 가입한 회원이 없습니다.",
+      "noName": "이름 없음",
+      "steamLinked": "Steam 연동",
+      "commentCount": "댓글 {{count}}개",
+      "lastActivity": "마지막 활동"
+    },
+    "settings": {
+      "title": "사이트 설정",
+      "description": "사이트의 기본 정보와 SEO 설정을 관리합니다.",
+      "basicInfo": "기본 정보",
+      "siteName": "사이트 이름",
+      "siteDescription": "사이트 설명",
+      "siteDescriptionHint": "검색 결과와 소셜 미리보기에 표시됩니다.",
+      "footerText": "푸터 문구",
+      "seo": "SEO 설정",
+      "keywords": "키워드",
+      "keywordsHint": "쉼표로 구분하여 입력하세요.",
+      "socialImage": "소셜 미리보기 이미지 URL",
+      "socialImageHint": "SNS 공유 시 표시되는 이미지입니다. (권장: 1200x630)",
+      "googleAnalyticsId": "Google Analytics ID",
+      "advanced": "고급 설정",
+      "maintenanceMode": "유지보수 모드",
+      "maintenanceModeHint": "활성화하면 관리자 외 접속이 차단됩니다.",
+      "saveSettings": "설정 저장"
+    },
+    "system": {
+      "title": "시스템 상태",
+      "description": "사이트 시스템의 현재 상태를 확인합니다.",
+      "refresh": "새로고침",
+      "systemNormal": "시스템 정상",
+      "systemError": "시스템 이상 감지",
+      "lastChecked": "마지막 확인",
+      "responseTime": "응답 시간",
+      "supabaseAuth": "Supabase Auth",
+      "supabaseDb": "Supabase Database",
+      "status": "상태",
+      "normal": "정상",
+      "error": "오류",
+      "httpStatus": "HTTP 상태",
+      "noError": "없음",
+      "lastHealthCheck": "마지막 정기 헬스체크",
+      "stale": "오래됨",
+      "checkTime": "확인 시간",
+      "envInfo": "환경 정보",
+      "nodeVersion": "Node.js 버전",
+      "environment": "환경",
+      "configured": "설정됨",
+      "notConfigured": "미설정",
+      "errorDetail": "오류 상세"
+    },
+    "designSystem": {
+      "title": "디자인 시스템",
+      "common": "공통영역",
+      "screens": "화면영역",
+      "description": "DevDeck 프로젝트의 컴포넌트 가이드입니다.",
+      "agentRef": "에이전트 참고용"
+    }
   },
   "work": {
     "title": "커리어",

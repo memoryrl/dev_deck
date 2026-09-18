@@ -6,33 +6,35 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { requireOwner } from "@/lib/auth/owner"
 import { getSiteSettings } from "@/lib/site/settings"
+import { getT } from "@/lib/i18n/dictionary"
 import { saveSiteSettings } from "./actions"
 
 export default async function SiteSettingsPage() {
   await requireOwner()
   const settings = await getSiteSettings()
+  const { t } = getT()
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <PageTitleBanner
-        title="사이트 설정"
+        title={t("admin.settings.title")}
         breadcrumb={[
-          { label: "사이트 관리", href: "/site/dashboard" },
-          { label: "설정" },
+          { label: t("nav.dashboard"), href: "/site/dashboard" },
+          { label: t("admin.settings.title") },
         ]}
       />
 
       <p className="text-sm text-muted-foreground">
-        사이트의 기본 정보와 SEO 설정을 관리합니다.
+        {t("admin.settings.description")}
       </p>
 
       <form action={saveSiteSettings} className="space-y-8">
         {/* 기본 정보 */}
         <section className="rounded-xl border bg-white p-6 dark:bg-card">
-          <h2 className="mb-6 font-display text-lg font-bold">기본 정보</h2>
+          <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.basicInfo")}</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="siteName">사이트 이름</Label>
+              <Label htmlFor="siteName">{t("admin.settings.siteName")}</Label>
               <Input
                 id="siteName"
                 name="siteName"
@@ -41,20 +43,20 @@ export default async function SiteSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="siteDescription">사이트 설명</Label>
+              <Label htmlFor="siteDescription">{t("admin.settings.siteDescription")}</Label>
               <Textarea
                 id="siteDescription"
                 name="siteDescription"
                 defaultValue={settings.siteDescription}
-                placeholder="사이트에 대한 간단한 설명"
+                placeholder={t("admin.settings.siteDescription")}
                 rows={3}
               />
               <p className="text-xs text-muted-foreground">
-                검색 결과와 소셜 미리보기에 표시됩니다.
+                {t("admin.settings.siteDescriptionHint")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="footerText">푸터 문구</Label>
+              <Label htmlFor="footerText">{t("admin.settings.footerText")}</Label>
               <Input
                 id="footerText"
                 name="footerText"
@@ -67,10 +69,10 @@ export default async function SiteSettingsPage() {
 
         {/* SEO 설정 */}
         <section className="rounded-xl border bg-white p-6 dark:bg-card">
-          <h2 className="mb-6 font-display text-lg font-bold">SEO 설정</h2>
+          <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.seo")}</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="siteKeywords">키워드</Label>
+              <Label htmlFor="siteKeywords">{t("admin.settings.keywords")}</Label>
               <Input
                 id="siteKeywords"
                 name="siteKeywords"
@@ -78,11 +80,11 @@ export default async function SiteSettingsPage() {
                 placeholder="AI, 프롬프트, 포트폴리오"
               />
               <p className="text-xs text-muted-foreground">
-                쉼표로 구분하여 입력하세요.
+                {t("admin.settings.keywordsHint")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="socialImage">소셜 미리보기 이미지 URL</Label>
+              <Label htmlFor="socialImage">{t("admin.settings.socialImage")}</Label>
               <Input
                 id="socialImage"
                 name="socialImage"
@@ -90,11 +92,11 @@ export default async function SiteSettingsPage() {
                 placeholder="https://example.com/og-image.png"
               />
               <p className="text-xs text-muted-foreground">
-                SNS 공유 시 표시되는 이미지입니다. (권장: 1200x630)
+                {t("admin.settings.socialImageHint")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="googleAnalyticsId">Google Analytics ID</Label>
+              <Label htmlFor="googleAnalyticsId">{t("admin.settings.googleAnalyticsId")}</Label>
               <Input
                 id="googleAnalyticsId"
                 name="googleAnalyticsId"
@@ -107,13 +109,13 @@ export default async function SiteSettingsPage() {
 
         {/* 고급 설정 */}
         <section className="rounded-xl border bg-white p-6 dark:bg-card">
-          <h2 className="mb-6 font-display text-lg font-bold">고급 설정</h2>
+          <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.advanced")}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="maintenanceMode">유지보수 모드</Label>
+                <Label htmlFor="maintenanceMode">{t("admin.settings.maintenanceMode")}</Label>
                 <p className="text-sm text-muted-foreground">
-                  활성화하면 관리자 외 접속이 차단됩니다.
+                  {t("admin.settings.maintenanceModeHint")}
                 </p>
               </div>
               <Switch
@@ -127,7 +129,7 @@ export default async function SiteSettingsPage() {
 
         <div className="flex justify-end">
           <Button type="submit" className="rounded-full px-8">
-            설정 저장
+            {t("admin.settings.saveSettings")}
           </Button>
         </div>
       </form>

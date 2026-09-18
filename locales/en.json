@@ -56,6 +56,7 @@
     "owner": "Admin"
   },
   "nav": {
+    "dashboard": "Dashboard",
     "promptkit": "PromptKit",
     "career": "CareerLog",
     "steam": "Steam Tracker",
@@ -63,7 +64,11 @@
     "comments": "Comments",
     "menus": "Menus",
     "uploads": "Uploads",
-    "loginHistory": "Access History"
+    "members": "Members",
+    "loginHistory": "Access History",
+    "settings": "Settings",
+    "system": "System",
+    "designSystem": "Design System"
   },
   "footer": {
     "blurb": "A personal portfolio hub for prompts, career notes, and a Steam library.",
@@ -289,6 +294,93 @@
   "dashboard": {
     "adminMenu": "Admin menu",
     "homeAria": "Homepage"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "visitorStats": "Visitor Stats",
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "Last 30 days",
+      "contentStatus": "Content Status",
+      "posts": "Posts",
+      "comments": "Comments",
+      "prompts": "Prompts",
+      "uploads": "Uploads",
+      "memberStatus": "Member Status",
+      "members": "Members",
+      "recentActivity": "Recent Activity",
+      "viewAll": "View all",
+      "quickLinks": "Quick Links",
+      "comment": "Comment",
+      "visit": "Visit",
+      "post": "Post",
+      "login": "Login",
+      "siteAccess": "Site access",
+      "anonymous": "Anonymous"
+    },
+    "members": {
+      "title": "Members",
+      "description": "List of registered members. You can check their activity history.",
+      "searchPlaceholder": "Search by name or username",
+      "total": "{{count}} members",
+      "empty": "No members yet.",
+      "noName": "No name",
+      "steamLinked": "Steam linked",
+      "commentCount": "{{count}} comments",
+      "lastActivity": "Last activity"
+    },
+    "settings": {
+      "title": "Site Settings",
+      "description": "Manage site information and SEO settings.",
+      "basicInfo": "Basic Info",
+      "siteName": "Site name",
+      "siteDescription": "Site description",
+      "siteDescriptionHint": "Displayed in search results and social previews.",
+      "footerText": "Footer text",
+      "seo": "SEO Settings",
+      "keywords": "Keywords",
+      "keywordsHint": "Separate with commas.",
+      "socialImage": "Social preview image URL",
+      "socialImageHint": "Image shown when sharing on social media. (Recommended: 1200x630)",
+      "googleAnalyticsId": "Google Analytics ID",
+      "advanced": "Advanced",
+      "maintenanceMode": "Maintenance mode",
+      "maintenanceModeHint": "When enabled, only admins can access the site.",
+      "saveSettings": "Save settings"
+    },
+    "system": {
+      "title": "System Status",
+      "description": "Check the current status of the site system.",
+      "refresh": "Refresh",
+      "systemNormal": "System Normal",
+      "systemError": "System Error Detected",
+      "lastChecked": "Last checked",
+      "responseTime": "Response time",
+      "supabaseAuth": "Supabase Auth",
+      "supabaseDb": "Supabase Database",
+      "status": "Status",
+      "normal": "Normal",
+      "error": "Error",
+      "httpStatus": "HTTP Status",
+      "noError": "None",
+      "lastHealthCheck": "Last Health Check",
+      "stale": "Stale",
+      "checkTime": "Check time",
+      "envInfo": "Environment Info",
+      "nodeVersion": "Node.js version",
+      "environment": "Environment",
+      "configured": "Configured",
+      "notConfigured": "Not configured",
+      "errorDetail": "Error Details"
+    },
+    "designSystem": {
+      "title": "Design System",
+      "common": "Common",
+      "screens": "Screens",
+      "description": "Component guide for the DevDeck project.",
+      "agentRef": "Agent reference"
+    }
   },
   "work": {
     "title": "Career",
