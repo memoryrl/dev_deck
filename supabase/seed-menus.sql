@@ -113,5 +113,44 @@ BEGIN
     (id_community_footer, id_notice, '공지사항', NULL, 'footer', 'visitor', true, 0),
     (id_community_footer, id_free, '자유게시판', NULL, 'footer', 'visitor', true, 10);
 
+  -- Admin sidebar (1depth groups / 2depth links)
+  INSERT INTO devdeck.menus (label, label_key, href, icon, location, view_role, is_active, sort_order)
+  VALUES ('콘텐츠', 'nav.group.content', NULL, 'Layers', 'admin', 'owner', true, 0)
+  RETURNING id INTO id_prompt;
+
+  INSERT INTO devdeck.menus (parent_id, label, label_key, href, icon, location, view_role, is_active, sort_order) VALUES
+    (id_prompt, '대시보드', 'nav.dashboard', '/site/dashboard', 'LayoutDashboard', 'admin', 'owner', true, 0),
+    (id_prompt, 'PromptKit', 'nav.promptkit', '/promptkit', 'Sparkles', 'admin', 'owner', true, 10),
+    (id_prompt, 'CareerLog', 'nav.career', '/career', 'Briefcase', 'admin', 'owner', true, 20),
+    (id_prompt, 'Steam Tracker', 'nav.steam', '/steam', 'Gamepad2', 'admin', 'owner', true, 30);
+
+  INSERT INTO devdeck.menus (label, label_key, href, icon, location, view_role, is_active, sort_order)
+  VALUES ('커뮤니티', 'nav.group.community', NULL, 'LayoutList', 'admin', 'owner', true, 10)
+  RETURNING id INTO id_career;
+
+  INSERT INTO devdeck.menus (parent_id, label, label_key, href, icon, location, view_role, is_active, sort_order) VALUES
+    (id_career, '게시판', 'nav.boards', '/site/boards', 'LayoutList', 'admin', 'owner', true, 0),
+    (id_career, '댓글', 'nav.comments', '/site/comments', 'MessageSquare', 'admin', 'owner', true, 10),
+    (id_career, '메뉴', 'nav.menus', '/site/menus', 'Menu', 'admin', 'owner', true, 20),
+    (id_career, '업로드', 'nav.uploads', '/site/uploads', 'Upload', 'admin', 'owner', true, 30);
+
+  INSERT INTO devdeck.menus (label, label_key, href, icon, location, view_role, is_active, sort_order)
+  VALUES ('운영', 'nav.group.ops', NULL, 'Shield', 'admin', 'owner', true, 20)
+  RETURNING id INTO id_games;
+
+  INSERT INTO devdeck.menus (parent_id, label, label_key, href, icon, location, view_role, is_active, sort_order) VALUES
+    (id_games, '회원', 'nav.members', '/site/members', 'Users', 'admin', 'owner', true, 0),
+    (id_games, '접속 이력', 'nav.loginHistory', '/site/login-history', 'History', 'admin', 'owner', true, 10),
+    (id_games, '설정', 'nav.settings', '/site/settings', 'Settings', 'admin', 'owner', true, 20),
+    (id_games, '시스템', 'nav.system', '/site/system', 'Monitor', 'admin', 'owner', true, 30);
+
+  INSERT INTO devdeck.menus (label, label_key, href, icon, location, view_role, is_active, sort_order)
+  VALUES ('디자인 시스템', 'nav.group.design', NULL, 'Palette', 'admin', 'owner', true, 30)
+  RETURNING id INTO id_community;
+
+  INSERT INTO devdeck.menus (parent_id, label, label_key, href, icon, location, view_role, is_active, sort_order) VALUES
+    (id_community, '공통영역', 'nav.designSystemCommon', '/site/design-system/common', 'Palette', 'admin', 'owner', true, 0),
+    (id_community, '화면영역', 'nav.designSystemScreens', '/site/design-system/screens', 'LayoutTemplate', 'admin', 'owner', true, 10);
+
   RAISE NOTICE 'default menus seeded';
 END $$;

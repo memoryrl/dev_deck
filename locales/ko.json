@@ -68,7 +68,16 @@
     "loginHistory": "접속 이력",
     "settings": "설정",
     "system": "시스템",
-    "designSystem": "디자인 시스템"
+    "designSystem": "디자인 시스템",
+    "designSystemCommon": "공통영역",
+    "designSystemScreens": "화면영역",
+    "group": {
+      "content": "콘텐츠",
+      "community": "커뮤니티",
+      "ops": "운영",
+      "design": "디자인 시스템",
+      "other": "기타"
+    }
   },
   "footer": {
     "blurb": "프롬프트, 커리어, Steam 라이브러리를 한 덱에 모은 개인 포트폴리오 허브입니다.",
@@ -140,6 +149,7 @@
     "openModule": "자세히 보기",
     "emptyItems": "하위 메뉴가 없습니다.",
     "restrictedItems": "관리자만 볼 수 있는 내용이에요.",
+    "awaySign": "외근중...",
     "recentPlayed": "최근 플레이",
     "modulePrompt": "바이브 코딩 프롬프트를 저장하고 한 번에 복사합니다.",
     "moduleCareer": "참여 프로젝트와 스킬을 게시판·블로그로 정리합니다.",

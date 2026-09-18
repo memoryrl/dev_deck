@@ -13,6 +13,7 @@ export default function SiteMenusPage() {
       <PageTitleBanner title="메뉴" />
       <p className="text-sm text-muted-foreground">
         왼쪽에서 권한별 메뉴 트리를 확인하고, 오른쪽에서 상세를 편집하거나 새 메뉴를 추가합니다.
+        관리자 트리는 대시보드 좌측 사이드바에 그대로 반영됩니다.
       </p>
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <MenusWorkspaceBody />

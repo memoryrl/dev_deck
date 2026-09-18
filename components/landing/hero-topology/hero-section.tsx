@@ -153,7 +153,12 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
             </div>
             <div className="relative h-full w-full shrink-0">
               {visitedTopology ? (
-                <TopologyPanel data={topology} className="h-full md:h-full" panPixels={100} />
+                <TopologyPanel
+                  data={topology}
+                  className="h-full md:h-full"
+                  panPixels={100}
+                  active={isDesktop && slide === 1}
+                />
               ) : (
                 <div className="h-full bg-[#efe6d8]" />
               )}

@@ -68,7 +68,16 @@
     "loginHistory": "Access History",
     "settings": "Settings",
     "system": "System",
-    "designSystem": "Design System"
+    "designSystem": "Design System",
+    "designSystemCommon": "Common",
+    "designSystemScreens": "Screens",
+    "group": {
+      "content": "Content",
+      "community": "Community",
+      "ops": "Operations",
+      "design": "Design System",
+      "other": "Other"
+    }
   },
   "footer": {
     "blurb": "A personal portfolio hub for prompts, career notes, and a Steam library.",
@@ -140,6 +149,7 @@
     "openModule": "View details",
     "emptyItems": "No sub-menu items.",
     "restrictedItems": "Only admins can view this.",
+    "awaySign": "Out of office…",
     "recentPlayed": "Recently played",
     "modulePrompt": "Save vibe-coding prompts and copy them in one tap.",
     "moduleCareer": "Turn projects and skills into a board and blog.",

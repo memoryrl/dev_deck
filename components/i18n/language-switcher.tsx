@@ -23,10 +23,12 @@ type MenuPos = {
 
 export function LanguageSwitcher({
   compact = false,
+  fullWidth = false,
   menuPlacement = "down",
   className,
 }: {
   compact?: boolean
+  fullWidth?: boolean
   menuPlacement?: "down" | "up"
   className?: string
 }) {
@@ -160,7 +162,7 @@ export function LanguageSwitcher({
       : null
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
+    <div ref={rootRef} className={cn("relative", fullWidth && "w-full", className)}>
       <button
         ref={buttonRef}
         type="button"
@@ -171,13 +173,17 @@ export function LanguageSwitcher({
         className={cn(
           "inline-flex items-center rounded-full text-[11px] font-medium text-foreground/70 transition-colors hover:bg-foreground/[0.06] hover:text-foreground",
           compact ? "size-8 justify-center" : "gap-1 px-2 py-1",
+          fullWidth &&
+            "h-10 w-full justify-center gap-1.5 border border-input bg-background px-4 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground",
           open && "bg-foreground/[0.08] text-foreground"
         )}
       >
-        <Globe className={cn("opacity-80", compact ? "size-4" : "size-3.5")} />
+        <Globe className={cn("opacity-80", compact || fullWidth ? "size-4" : "size-3.5")} />
         {compact ? null : <span>{t("language.comboLabel")}</span>}
         {compact ? null : (
-          <ChevronDown className={cn("size-3 opacity-50 transition-transform", open && "rotate-180")} />
+          <ChevronDown
+            className={cn("opacity-50 transition-transform", fullWidth ? "size-4" : "size-3", open && "rotate-180")}
+          />
         )}
       </button>
       {menu}

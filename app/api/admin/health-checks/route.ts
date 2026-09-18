@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { isOwnerUser } from "@/lib/auth/roles"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, getAuthUser } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 /** 관리자 전용: Supabase 일일 헬스체크 로그 조회 */
 export async function GET(request: NextRequest) {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   if (!isOwnerUser(user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+  const supabase = createClient()
 
   try {
     const limitParam = Number(request.nextUrl.searchParams.get("limit") || "90")

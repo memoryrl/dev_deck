@@ -344,9 +344,11 @@ CREATE TABLE IF NOT EXISTS devdeck.menus (
   parent_id UUID REFERENCES devdeck.menus(id) ON DELETE CASCADE,
   board_id UUID REFERENCES devdeck.boards(id) ON DELETE SET NULL,
   label TEXT NOT NULL,
+  label_key TEXT,
+  icon TEXT,
   href TEXT,
   location TEXT NOT NULL DEFAULT 'header'
-    CHECK (location IN ('header', 'footer')),
+    CHECK (location IN ('header', 'footer', 'admin')),
   view_role TEXT NOT NULL DEFAULT 'visitor'
     CHECK (view_role IN ('visitor', 'member', 'owner')),
   is_active BOOLEAN NOT NULL DEFAULT true,

@@ -1,4 +1,5 @@
 import { forgetMemoryCache, MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
+import { ensureAdminMenus } from "@/lib/menus/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { AccessRole } from "@/lib/access"
@@ -140,7 +141,10 @@ export async function ensureDefaultMenus() {
     if (error) return false
     return (count ?? 0) > 0
   })
-  if (alreadySeeded) return { seeded: false as const, reason: "already_has_rows" as const }
+  if (alreadySeeded) {
+    const admin = await ensureAdminMenus()
+    return { seeded: false as const, reason: "already_has_rows" as const, admin }
+  }
 
   const supabase = createClient()
   const { count, error: countError } = await supabase
@@ -148,7 +152,10 @@ export async function ensureDefaultMenus() {
     .select("*", { count: "exact", head: true })
 
   if (countError) return { seeded: false as const, reason: "count_failed" as const, error: countError.message }
-  if ((count ?? 0) > 0) return { seeded: false as const, reason: "already_has_rows" as const }
+  if ((count ?? 0) > 0) {
+    const admin = await ensureAdminMenus()
+    return { seeded: false as const, reason: "already_has_rows" as const, admin }
+  }
 
   for (const parent of DEFAULT_MENU_SEEDS) {
     const { data: parentRow, error: parentError } = await supabase
@@ -196,5 +203,6 @@ export async function ensureDefaultMenus() {
   }
 
   forgetMemoryCache("menus")
-  return { seeded: true as const }
+  const admin = await ensureAdminMenus()
+  return { seeded: true as const, admin }
 }

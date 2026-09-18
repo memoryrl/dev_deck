@@ -1,13 +1,29 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Html, OrbitControls } from "@react-three/drei"
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib"
 import * as THREE from "three"
 import { TopologyDesk } from "@/components/landing/hero-topology/topology-desk"
+import { TopologyRobotVacuum, type VacuumObstacle } from "@/components/landing/hero-topology/topology-robot-vacuum"
+import { TopologyAirPurifier } from "@/components/landing/hero-topology/topology-air-purifier"
+import { TopologyBookshelf } from "@/components/landing/hero-topology/topology-bookshelf"
+import { PANTRY_PURIFIER_OFFSET, TopologyPantry } from "@/components/landing/hero-topology/topology-pantry"
 import { FOCUS_WORLD_OFFSET } from "@/components/landing/hero-topology/topology-camera"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
+
+// 문서가 백그라운드 탭으로 가려지면(document.hidden) 씬이 보이지 않아도
+// requestAnimationFrame 자체는 계속 돌 수 있다 — frameloop를 꺼서 완전히 멈춘다.
+function useDocumentVisible() {
+  const [visible, setVisible] = useState(() => typeof document === "undefined" || !document.hidden)
+  useEffect(() => {
+    const onChange = () => setVisible(!document.hidden)
+    document.addEventListener("visibilitychange", onChange)
+    return () => document.removeEventListener("visibilitychange", onChange)
+  }, [])
+  return visible
+}
 
 const TINT_COLOR: Record<TopologyTint, string> = {
   champagne: "#c4a574",
@@ -113,6 +129,8 @@ type Props = {
   activeModuleId: string | null
   onSelectModule: (id: string | null) => void
   panPixels?: number
+  /** 히어로 캐러셀이 클래식 슬라이드에 있거나 탭이 백그라운드면 false — 렌더 루프 자체를 끈다 */
+  active?: boolean
 }
 
 function CameraFocus({
@@ -248,9 +266,11 @@ function OfficePlant({ position }: { position: [number, number, number] }) {
   )
 }
 
-export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels = 0 }: Props) {
+export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels = 0, active = true }: Props) {
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const dragging = useRef(false)
+  const documentVisible = useDocumentVisible()
+  const frameloop = active && documentVisible ? "always" : "never"
 
   const layout = useMemo(() => computeLayout(data.modules), [data.modules])
   const deskLayout = layout.seats
@@ -282,9 +302,38 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
   const sideWallDepth = floorDepth - WALL_T
   const sideWallCenterZ = floorMinZ + WALL_T + sideWallDepth / 2
 
+  // 로봇청소기가 실제로 우회해야 할 고정 소품들의 위치 — 아래 JSX에 그대로 쓰는
+  // 좌표와 같은 값이어야 하므로 여기서 한 번만 정의해서 같이 쓴다.
+  const plantPos: [number, number, number] = [floorWidth / 2 - 0.5, 0, LEAD_Z - 0.1]
+  // 로봇청소기 순찰 경로(inset 0.5)와 정확히 겹치지 않도록 네 모서리 모두
+  // 그보다 살짝 더 깊은 inset(0.4)을 쓴다 — 거리 0이 되는 특이점을 피한다.
+  const purifierPositions: [number, number, number][] = [
+    [floorMinX + 0.4, 0, floorMinZ + 0.4],
+    [floorMinX + floorWidth - 0.4, 0, floorMinZ + 0.4],
+    [floorMinX + 0.4, 0, floorMinZ + floorDepth - 0.4],
+    [floorMinX + floorWidth - 0.4, 0, floorMinZ + floorDepth - 0.4],
+  ]
+  // 팀장 자리(LEAD_Z) 옆, TV에서 봤을 때 왼쪽 벽(sideWallX)에 붙는 4단 책장
+  const bookshelfPos: [number, number, number] = [sideWallX + WALL_T / 2 + 0.14, 0, LEAD_Z]
+  // 팀장 로봇 우측 — 뒷벽에 붙인 탕비 카운터. 책상 끝(1.15)과 식물 사이.
+  const pantryPos: [number, number, number] = [2.22, 0, backWallZ + WALL_T / 2 + 0.26]
+
+  const vacuumObstacles: VacuumObstacle[] = [
+    { x: plantPos[0], z: plantPos[2], radius: 0.28 },
+    ...purifierPositions.map(([x, , z]) => ({ x, z, radius: 0.22 })),
+    { x: bookshelfPos[0], z: bookshelfPos[2], radius: 0.32 },
+    { x: pantryPos[0], z: pantryPos[2], radius: 0.42 },
+    {
+      x: pantryPos[0] + PANTRY_PURIFIER_OFFSET.x,
+      z: pantryPos[2] + PANTRY_PURIFIER_OFFSET.z,
+      radius: 0.24,
+    },
+  ]
+
   return (
     <Canvas
       orthographic
+      frameloop={frameloop}
       camera={{
         position: cameraOffset.toArray(),
         zoom: layout.zoom,
@@ -411,7 +460,29 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         </mesh>
       ))}
 
-      <OfficePlant position={[floorWidth / 2 - 0.5, 0, LEAD_Z - 0.1]} />
+      <OfficePlant position={plantPos} />
+
+      {/* 4단 책장 — 팀장 자리 옆 왼쪽 벽(TV에서 바라봤을 때 왼쪽) */}
+      <TopologyBookshelf position={bookshelfPos} />
+
+      {/* 탕비 공간 — 팀장 로봇 우측, 뒷벽에 붙인 카운터 + 커피머신 + 정수기 */}
+      <TopologyPantry position={pantryPos} />
+
+      {/* 로봇청소기 — 벽 안쪽 테두리를 따라 방을 도는 순찰 경로(정적 오브젝트가
+          아니라 useFrame으로 매 프레임 이동). 책상 구역(ROOM_MARGIN)과 안 겹치고,
+          공기청정기·식물·책장과는 obstacles로 넘겨 살짝 우회하게 한다. */}
+      <TopologyRobotVacuum
+        floorMinX={floorMinX}
+        floorWidth={floorWidth}
+        floorMinZ={floorMinZ}
+        floorDepth={floorDepth}
+        obstacles={vacuumObstacles}
+      />
+
+      {/* 공기청정기 4대 — 네 모서리마다 하나씩 */}
+      {purifierPositions.map((pos, index) => (
+        <TopologyAirPurifier key={index} position={pos} />
+      ))}
 
       {data.modules.map((module, index) => {
         const seat = deskLayout.get(module.id)
@@ -426,7 +497,10 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
             wide={seat.wide}
             active={activeModuleId === module.id}
             skinIndex={index}
-            onSelect={() => onSelectModule(activeModuleId === module.id ? null : module.id)}
+            onSelect={() => {
+              if (module.vacant) return
+              onSelectModule(activeModuleId === module.id ? null : module.id)
+            }}
           />
         )
       })}

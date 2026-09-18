@@ -4,7 +4,8 @@ import Link from "next/link"
 import { useEffect, useId, useRef, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
-import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 import type { AccessRole } from "@/lib/access"
@@ -21,11 +22,13 @@ export function AccountMenu({
   user,
   showAdminNav = false,
   compact = false,
+  adminMenus = [],
   onOpen,
 }: {
   user: AccountMenuUser
   showAdminNav?: boolean
   compact?: boolean
+  adminMenus?: AdminSidebarGroup[]
   onOpen?: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -102,25 +105,11 @@ export function AccountMenu({
             </div>
           </div>
           {adminLinks ? (
-            <div className="border-t border-foreground/10 py-1.5">
+            <div className="max-h-[min(22rem,50vh)] overflow-y-auto border-t border-foreground/10 py-1.5">
               <p className="px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 {t("common.admin")}
               </p>
-              {ADMIN_NAV.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    role="menuitem"
-                    className="flex items-center gap-2.5 px-3.5 py-2 text-sm font-medium hover:bg-foreground/[0.05]"
-                    onClick={() => setOpen(false)}
-                  >
-                    <Icon className="size-4 opacity-70" />
-                    {t(item.labelKey)}
-                  </Link>
-                )
-              })}
+              <AdminMenuGroups groups={adminMenus} onNavigate={() => setOpen(false)} />
             </div>
           ) : null}
           {!user.isOwner ? (

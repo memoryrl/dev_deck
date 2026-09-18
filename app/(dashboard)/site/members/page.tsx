@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { RefreshCw, User } from "lucide-react"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
@@ -105,11 +104,11 @@ function MemberCard({ member, locale }: { member: MemberListEntry; locale: AppLo
       <div className="flex items-start gap-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted">
           {member.avatar_url ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element -- OAuth 아바타 호스트가 다양해서 next/image 허용 목록에 묶지 않는다
+            <img
               src={member.avatar_url}
-              alt={displayName}
-              width={48}
-              height={48}
+              alt=""
+              referrerPolicy="no-referrer"
               className="size-12 rounded-full object-cover"
             />
           ) : (

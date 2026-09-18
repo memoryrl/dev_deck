@@ -12,6 +12,7 @@ import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
+import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
 
 type SceneId = MegaId | "default"
 
@@ -162,9 +163,11 @@ function fallbackNodes(
 export function PublicHeaderNav({
   account,
   navNodes = [],
+  adminMenus = [],
 }: {
   account: SessionUserView | null
   navNodes?: NavNode[]
+  adminMenus?: AdminSidebarGroup[]
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const [drawer, setDrawer] = useState(false)
@@ -280,6 +283,7 @@ export function PublicHeaderNav({
                 <AccountMenu
                   user={account}
                   showAdminNav
+                  adminMenus={adminMenus}
                   onOpen={() => {
                     setOpen(null)
                     setDrawer(false)
@@ -303,6 +307,7 @@ export function PublicHeaderNav({
                 user={account}
                 showAdminNav
                 compact
+                adminMenus={adminMenus}
                 onOpen={() => {
                   setOpen(null)
                   setDrawer(false)
@@ -422,7 +427,13 @@ export function PublicHeaderNav({
           <BrandMark />
         </div>
       ) : null}
-      <PublicMobileNav open={drawer} onClose={closeDrawer} account={account} navNodes={nodes} />
+      <PublicMobileNav
+        open={drawer}
+        onClose={closeDrawer}
+        account={account}
+        navNodes={nodes}
+        adminMenus={adminMenus}
+      />
     </div>
   )
 }

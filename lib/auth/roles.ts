@@ -9,5 +9,5 @@ export function isOwnerUser(user: { email?: string | null } | null | undefined) 
 }
 
 export function postLoginPath(user: { email?: string | null } | null | undefined) {
-  return isOwnerUser(user) ? "/promptkit" : "/account"
+  return isOwnerUser(user) ? "/site/dashboard" : "/account"
 }

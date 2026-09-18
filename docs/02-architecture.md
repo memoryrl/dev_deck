@@ -115,7 +115,7 @@ devdeck/
 
 1. 사용자가 `/login`에서 Google로 로그인한다.
 2. Supabase OAuth → 제공자 동의 → `/auth/callback?code=...`
-3. Route Handler가 `exchangeCodeForSession` 후 Owner는 `/promptkit`, 회원은 `/account`로 보낸다.
+3. Route Handler가 `exchangeCodeForSession` 후 Owner는 `/site/dashboard`, 회원은 `/account`로 보낸다.
 4. `middleware.ts`가 쿠키 세션을 갱신한다.
 5. `(dashboard)/*` 는 세션 없으면 `/login`으로 보낸다. `/`, `/p/[id]`, `/work`, `/work/[id]` 는 가드하지 않는다.
 6. `auth.users` INSERT 시 **추가** 트리거 `devdeck_on_auth_user_created`가 `devdeck.profiles`를 만든다. 기존 public 트리거는 그대로 둔다. 기존 유저는 첫 세션 `ensureProfile` upsert.

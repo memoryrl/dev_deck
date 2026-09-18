@@ -3,7 +3,7 @@ import { accessRoleOf, roleAtLeast, type AccessRole } from "@/lib/access"
 import { SYSTEM_BOARD_KINDS } from "@/lib/boards/kind"
 import { withBoardDefaults } from "@/lib/boards/permissions"
 import { MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, getAuthUser } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Board, SystemBoardKind } from "@/types/board"
 
@@ -13,10 +13,7 @@ export const currentViewer = cache(async () => {
   if (!isSupabaseConfigured()) {
     return { user: null, role: "visitor" as const, isOwner: false, userId: null as string | null }
   }
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   const role = accessRoleOf(user)
   return { user, role, isOwner: role === "owner", userId: user?.id ?? null }
 })

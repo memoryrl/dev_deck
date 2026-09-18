@@ -61,6 +61,39 @@ function hashIndex(id: string, mod: number) {
   return hash % mod
 }
 
+// 모니터 앞(로컬 +Z, 로봇 쪽으로 조금 더 가까운 자리)에 눕혀 두는 키보드+마우스.
+// 모듈 변주(variant)와 무관하게 항상 그린다 — 책상마다 빠짐없이 있어야 하는
+// 기본 소품이라서.
+function KeyboardAndMouse({ color }: { color: string }) {
+  // 책상 상판 박스가 position=[0,0.5,0], height=0.1이라 상판면은 y=0.55다.
+  // 이보다 낮게 두면 상판 속에 파묻혀 안 보인다 — 상판면 바로 위에 얹는다.
+  return (
+    <group position={[0, 0.562, 0.3]}>
+      {/* 키보드 본체 */}
+      <mesh>
+        <boxGeometry args={[0.32, 0.018, 0.1]} />
+        <meshStandardMaterial color="#cdc6b8" roughness={0.6} />
+      </mesh>
+      {/* 키캡 면 — 살짝 어두운 상판으로 키 배열 느낌만 준다 */}
+      <mesh position={[0, 0.011, 0]}>
+        <boxGeometry args={[0.29, 0.006, 0.075]} />
+        <meshStandardMaterial color="#3a3532" roughness={0.5} />
+      </mesh>
+      {/* 마우스 — 키보드 오른쪽 옆 */}
+      <group position={[0.22, 0, -0.01]}>
+        <mesh>
+          <boxGeometry args={[0.055, 0.02, 0.085]} />
+          <meshStandardMaterial color="#e8e4da" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.012, -0.018]}>
+          <boxGeometry args={[0.01, 0.005, 0.018]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} roughness={0.4} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
 // 요청사항: "책상 위에는 모니터들이 있어야 한다" — 모듈 종류와 무관하게 모니터는
 // 공통으로 두고, 소품 하나를 더 얹어 책상마다 약간의 변주를 준다.
 function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
@@ -77,6 +110,7 @@ function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
           <meshStandardMaterial color={color} roughness={0.35} emissive={color} emissiveIntensity={0.12} />
         </mesh>
       </group>
+      <KeyboardAndMouse color={color} />
       {variant === 0 ? (
         <mesh position={[0.42, 0.56, -0.05]} rotation={[-0.5, 0, 0]}>
           <boxGeometry args={[0.22, 0.16, 0.02]} />
@@ -95,6 +129,37 @@ function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
           <meshStandardMaterial color="#3a3532" />
         </mesh>
       ) : null}
+    </group>
+  )
+}
+
+function AwaySign({ label }: { label: string }) {
+  // 팀장 자리는 yaw=π라 로컬 -Z가 카메라(팀원) 쪽이다. 팻말은 모니터 옆, 객석을 향해 세운다.
+  return (
+    <group position={[-0.58, 0.55, -0.08]}>
+      <mesh position={[0, 0.01, 0]}>
+        <boxGeometry args={[0.18, 0.02, 0.12]} />
+        <meshStandardMaterial color="#8a6a45" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.11, 0.055]} rotation={[0.62, 0, 0]}>
+        <boxGeometry args={[0.56, 0.24, 0.018]} />
+        <meshStandardMaterial color="#d4c09a" roughness={0.72} />
+      </mesh>
+      <mesh position={[0, 0.11, -0.055]} rotation={[-0.62, 0, 0]}>
+        <boxGeometry args={[0.56, 0.24, 0.018]} />
+        <meshStandardMaterial color="#f3e6cc" roughness={0.55} />
+      </mesh>
+      <Html
+        position={[0, 0.17, -0.12]}
+        center
+        occlude={false}
+        zIndexRange={[15, 0]}
+        className="pointer-events-none select-none"
+      >
+        <div className="whitespace-nowrap rounded-[2px] bg-[#f6ead2] px-2 py-[3px] text-[10px] font-bold tracking-wide text-[#5a4632] shadow-sm ring-1 ring-[#cbb48a]">
+          {label}
+        </div>
+      </Html>
     </group>
   )
 }
@@ -128,6 +193,7 @@ export function TopologyDesk({
   const lit = hovered || active
 
   function enterHover() {
+    if (module.vacant) return
     if (leaveTimer.current != null) {
       window.clearTimeout(leaveTimer.current)
       leaveTimer.current = null
@@ -161,6 +227,7 @@ export function TopologyDesk({
 
   function handleClick(event: ThreeEvent<MouseEvent>) {
     event.stopPropagation()
+    if (module.vacant) return
     onSelect()
   }
 
@@ -212,34 +279,39 @@ export function TopologyDesk({
         <Stool />
       </group>
 
-      {/* 클릭/호버 판정을 책상 전체가 아니라 로봇 몸통 주변으로만 좁힌다 — 책상 표면이나
-          모니터 위로 마우스가 지나가도 선택되지 않고, 로봇 실루엣 근처에서만 반응한다. */}
-      <group
-        position={[0, SEAT_HEIGHT, 0.55]}
-        onClick={handleClick}
-        onPointerOver={(event) => {
-          event.stopPropagation()
-          enterHover()
-        }}
-        onPointerOut={(event) => {
-          event.stopPropagation()
-          leaveHover()
-        }}
-      >
-        <TopologyRobot
-          skinIndex={skinIndex}
-          active={active}
-          hovered={hovered}
-          guideTitle={t("landing.robotGuideTitle", { label: module.label })}
-          guideDescription={module.guideDescription}
-        />
-        {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도. */}
-        <mesh position={[0, 0.6, -0.05]} visible={false}>
-          <boxGeometry args={[0.8, 1.5, 0.85]} />
-        </mesh>
-      </group>
+      {module.vacant ? <AwaySign label={t("landing.awaySign")} /> : null}
 
-      {active ? null : (
+      {/* 클릭/호버 판정을 책상 전체가 아니라 로봇 몸통 주변으로만 좁힌다 — 책상 표면이나
+          모니터 위로 마우스가 지나가도 선택되지 않고, 로봇 실루엣 근처에서만 반응한다.
+          외근(vacant) 좌석은 로봇·히트박스를 빼고 책상·모니터·팻말만 둔다. */}
+      {module.vacant ? null : (
+        <group
+          position={[0, SEAT_HEIGHT, 0.55]}
+          onClick={handleClick}
+          onPointerOver={(event) => {
+            event.stopPropagation()
+            enterHover()
+          }}
+          onPointerOut={(event) => {
+            event.stopPropagation()
+            leaveHover()
+          }}
+        >
+          <TopologyRobot
+            skinIndex={skinIndex}
+            active={active}
+            hovered={hovered}
+            guideTitle={t("landing.robotGuideTitle", { label: module.label })}
+            guideDescription={module.guideDescription}
+          />
+          {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도. */}
+          <mesh position={[0, 0.6, -0.05]} visible={false}>
+            <boxGeometry args={[0.8, 1.5, 0.85]} />
+          </mesh>
+        </group>
+      )}
+
+      {active || module.vacant ? null : (
         <Html
           position={[0, 1.85, 0.55]}
           center

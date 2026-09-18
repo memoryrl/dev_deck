@@ -23,6 +23,9 @@ const nextConfig = {
       { protocol: "https", hostname: "shared.akamai.steamstatic.com" },
       { protocol: "https", hostname: "media.steampowered.com" },
       { protocol: "https", hostname: "avatars.steamstatic.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "**.googleusercontent.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
   },
   async headers() {

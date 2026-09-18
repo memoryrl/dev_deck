@@ -1,10 +1,10 @@
-import { Suspense } from "react"
+import { Suspense, cache } from "react"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { DashboardHeader } from "@/components/layout/dashboard-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { sessionUserView } from "@/lib/auth/session-user"
 import { currentViewer } from "@/lib/boards/access"
-import { listAdminMenus } from "@/lib/menus/admin"
+import { ensureAdminMenus, listAdminMenus } from "@/lib/menus/admin"
 
 function DashboardHeaderFallback() {
   return (
@@ -19,31 +19,37 @@ function SidebarFallback() {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r bg-card p-5 md:flex">
       <Skeleton className="mb-8 h-7 w-24" />
-      <div className="space-y-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+      <div className="flex-1 space-y-2">
+        {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-10 rounded-2xl" />
         ))}
+      </div>
+      <div className="mt-4 space-y-2">
+        <Skeleton className="h-10 w-full rounded-full" />
+        <Skeleton className="h-10 w-full rounded-full" />
       </div>
     </aside>
   )
 }
 
-async function DashboardResolved({ children }: { children: React.ReactNode }) {
+const loadAdminChrome = cache(async () => {
+  await ensureAdminMenus()
   const [viewer, menus] = await Promise.all([
     currentViewer(),
     listAdminMenus(),
   ])
   const account = viewer.user ? sessionUserView(viewer.user) : sessionUserView({ email: null })
+  return { account, menus }
+})
 
-  return (
-    <>
-      <AppSidebar menus={menus} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <DashboardHeader account={account} menus={menus} />
-        <main className="flex-1 px-5 py-8">{children}</main>
-      </div>
-    </>
-  )
+async function DashboardSidebar() {
+  const { menus } = await loadAdminChrome()
+  return <AppSidebar menus={menus} />
+}
+
+async function DashboardHeaderSlot() {
+  const { account, menus } = await loadAdminChrome()
+  return <DashboardHeader account={account} menus={menus} />
 }
 
 export default function DashboardLayout({
@@ -53,19 +59,15 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-muted/40">
-      <Suspense
-        fallback={
-          <>
-            <SidebarFallback />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <DashboardHeaderFallback />
-              <main className="flex-1 px-5 py-8">{children}</main>
-            </div>
-          </>
-        }
-      >
-        <DashboardResolved>{children}</DashboardResolved>
+      <Suspense fallback={<SidebarFallback />}>
+        <DashboardSidebar />
       </Suspense>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Suspense fallback={<DashboardHeaderFallback />}>
+          <DashboardHeaderSlot />
+        </Suspense>
+        <main className="flex-1 px-5 py-8">{children}</main>
+      </div>
     </div>
   )
 }

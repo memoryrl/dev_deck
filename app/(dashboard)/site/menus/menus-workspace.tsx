@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ChevronRight, FolderTree, Plus } from "lucide-react"
 import { MenuForm } from "@/app/(dashboard)/site/menus/menu-form"
 import { ACCESS_ROLES, roleAtLeast, roleLabel, type AccessRole } from "@/lib/access"
@@ -15,7 +15,7 @@ import type { MenuItem } from "@/types/menu"
 
 type Selection =
   | { mode: "edit"; id: string }
-  | { mode: "create"; parentId: string | null; location: "header" | "footer" }
+  | { mode: "create"; parentId: string | null; location: "header" | "footer" | "admin" }
 
 type TreeNode = {
   item: MenuItem
@@ -23,7 +23,7 @@ type TreeNode = {
   visible: boolean
 }
 
-function buildTree(menus: MenuItem[], role: AccessRole): { header: TreeNode[]; footer: TreeNode[] } {
+function buildTree(menus: MenuItem[], role: AccessRole): { header: TreeNode[]; footer: TreeNode[]; admin: TreeNode[] } {
   const byParent = new Map<string | null, MenuItem[]>()
   for (const item of menus) {
     const key = item.parent_id
@@ -38,7 +38,7 @@ function buildTree(menus: MenuItem[], role: AccessRole): { header: TreeNode[]; f
   function walk(parentId: string | null): TreeNode[] {
     return (byParent.get(parentId) ?? []).map((item) => {
       const children = walk(item.id)
-      const selfVisible = roleAtLeast(role, item.view_role)
+      const selfVisible = roleAtLeast(role, item.view_role) && item.is_active
       return {
         item,
         children,
@@ -47,9 +47,11 @@ function buildTree(menus: MenuItem[], role: AccessRole): { header: TreeNode[]; f
     }).filter((node) => node.visible)
   }
 
+  const roots = walk(null)
   return {
-    header: walk(null).filter((node) => node.item.location === "header"),
-    footer: walk(null).filter((node) => node.item.location === "footer"),
+    header: roots.filter((node) => node.item.location === "header"),
+    footer: roots.filter((node) => node.item.location === "footer"),
+    admin: roots.filter((node) => node.item.location === "admin"),
   }
 }
 
@@ -59,9 +61,8 @@ function roleTextClass(role: AccessRole) {
   return "text-muted-foreground/70"
 }
 
-function collapseAllFolders(menus: MenuItem[]): Set<string> {
-  const parentIds = new Set(menus.filter((item) => item.parent_id).map((item) => item.parent_id as string))
-  return new Set(menus.filter((item) => parentIds.has(item.id)).map((item) => item.id))
+function countNodes(nodes: TreeNode[]): number {
+  return nodes.reduce((sum, node) => sum + 1 + countNodes(node.children), 0)
 }
 
 export function MenusWorkspace({
@@ -77,7 +78,7 @@ export function MenusWorkspace({
     parentId: null,
     location: "header",
   })
-  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => collapseAllFolders(menus))
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set())
 
   const toggleCollapsed = (id: string) => {
     setCollapsedIds((prev) => {
@@ -92,13 +93,21 @@ export function MenusWorkspace({
   }
 
   const tree = useMemo(() => buildTree(menus, role), [menus, role])
+  const visibleCount = countNodes(tree.header) + countNodes(tree.footer) + countNodes(tree.admin)
   const selectedMenu =
     selection.mode === "edit" ? menus.find((item) => item.id === selection.id) : undefined
+  const selectedVisible = selectedMenu
+    ? roleAtLeast(role, selectedMenu.view_role) && selectedMenu.is_active
+    : true
+
+  useEffect(() => {
+    setCollapsedIds(new Set())
+  }, [role])
 
   const formKey =
     selection.mode === "edit"
       ? `edit-${selection.id}`
-      : `create-${selection.parentId ?? "root"}-${selection.location}`
+      : `create-${selection.parentId ?? "root"}-${selection.location}-${role}`
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)] lg:items-start">
@@ -114,7 +123,7 @@ export function MenusWorkspace({
             className="mt-1.5"
           />
           <p className="mt-1.5 text-xs text-muted-foreground">
-            선택한 역할 기준으로 트리에 표시되는 메뉴가 달라집니다.
+            {roleLabel(role)}에게 보이는 헤더·푸터·관리자 메뉴만 트리에 남습니다. 권한을 바꾸면 폴더가 펼쳐집니다.
           </p>
         </div>
 
@@ -136,7 +145,7 @@ export function MenusWorkspace({
           </Button>
         </div>
 
-        <div className="min-h-0 max-h-[24rem] flex-1 space-y-4 overflow-y-auto pr-1">
+        <div className="min-h-0 max-h-[min(40rem,70vh)] flex-1 space-y-4 overflow-y-auto pr-1">
           {menus.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               등록된 메뉴가 없습니다. 우측에서 새 메뉴를 추가하세요.
@@ -152,6 +161,7 @@ export function MenusWorkspace({
                 collapsedIds={collapsedIds}
                 onToggleCollapsed={toggleCollapsed}
                 onSelect={(id) => setSelection({ mode: "edit", id })}
+                onAddRoot={() => setSelection({ mode: "create", parentId: null, location: "header" })}
                 onAddChild={(parentId) =>
                   setSelection({ mode: "create", parentId, location: "header" })
                 }
@@ -165,8 +175,23 @@ export function MenusWorkspace({
                 collapsedIds={collapsedIds}
                 onToggleCollapsed={toggleCollapsed}
                 onSelect={(id) => setSelection({ mode: "edit", id })}
+                onAddRoot={() => setSelection({ mode: "create", parentId: null, location: "footer" })}
                 onAddChild={(parentId) =>
                   setSelection({ mode: "create", parentId, location: "footer" })
+                }
+              />
+              <TreeSection
+                sectionKey="section:admin"
+                title="관리자"
+                nodes={tree.admin}
+                selectedId={selection.mode === "edit" ? selection.id : null}
+                previewRole={role}
+                collapsedIds={collapsedIds}
+                onToggleCollapsed={toggleCollapsed}
+                onSelect={(id) => setSelection({ mode: "edit", id })}
+                onAddRoot={() => setSelection({ mode: "create", parentId: null, location: "admin" })}
+                onAddChild={(parentId) =>
+                  setSelection({ mode: "create", parentId, location: "admin" })
                 }
               />
             </>
@@ -177,7 +202,10 @@ export function MenusWorkspace({
       {/* 우측: 상세 / 새 메뉴 */}
       <Card className="min-h-[32rem] space-y-4 p-4 sm:p-5">
         <div>
-          <h2 className="font-display text-xl font-bold">
+          <p className="text-xs font-medium text-muted-foreground">
+            미리보기 {roleLabel(role)} · 보이는 메뉴 {visibleCount}개
+          </p>
+          <h2 className="mt-1 font-display text-xl font-bold">
             {selection.mode === "edit" ? "메뉴 편집" : "새 메뉴"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -191,6 +219,18 @@ export function MenusWorkspace({
           </p>
         </div>
 
+        {selectedMenu && !selectedVisible ? (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2.5 text-sm">
+            이 메뉴는 <span className="font-semibold">{roleLabel(role)}</span>에게 보이지 않습니다.
+            최소 권한은 {roleLabel(selectedMenu.view_role)}+
+            {!selectedMenu.is_active ? ", 현재 비활성" : ""}입니다.
+          </div>
+        ) : (
+          <div className="rounded-xl border border-foreground/10 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+            {roleLabel(role)} 기준으로 왼쪽 트리에 남은 항목만 실제 화면에도 노출됩니다.
+          </div>
+        )}
+
         {selection.mode === "edit" && !selectedMenu ? (
           <p className="text-sm text-muted-foreground">왼쪽 트리에서 메뉴를 다시 선택하세요.</p>
         ) : (
@@ -199,6 +239,7 @@ export function MenusWorkspace({
             menu={selectedMenu}
             menus={menus}
             boards={boards}
+            previewRole={role}
             defaultParentId={selection.mode === "create" ? selection.parentId : undefined}
             defaultLocation={selection.mode === "create" ? selection.location : undefined}
             onDeleted={() =>
@@ -221,6 +262,7 @@ function TreeSection({
   collapsedIds,
   onToggleCollapsed,
   onSelect,
+  onAddRoot,
   onAddChild,
 }: {
   sectionKey: string
@@ -231,27 +273,43 @@ function TreeSection({
   collapsedIds: Set<string>
   onToggleCollapsed: (id: string) => void
   onSelect: (id: string) => void
+  onAddRoot: () => void
   onAddChild: (parentId: string) => void
 }) {
   const collapsed = collapsedIds.has(sectionKey)
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => onToggleCollapsed(sectionKey)}
-        disabled={nodes.length === 0}
-        className="mb-1.5 flex w-full items-center gap-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground disabled:cursor-default"
-      >
-        {nodes.length > 0 ? (
-          <ChevronRight
-            className={cn("size-3 shrink-0 transition-transform", !collapsed && "rotate-90")}
-          />
-        ) : (
-          <span className="size-3 shrink-0" />
-        )}
-        {title}
-      </button>
+      <div className="mb-1.5 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onToggleCollapsed(sectionKey)}
+          disabled={nodes.length === 0}
+          className="flex min-w-0 flex-1 items-center gap-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground disabled:cursor-default"
+        >
+          {nodes.length > 0 ? (
+            <ChevronRight
+              className={cn("size-3 shrink-0 transition-transform", !collapsed && "rotate-90")}
+            />
+          ) : (
+            <span className="size-3 shrink-0" />
+          )}
+          {title}
+          <span className="ml-1 normal-case tracking-normal text-muted-foreground/80">
+            ({countNodes(nodes)})
+          </span>
+        </button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-6 px-1.5"
+          onClick={onAddRoot}
+          aria-label={`${title} 최상위 메뉴 추가`}
+        >
+          <Plus className="size-3.5" />
+        </Button>
+      </div>
       {nodes.length === 0 ? (
         <p className="px-2 py-2 text-xs text-muted-foreground">표시할 메뉴 없음</p>
       ) : !collapsed ? (

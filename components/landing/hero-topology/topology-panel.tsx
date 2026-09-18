@@ -59,10 +59,13 @@ export function TopologyPanel({
   data,
   className,
   panPixels = 0,
+  active = true,
 }: {
   data: TopologyData
   className?: string
   panPixels?: number
+  /** 이 패널이 실제로 화면에 보이는 슬라이드일 때만 true — 씬의 렌더 루프를 켠다 */
+  active?: boolean
 }) {
   const { t } = useI18n()
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
@@ -111,12 +114,18 @@ export function TopologyPanel({
 
   return (
     <div className={cn("relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] md:h-[640px]", className)}>
-      <TopologyScene data={data} activeModuleId={activeModuleId} onSelectModule={setActiveModuleId} panPixels={panPixels} />
+      <TopologyScene
+        data={data}
+        activeModuleId={activeModuleId}
+        onSelectModule={setActiveModuleId}
+        panPixels={panPixels}
+        active={active}
+      />
 
       <TopologyIntro
         open={introOpen}
         hidden={open}
-        modules={data.modules}
+        modules={data.modules.filter((module) => !module.vacant)}
         onOpen={reopenIntro}
         onClose={closeIntro}
       />

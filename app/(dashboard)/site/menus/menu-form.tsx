@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { deleteMenu, upsertMenu } from "@/app/(dashboard)/site/actions"
-import { ACCESS_ROLES, roleLabel } from "@/lib/access"
+import { ACCESS_ROLES, roleLabel, type AccessRole } from "@/lib/access"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Board } from "@/types/board"
 import type { MenuItem, MenuLocation } from "@/types/menu"
+import { ADMIN_NAV_ICON_MAP } from "@/components/layout/admin-nav-icons"
+import { MENU_LOCATIONS, menuLocationLabel } from "@/lib/menus/locations"
 
 export function MenuForm({
   menu,
@@ -18,6 +20,7 @@ export function MenuForm({
   boards,
   defaultParentId,
   defaultLocation,
+  previewRole,
   onSaved,
   onDeleted,
 }: {
@@ -26,6 +29,7 @@ export function MenuForm({
   boards: Board[]
   defaultParentId?: string | null
   defaultLocation?: MenuLocation
+  previewRole?: AccessRole
   onSaved?: (id: string) => void
   onDeleted?: () => void
 }) {
@@ -34,6 +38,8 @@ export function MenuForm({
   const [error, setError] = useState<string | null>(null)
   const formId = menu?.id ?? "new"
   const parents = menus.filter((item) => !item.parent_id && item.id !== menu?.id)
+  const currentLocation = menu?.location ?? defaultLocation ?? "header"
+  const locationParents = parents.filter((item) => item.location === currentLocation)
 
   async function onSubmit(formData: FormData) {
     if (menu) formData.set("id", menu.id)
@@ -94,9 +100,9 @@ export function MenuForm({
             defaultValue={menu?.parent_id ?? defaultParentId ?? ""}
             options={[
               { value: "", label: "최상위" },
-              ...parents.map((item) => ({
+              ...locationParents.map((item) => ({
                 value: item.id,
-                label: `[${item.location === "header" ? "헤더" : "푸터"}] ${item.label}`,
+                label: `[${menuLocationLabel(item.location)}] ${item.label}`,
               })),
             ]}
           />
@@ -109,10 +115,10 @@ export function MenuForm({
             id={`location-${formId}`}
             name="location"
             defaultValue={menu?.location ?? defaultLocation ?? "header"}
-            options={[
-              { value: "header", label: "헤더" },
-              { value: "footer", label: "푸터" },
-            ]}
+            options={MENU_LOCATIONS.map((item) => ({
+              value: item,
+              label: menuLocationLabel(item),
+            }))}
           />
         </div>
         <div>
@@ -120,7 +126,10 @@ export function MenuForm({
           <CustomSelect
             id={`view-${formId}`}
             name="view_role"
-            defaultValue={menu?.view_role ?? "visitor"}
+            defaultValue={
+              menu?.view_role ??
+              (currentLocation === "admin" ? "owner" : previewRole ?? "visitor")
+            }
             options={ACCESS_ROLES.map((role) => ({ value: role, label: `${roleLabel(role)} 이상` }))}
           />
         </div>
@@ -133,6 +142,19 @@ export function MenuForm({
             defaultValue={menu?.sort_order ?? 0}
           />
         </div>
+      </div>
+      <div>
+        <Label htmlFor={`icon-${formId}`}>아이콘</Label>
+        <CustomSelect
+          id={`icon-${formId}`}
+          name="icon"
+          defaultValue={menu?.icon ?? ""}
+          options={[
+            { value: "", label: "없음" },
+            ...Object.keys(ADMIN_NAV_ICON_MAP).map((name) => ({ value: name, label: name })),
+          ]}
+        />
+        <p className="mt-1.5 text-xs text-muted-foreground">관리자 사이드바에서 사용합니다. 헤더·푸터는 무시됩니다.</p>
       </div>
       <div className="flex items-center gap-2">
         <Switch checked={active} onCheckedChange={setActive} />

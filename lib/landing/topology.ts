@@ -6,14 +6,13 @@ import { getT } from "@/lib/i18n/dictionary"
 import { listAllMenus } from "@/lib/menus/public"
 import type { MenuItem } from "@/types/menu"
 
-// 08-landing-topology.md 갱신본 참고. "결국 루트 메뉴에 따라 로봇이 배정된다"는
+// "결국 루트 메뉴에 따라 로봇이 배정된다"는
 // 방향에 맞춰, 하드코딩된 PromptKit/CareerLog/Steam 3개 대신 실제 헤더 루트 메뉴
 // (devdeck.menus, location='header', parent_id=null)를 그대로 팀원 책상으로 그린다.
 // 메뉴가 늘거나 줄면 책상 수도 그만큼 늘고 준다(topology-scene.tsx에서 한 행 4석,
 // 마주보는 페어 2개). 하위 메뉴는 그 책상의 목록 자리에 그대로 나온다. 팀장 자리는
-// "관리자 대시보드"(components/layout/admin-nav.ts, ADMIN_NAV)를 나타내는 좌석인데,
-// 관리자로 로그인했을 때만 통째로 존재한다 — 그 외에는 좌석 자체가 배열에 없다
-// (잠긴 채로 보여주지 않고 아예 안 보인다).
+// "관리자 대시보드" 좌석이다. 관리자 로그인 시 로봇이 앉아 있고, 그 외에는 책상·모니터만
+// 남기고 외근 팻말을 올린다.
 
 export type TopologyTint = "champagne" | "cognac" | "espresso"
 
@@ -31,6 +30,8 @@ export type TopologyModuleNode = {
   tint: TopologyTint
   isLead: boolean
   restricted: boolean
+  /** 관리자 자리: 비로그인·일반회원에게는 로봇 없이 책상만 두고 외근 팻말을 올린다 */
+  vacant: boolean
   /** 로봇 말풍선 부연설명 (헤더 메가 메뉴와 동일한 카피) */
   guideDescription: string
   items: TopologyItemNode[]
@@ -66,23 +67,27 @@ function resolveModuleGuideDescription(
   return t("mega.fallbackBody")
 }
 
-function buildAdminModule(t: (key: string) => string): TopologyModuleNode {
-  // 이 함수는 관리자로 로그인했을 때만 호출된다 — 그 외에는 아예 목록에 넣지 않는다
-  // (책상 자체가 안 보임. 잠긴 채로 보여주지 않는다).
+// 관리자 대시보드 좌석. 관리자가 아니면 로봇만 빼고 책상·모니터는 남겨
+// "외근중" 팻말을 올린다(방이 비어 보이지 않게).
+
+function buildAdminModule(t: (key: string) => string, vacant: boolean): TopologyModuleNode {
   return {
     id: ADMIN_MODULE_ID,
     label: t("dashboard.adminMenu"),
-    href: ADMIN_NAV[0]?.href ?? "/promptkit",
+    href: vacant ? "/" : (ADMIN_NAV[0]?.href ?? "/site/dashboard"),
     tint: "espresso",
     isLead: true,
-    restricted: false,
+    restricted: vacant,
+    vacant,
     guideDescription: resolveModuleGuideDescription(t("dashboard.adminMenu"), t, true),
-    items: ADMIN_NAV.slice(0, MAX_ITEMS_PER_MODULE).map((entry) => ({
-      id: entry.href,
-      label: t(entry.labelKey),
-      meta: null,
-      href: entry.href,
-    })),
+    items: vacant
+      ? []
+      : ADMIN_NAV.slice(0, MAX_ITEMS_PER_MODULE).map((entry) => ({
+          id: entry.href,
+          label: t(entry.labelKey),
+          meta: null,
+          href: entry.href,
+        })),
   }
 }
 
@@ -122,6 +127,7 @@ export async function listLandingModules(): Promise<TopologyModuleNode[]> {
       tint: TINTS[index % TINTS.length],
       isLead: false,
       restricted: false,
+      vacant: false,
       guideDescription: resolveModuleGuideDescription(root.label, t, false),
       items,
     }
@@ -132,10 +138,8 @@ export async function buildLandingTopology(): Promise<TopologyData> {
   const [memberModules, viewer] = await Promise.all([listLandingModules(), currentViewer()])
   const { t } = getT()
 
-  // 요청사항: "관리자 메뉴와 로봇은 관리자가 로그인했을 때만 보이게 한다" — 관리자가
-  // 아니면 이 좌석 자체를 배열에서 뺀다(잠긴 상태로도 보여주지 않음).
   const isOwner = roleAtLeast(viewer.role, "owner")
-  const modules = isOwner ? [buildAdminModule(t), ...memberModules] : memberModules
+  const modules = [buildAdminModule(t, !isOwner), ...memberModules]
 
   return { modules }
 }

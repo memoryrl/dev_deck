@@ -64,6 +64,7 @@ export async function runSupabaseHealthCheck(): Promise<HealthPayload> {
         Authorization: `Bearer ${supabaseAnonKey}`,
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     })
 
     const supabase = healthClient(supabaseUrl, supabaseAnonKey)

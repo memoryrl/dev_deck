@@ -3,18 +3,15 @@ import { UserMenu } from "@/components/layout/user-menu"
 import { Card } from "@/components/ui/card"
 import { isOwnerUser } from "@/lib/auth/roles"
 import { sessionUserView } from "@/lib/auth/session-user"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export default async function AccountPage() {
   if (!isSupabaseConfigured()) redirect("/login")
 
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect("/login")
-  if (isOwnerUser(user)) redirect("/promptkit")
+  if (isOwnerUser(user)) redirect("/site/dashboard")
 
   const account = sessionUserView(user)
 

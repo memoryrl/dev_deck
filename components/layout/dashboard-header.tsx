@@ -3,64 +3,21 @@
 import Link from "next/link"
 import { useEffect, useId, useState } from "react"
 import { usePathname } from "next/navigation"
-import {
-  Briefcase,
-  Gamepad2,
-  History,
-  Home,
-  LayoutDashboard,
-  LayoutList,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Monitor,
-  Palette,
-  Settings,
-  Sparkles,
-  Upload,
-  Users,
-  X,
-  type LucideIcon,
-} from "lucide-react"
+import { Home, LogOut, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
+import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { AdminSidebarNav } from "@/components/layout/admin-sidebar-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import { cn } from "@/lib/utils"
 
-export type AdminMenuItemForHeader = {
-  id: string
-  label: string
-  href: string
-  iconName: string
-}
-
 type Props = {
   account: SessionUserView
-  menus?: AdminMenuItemForHeader[]
-}
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Sparkles,
-  Briefcase,
-  Gamepad2,
-  LayoutList,
-  MessageSquare,
-  Menu,
-  Upload,
-  Users,
-  History,
-  Settings,
-  Monitor,
-  Palette,
-}
-
-function getIconComponent(name: string): LucideIcon {
-  return ICON_MAP[name] ?? LayoutDashboard
+  menus?: AdminSidebarGroup[]
 }
 
 export function DashboardHeader({ account, menus = [] }: Props) {
@@ -142,38 +99,18 @@ export function DashboardHeader({ account, menus = [] }: Props) {
           <h2 id={titleId} className="sr-only">
             {t("dashboard.adminMenu")}
           </h2>
-          <div className="border-b px-3 py-3">
-            <LanguageSwitcher />
-          </div>
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <Link
-              href="/"
-              className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
-              onClick={() => setDrawer(false)}
-            >
-              <Home className="size-4 opacity-70" />
-              {t("common.siteHome")}
-            </Link>
-            {menus.map((item) => {
-              const Icon = getIconComponent(item.iconName)
-              const active = pathname.startsWith(item.href)
-              const label = t(item.label) || item.label
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold",
-                    active ? "bg-primary text-primary-foreground" : "hover:bg-foreground/[0.05]"
-                  )}
-                  onClick={() => setDrawer(false)}
-                >
-                  <Icon className="size-4 opacity-70" />
-                  {label}
+          <div className="flex min-h-0 flex-1 flex-col px-3 py-4">
+            <AdminSidebarNav groups={menus} onNavigate={() => setDrawer(false)} />
+            <div className="mt-4 shrink-0 space-y-2">
+              <LanguageSwitcher fullWidth menuPlacement="up" />
+              <Button asChild variant="outline" className="h-10 w-full rounded-full">
+                <Link href="/" onClick={() => setDrawer(false)}>
+                  <Home />
+                  {t("common.siteHome")}
                 </Link>
-              )
-            })}
-          </nav>
+              </Button>
+            </div>
+          </div>
           <div className="flex items-center gap-2 border-t px-5 py-4">
             <form action={signOut} className="flex-1">
               <button

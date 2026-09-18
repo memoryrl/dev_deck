@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { findRecentSessionId, recordPageView, recordVisitHistory } from "@/lib/auth/login-history"
 import { VISIT_ID_COOKIE, VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/supabase/server"
 import { checkRateLimit } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 
@@ -51,10 +51,7 @@ export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return jsonWithVisitCookies({ ok: false }, null)
 
   try {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const user = await getAuthUser()
 
     const recentId = await findRecentSessionId({ userId: user?.id ?? null, ipAddress: ip })
     if (recentId) {

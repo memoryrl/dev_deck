@@ -22,6 +22,7 @@ export const memoryKey = {
   boardAll: "board:system:all",
   previewEmbed: (url: string) => `preview:embed:${url}`,
   menusSeeded: "menus:seeded",
+  adminMenusSeeded: "menus:admin-seeded",
 }
 
 export function withMemoryCache<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {

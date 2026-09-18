@@ -9,6 +9,7 @@ import { isBlankContent } from "@/lib/content"
 import { createClient } from "@/lib/supabase/server"
 import type { Board } from "@/types/board"
 import type { MenuLocation } from "@/types/menu"
+import { isMenuLocation } from "@/lib/menus/locations"
 
 function refreshSite() {
   forgetMemoryCache("menus:")
@@ -17,6 +18,10 @@ function refreshSite() {
   revalidatePath("/")
   revalidatePath("/site/boards")
   revalidatePath("/site/menus")
+  revalidatePath("/site/dashboard", "layout")
+  revalidatePath("/promptkit", "layout")
+  revalidatePath("/career", "layout")
+  revalidatePath("/steam", "layout")
   revalidatePath("/b", "layout")
 }
 
@@ -104,31 +109,54 @@ export async function upsertMenu(formData: FormData) {
   const label = String(formData.get("label") ?? "").trim()
   if (!label) return { ok: false as const, error: "메뉴 이름은 필수입니다." }
 
-  const location = String(formData.get("location") ?? "header") as MenuLocation
-  if (location !== "header" && location !== "footer") {
+  const location = String(formData.get("location") ?? "header")
+  if (!isMenuLocation(location)) {
     return { ok: false as const, error: "메뉴 위치가 올바르지 않습니다." }
   }
 
   const parentId = String(formData.get("parent_id") ?? "") || null
   const boardId = String(formData.get("board_id") ?? "") || null
   const href = String(formData.get("href") ?? "").trim() || null
+  const icon = String(formData.get("icon") ?? "").trim() || null
+  let resolvedLocation: MenuLocation = location
+
+  if (parentId) {
+    const { data: parent } = await supabase
+      .from("menus")
+      .select("location")
+      .eq("id", parentId)
+      .maybeSingle()
+    if (parent?.location && isMenuLocation(parent.location)) {
+      resolvedLocation = parent.location
+    }
+  }
 
   const payload = {
     label,
     href: boardId ? null : href,
     parent_id: parentId,
     board_id: boardId,
-    location,
+    location: resolvedLocation,
+    icon,
     view_role: parseRole(String(formData.get("view_role") ?? "visitor"), "visitor"),
     is_active: formData.get("is_active") === "on",
     sort_order: Number(formData.get("sort_order") ?? 0) || 0,
   }
 
-  const query = id
-    ? supabase.from("menus").update(payload).eq("id", id).select("id").single()
-    : supabase.from("menus").insert(payload).select("id").single()
+  const persist = async (body: typeof payload | Omit<typeof payload, "icon">) => {
+    const query = id
+      ? supabase.from("menus").update(body).eq("id", id).select("id").single()
+      : supabase.from("menus").insert(body).select("id").single()
+    return query
+  }
 
-  const { data, error } = await query
+  let { data, error } = await persist(payload)
+  if (error && /icon/.test(error.message)) {
+    const { icon: _omit, ...withoutIcon } = payload
+    const retry = await persist(withoutIcon)
+    data = retry.data
+    error = retry.error
+  }
   if (error) return { ok: false as const, error: error.message }
   refreshSite()
   return { ok: true as const, id: data?.id ?? id }

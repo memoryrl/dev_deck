@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import type { User } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { cache } from "react"
+import { isInvalidRefreshError } from "@/lib/supabase/auth-error"
 
 export function createClient() {
   const cookieStore = cookies()
@@ -31,6 +32,23 @@ export function createClient() {
   )
 }
 
+export const getAuthUser = cache(async () => {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (isInvalidRefreshError(error)) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {})
+      return null
+    }
+    return data.user ?? null
+  } catch (error) {
+    if (isInvalidRefreshError(error instanceof Error ? error : null)) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {})
+    }
+    return null
+  }
+})
+
 // devdeck.profiles 행을 만들거나 최신화한다. 로그인 시 딱 한 번(app/auth/callback/route.ts)
 // 호출하면 충분하다 — 예전엔 대시보드 페이지마다 ensureProfile()이 이 upsert까지 매번
 // 다시 실행해서, 페이지 이동 한 번에 getUser() 왕복 2번(미들웨어+페이지) + 쓰기 1번이
@@ -55,10 +73,4 @@ export async function upsertProfile(user: User) {
 // 걸러주지만 페이지 자체에서도 user 객체가 필요한 곳이 있다). React cache()로 감싸서
 // 같은 요청 안에서 여러 번 불려도 실제 네트워크 호출은 한 번만 나간다. 프로필 upsert는
 // 더 이상 여기서 하지 않는다 — 로그인 시점에 upsertProfile()로 한 번만 하면 된다.
-export const ensureProfile = cache(async (): Promise<User | null> => {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  return user
-})
+export const ensureProfile = getAuthUser

@@ -184,7 +184,7 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 
 ### 2.8 `menus`
 
-헤더·푸터 메뉴. `board_id`가 있으면 href 대신 `/b/{slug}`.
+헤더·푸터·관리자 사이드바 메뉴. `board_id`가 있으면 href 대신 `/b/{slug}`. 관리자 메뉴는 `location = 'admin'` 트리이며 대시보드 사이드바가 그대로 읽는다.
 
 | 컬럼 | 타입 | 제약 | 설명 |
 | --- | --- | --- | --- |
@@ -192,13 +192,15 @@ Steam 게임 마스터 테이블은 없다. `app_id`는 Steam AppID를 그대로
 | parent_id | UUID | FK → menus CASCADE, nullable | 하위 메뉴 |
 | board_id | UUID | FK → boards SET NULL | 게시판 연결 |
 | label | TEXT | NOT NULL | |
+| label_key | TEXT | | i18n 키. 있으면 사이드바가 번역 |
+| icon | TEXT | | Lucide 아이콘 이름. 관리자 사이드바 |
 | href | TEXT | | 직접 링크. 게시판 연결 시 비움 |
-| location | TEXT | `header` / `footer` | |
+| location | TEXT | `header` / `footer` / `admin` | |
 | view_role | TEXT | `visitor` / `member` / `owner` | 보이는 최소 권한 |
 | is_active | BOOLEAN | DEFAULT true | |
 | sort_order | INT | DEFAULT 0 | |
 
-기존 DB는 `supabase/patch-boards-menus.sql`을 SQL Editor에서 실행한다. `kind` 컬럼과 시스템 게시판 시드가 포함된다.
+기존 DB는 `supabase/patch-boards-menus.sql`을 SQL Editor에서 실행한다. `kind` 컬럼과 시스템 게시판 시드가 포함된다. 관리자 메뉴 위치·시드는 `supabase/patch-admin-menus.sql`.
 
 ### 2.9 `comments`
 

@@ -4,7 +4,8 @@ import Link from "next/link"
 import { useEffect, useId, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
-import { ADMIN_NAV } from "@/components/layout/admin-nav"
+import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { UserAvatar } from "@/components/layout/account-menu"
 import { MENU_ICON, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -18,11 +19,13 @@ export function PublicMobileNav({
   onClose,
   account,
   navNodes,
+  adminMenus = [],
 }: {
   open: boolean
   onClose: () => void
   account: SessionUserView | null
   navNodes: NavNode[]
+  adminMenus?: AdminSidebarGroup[]
 }) {
   const [section, setSection] = useState<string | null>(null)
   const titleId = useId()
@@ -136,20 +139,7 @@ export function PublicMobileNav({
               <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 {t("common.admin")}
               </p>
-              {ADMIN_NAV.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
-                    onClick={onClose}
-                  >
-                    <Icon className="size-4 opacity-70" />
-                    {t(item.labelKey)}
-                  </Link>
-                )
-              })}
+              <AdminMenuGroups groups={adminMenus} onNavigate={onClose} />
             </div>
           ) : null}
           {account && !account.isOwner ? (

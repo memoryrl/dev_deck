@@ -59,26 +59,27 @@ export function VisitStatsChart({ yearlyData, monthlyData, dailyData }: Props) {
         </div>
       </div>
 
-      <div className="h-[280px] w-full">
+      <div className="h-[280px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e8dfd2" />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 12, fill: "#8a7d6b" }}
               tickLine={false}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              axisLine={{ stroke: "#e8dfd2" }}
             />
             <YAxis
-              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 12, fill: "#8a7d6b" }}
               tickLine={false}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              axisLine={{ stroke: "#e8dfd2" }}
               allowDecimals={false}
+              width={36}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#fff",
+                border: "1px solid #e8dfd2",
                 borderRadius: "8px",
                 fontSize: "14px",
               }}
@@ -88,10 +89,10 @@ export function VisitStatsChart({ yearlyData, monthlyData, dailyData }: Props) {
             <Line
               type="monotone"
               dataKey="count"
-              stroke="hsl(var(--primary))"
+              stroke="#1a1614"
               strokeWidth={2}
-              dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              dot={{ fill: "#1a1614", strokeWidth: 0, r: 3 }}
+              activeDot={{ r: 5, strokeWidth: 0 }}
             />
           </LineChart>
         </ResponsiveContainer>
