@@ -3,10 +3,10 @@ import { ArrowLeft, ChevronRight } from "lucide-react"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ensureProfile } from "@/lib/supabase/server"
+import { requireOwner } from "@/lib/auth/owner"
 
 export default async function DesignSystemScreensPage() {
-  await ensureProfile()
+  await requireOwner()
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 pb-16">

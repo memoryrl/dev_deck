@@ -18,10 +18,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomSelect } from "@/components/ui/custom-select"
-import { ensureProfile } from "@/lib/supabase/server"
+import { requireOwner } from "@/lib/auth/owner"
 
 export default async function DesignSystemCommonPage() {
-  await ensureProfile()
+  await requireOwner()
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 pb-16">
