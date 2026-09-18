@@ -2,13 +2,19 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
 import { LoginHistoryRow } from "@/app/(dashboard)/site/login-history/login-history-row"
+import { VisitStatsChart } from "@/app/(dashboard)/site/login-history/visit-stats-chart"
 import { ListPager } from "@/components/layout/list-pager"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
-import { countPageViewsByVisit, listLoginHistory, type LoginHistorySearchField } from "@/lib/auth/login-history"
+import {
+  countPageViewsByVisit,
+  getVisitStats,
+  listLoginHistory,
+  type LoginHistorySearchField,
+} from "@/lib/auth/login-history"
 import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
@@ -52,6 +58,10 @@ export default function LoginHistoryPage({
         구글 로그인 성공 시점과, 회원·비회원 구분 없이 사이트에 접속한 시점을 함께 기록합니다. 접속 IP와
         지역 정보, 그 세션이 본 페이지 목록까지 확인할 수 있습니다.
       </p>
+
+      <Suspense fallback={<ChartSkeleton />}>
+        <VisitStatsChartWrapper />
+      </Suspense>
 
       <form action="/site/login-history" className="flex flex-wrap items-center gap-2">
         <CustomSelect
@@ -143,4 +153,30 @@ async function LoginHistoryList({
       )}
     </div>
   )
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="animate-pulse rounded-xl border bg-white p-6 dark:bg-card">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-40 rounded bg-muted" />
+        </div>
+        <div className="h-9 w-36 rounded-full bg-muted" />
+      </div>
+      <div className="h-[280px] w-full rounded bg-muted" />
+    </div>
+  )
+}
+
+async function VisitStatsChartWrapper() {
+  await ensureProfile()
+  const [yearlyData, monthlyData, dailyData] = await Promise.all([
+    getVisitStats("yearly"),
+    getVisitStats("monthly"),
+    getVisitStats("daily"),
+  ])
+
+  return <VisitStatsChart yearlyData={yearlyData} monthlyData={monthlyData} dailyData={dailyData} />
 }
