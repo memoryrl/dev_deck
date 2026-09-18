@@ -19,7 +19,7 @@ export default function CareerDetailPage({
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager id={params.id} />
       </Suspense>
-      <PageTitleBanner title="글 수정" breadcrumb={[{ label: "CareerLog", href: "/career" }]} className="mb-6 mt-6" />
+      <PageTitleBanner title="글 수정" breadcrumb={[{ label: "글 수정" }]} className="mb-6 mt-6" />
       <Suspense fallback={<EditorFormSkeleton />}>
         <CareerFormSection id={params.id} />
       </Suspense>

@@ -3,6 +3,7 @@ import { Inter, Public_Sans } from "next/font/google"
 import { Suspense } from "react"
 import { I18nProvider } from "@/components/i18n/i18n-provider"
 import { LanguageRouteSync } from "@/components/i18n/language-route-sync"
+import { HashScrollFix } from "@/components/layout/hash-scroll-fix"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { VisitTracker } from "@/components/layout/visit-tracker"
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
             <ScrollToTop />
             <VisitTracker />
+            <HashScrollFix />
           </I18nProvider>
         </ThemeProvider>
       </body>

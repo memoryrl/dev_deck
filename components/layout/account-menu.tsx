@@ -112,18 +112,16 @@ export function AccountMenu({
               <AdminMenuGroups groups={adminMenus} onNavigate={() => setOpen(false)} />
             </div>
           ) : null}
-          {!user.isOwner ? (
-            <div className="border-t border-foreground/10 py-1.5">
-              <Link
-                href="/account"
-                role="menuitem"
-                className="block px-3.5 py-2 text-sm font-medium hover:bg-foreground/[0.05]"
-                onClick={() => setOpen(false)}
-              >
-                {t("common.account")}
-              </Link>
-            </div>
-          ) : null}
+          <div className="border-t border-foreground/10 py-1.5">
+            <Link
+              href="/account"
+              role="menuitem"
+              className="block px-3.5 py-2 text-sm font-medium hover:bg-foreground/[0.05]"
+              onClick={() => setOpen(false)}
+            >
+              {t("common.mypage")}
+            </Link>
+          </div>
           <form action={signOut} className="border-t border-foreground/10 p-1.5">
             <button
               type="submit"

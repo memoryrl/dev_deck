@@ -42,7 +42,7 @@ export default async function PublicBoardPostPage({
 
   const view = (
     <>
-      <PageTitleBanner title={post.title} breadcrumb={[{ label: board.name, href: listHref }]} className="mt-6" />
+      <PageTitleBanner title={post.title} className="mt-6" />
       <div className="mt-8">
         <RichContent content={post.content} />
       </div>

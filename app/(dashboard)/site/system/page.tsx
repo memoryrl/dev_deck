@@ -38,10 +38,7 @@ export default async function SystemStatusPage() {
     <div className="mx-auto max-w-4xl space-y-8">
       <PageTitleBanner
         title={t("admin.system.title")}
-        breadcrumb={[
-          { label: t("nav.dashboard"), href: "/site/dashboard" },
-          { label: t("admin.system.title") },
-        ]}
+        description={t("admin.system.description")}
         actions={
           <form action={refreshSystemStatus}>
             <Button type="submit" variant="outline" className="rounded-full">
@@ -51,10 +48,6 @@ export default async function SystemStatusPage() {
           </form>
         }
       />
-
-      <p className="text-sm text-muted-foreground">
-        {t("admin.system.description")}
-      </p>
 
       <Suspense fallback={<SystemStatusSkeleton />}>
         <SystemStatusContent />

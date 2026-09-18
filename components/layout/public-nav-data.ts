@@ -1,17 +1,19 @@
-import { Briefcase, Gamepad2, Sparkles } from "lucide-react"
+import { Briefcase, Gamepad2, Sparkles, Users } from "lucide-react"
 
-export type MegaId = "prompt" | "career" | "games"
+export type MegaId = "prompt" | "career" | "games" | "community"
 
 export const MENU_ICON = {
   prompt: Sparkles,
   career: Briefcase,
   games: Gamepad2,
+  community: Users,
 } as const
 
 export const SCENE_LINE: Record<MegaId, string> = {
   prompt: "h-0.5 bg-gradient-to-r from-transparent via-[hsl(var(--lux-champagne))] to-transparent",
   career: "h-0.5 bg-gradient-to-r from-transparent via-[hsl(var(--lux-cognac))] to-transparent",
   games: "h-0.5 bg-gradient-to-r from-transparent via-[hsl(var(--lux-espresso))] to-transparent",
+  community: "h-0.5 bg-gradient-to-r from-transparent via-[hsl(214_30%_36%)] to-transparent",
 }
 
 export const publicMenus: {
@@ -26,15 +28,15 @@ export const publicMenus: {
     highlight: {
       title: "PromptKit",
       bodyKey: "mega.prompt.body",
-      href: "/#prompts",
+      href: "/b/prompts",
       ctaKey: "mega.prompt.cta",
     },
     groups: [
       {
         titleKey: "mega.browse",
         links: [
-          { href: "/#prompts", labelKey: "mega.prompt.public", noteKey: "mega.prompt.publicNote" },
-          { href: "/", labelKey: "mega.prompt.home" },
+          { href: "/b/prompts", labelKey: "mega.prompt.public" },
+          { href: "/b/prompts/top", labelKey: "mega.prompt.top" },
         ],
       },
       {
@@ -57,8 +59,8 @@ export const publicMenus: {
         titleKey: "mega.browse",
         links: [
           { href: "/work", labelKey: "mega.career.all" },
-          { href: "/#career", labelKey: "mega.career.recent" },
-          { href: "/#skills", labelKey: "mega.career.skills" },
+          { href: "/b/skills", labelKey: "mega.career.skills" },
+          { href: "/b/skills/top", labelKey: "mega.career.skillsTop" },
         ],
       },
       {
@@ -81,12 +83,35 @@ export const publicMenus: {
         titleKey: "mega.browse",
         links: [
           { href: "/games", labelKey: "mega.games.list" },
-          { href: "/#games", labelKey: "mega.games.featured" },
+          { href: "/games/top", labelKey: "mega.games.featured" },
         ],
       },
       {
         titleKey: "mega.edit",
         links: [{ href: "__steam__", labelKey: "mega.games.manage", noteKey: "mega.adminOnly" }],
+      },
+    ],
+  },
+  {
+    id: "community",
+    labelKey: "mega.community.label",
+    highlight: {
+      title: "Community",
+      bodyKey: "mega.community.body",
+      href: "/b/notice",
+      ctaKey: "mega.community.cta",
+    },
+    groups: [
+      {
+        titleKey: "mega.browse",
+        links: [
+          { href: "/b/notice", labelKey: "mega.community.notice" },
+          { href: "/b/free", labelKey: "mega.community.free" },
+        ],
+      },
+      {
+        titleKey: "mega.edit",
+        links: [{ href: "__boards__", labelKey: "mega.community.manage", noteKey: "mega.adminOnly" }],
       },
     ],
   },

@@ -27,10 +27,7 @@ export default async function DesignSystemCommonPage() {
     <div className="mx-auto max-w-5xl space-y-12 pb-16">
       <PageTitleBanner
         title="디자인 시스템 - 공통영역"
-        breadcrumb={[
-          { label: "사이트 관리", href: "/site/menus" },
-          { label: "디자인 시스템" },
-        ]}
+        description="DevDeck 프로젝트의 공통 UI 컴포넌트 가이드입니다. 에이전트(Cursor, Claude)가 작업 시 이 페이지를 참고하여 일관된 디자인을 유지합니다."
         actions={
           <Button asChild variant="outline" className="rounded-full">
             <Link href="/site/design-system/screens">
@@ -41,10 +38,6 @@ export default async function DesignSystemCommonPage() {
       />
 
       <section className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          DevDeck 프로젝트의 공통 UI 컴포넌트 가이드입니다. 에이전트(Cursor, Claude)가 작업 시 이
-          페이지를 참고하여 일관된 디자인을 유지합니다.
-        </p>
         <div className="flex gap-2">
           <Badge>공통 컴포넌트</Badge>
           <Badge variant="secondary">UI 라이브러리</Badge>
@@ -362,7 +355,7 @@ import { Label } from "@/components/ui/label"
         id="page-title-banner"
         title="PageTitleBanner"
         path="components/layout/page-title-banner.tsx"
-        description="페이지 상단에 표시되는 타이틀 배너입니다. 브레드크럼과 액션 버튼을 포함할 수 있습니다."
+        description="페이지 상단 타이틀 배너입니다. 브레드크럼은 메뉴 DB의 1depth > 2depth를 현재 경로로 맞추고, 부연설명은 제목 밑줄 아래에 둡니다."
       >
         <div className="rounded-xl border bg-muted/30 p-4">
           <p className="text-sm text-muted-foreground">
@@ -373,9 +366,9 @@ import { Label } from "@/components/ui/label"
 
 <PageTitleBanner
   title="페이지 제목"
+  description="제목 밑줄 아래에 들어가는 부연설명입니다."
   breadcrumb={[
-    { label: "상위 메뉴", href: "/parent" },
-    { label: "현재 페이지" },
+    { label: "하위 화면" },
   ]}
   actions={
     <Button>액션 버튼</Button>

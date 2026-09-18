@@ -153,12 +153,14 @@ export function TopologyRobot({
   skinIndex = 0,
   active,
   hovered = false,
+  showSpeech = true,
   guideTitle,
   guideDescription,
 }: {
   skinIndex?: number
   active: boolean
   hovered?: boolean
+  showSpeech?: boolean
   guideTitle: string
   guideDescription: string
 }) {
@@ -197,7 +199,7 @@ export function TopologyRobot({
 
       <RobotModel skin={skin} active={active} />
 
-      {active ? (
+      {active && showSpeech ? (
         <Html
           position={[0, 1.68, 0.12]}
           center

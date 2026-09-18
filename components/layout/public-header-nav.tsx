@@ -37,6 +37,11 @@ const PHOTO_POOLS: Record<SceneId, string[]> = {
     "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1920&q=70",
     "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1920&q=70",
   ],
+  community: [
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1920&q=70",
+    "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1920&q=70",
+    "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1920&q=70",
+  ],
 }
 
 const SCENE_TINT: Record<SceneId, string> = {
@@ -44,6 +49,7 @@ const SCENE_TINT: Record<SceneId, string> = {
   prompt: "bg-[hsl(var(--lux-champagne)/0.1)]",
   career: "bg-[hsl(var(--lux-cognac)/0.1)]",
   games: "bg-[hsl(var(--lux-espresso)/0.1)]",
+  community: "bg-[hsl(214_30%_36%/0.1)]",
 }
 
 function pickPhoto(pool: string[]) {
@@ -180,6 +186,7 @@ export function PublicHeaderNav({
     __prompt__: owner ? "/promptkit" : "/login",
     __career__: owner ? "/career" : "/login",
     __steam__: owner ? "/steam" : "/login",
+    __boards__: owner ? "/site/boards" : "/login",
   }
   const nodes = navNodes.length > 0 ? navNodes : fallbackNodes(edit, t)
   const activeNode = nodes.find((menu) => menu.id === open)
@@ -201,6 +208,7 @@ export function PublicHeaderNav({
       prompt: pickPhoto(PHOTO_POOLS.prompt),
       career: pickPhoto(PHOTO_POOLS.career),
       games: pickPhoto(PHOTO_POOLS.games),
+      community: pickPhoto(PHOTO_POOLS.community),
     }
     setPhotos(next)
     Object.values(next).forEach((url) => {

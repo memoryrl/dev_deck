@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { requireOwner } from "@/lib/auth/owner"
 import { listMembers, type MemberListEntry } from "@/lib/site/members"
+import { getMemberStats } from "@/lib/site/member-stats"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import type { AppLocale } from "@/lib/i18n/config"
 import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
+import { MemberStatsChart } from "./member-stats-chart"
 
 export default function MembersPage({
   searchParams,
@@ -27,15 +29,12 @@ export default function MembersPage({
     <div className="mx-auto max-w-5xl space-y-8">
       <PageTitleBanner
         title={t("admin.members.title")}
-        breadcrumb={[
-          { label: t("nav.dashboard"), href: "/site/dashboard" },
-          { label: t("admin.members.title") },
-        ]}
+        description={t("admin.members.description")}
       />
 
-      <p className="text-sm text-muted-foreground">
-        {t("admin.members.description")}
-      </p>
+      <Suspense fallback={<ChartSkeleton />}>
+        <MemberStatsChartWrapper />
+      </Suspense>
 
       <form action="/site/members" className="flex flex-wrap items-center gap-2">
         <Input
@@ -93,6 +92,32 @@ async function MemberList({ page, q }: { page: number; q: string }) {
       )}
     </div>
   )
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="animate-pulse rounded-xl border bg-white p-6 dark:bg-card">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-48 rounded bg-muted" />
+        </div>
+        <div className="h-9 w-36 rounded-full bg-muted" />
+      </div>
+      <div className="h-[280px] w-full rounded bg-muted" />
+    </div>
+  )
+}
+
+async function MemberStatsChartWrapper() {
+  await requireOwner()
+  const [yearlyData, monthlyData, dailyData] = await Promise.all([
+    getMemberStats("yearly"),
+    getMemberStats("monthly"),
+    getMemberStats("daily"),
+  ])
+
+  return <MemberStatsChart yearlyData={yearlyData} monthlyData={monthlyData} dailyData={dailyData} />
 }
 
 function MemberCard({ member, locale }: { member: MemberListEntry; locale: AppLocale }) {

@@ -17,10 +17,7 @@ export default function PublicGamesPage({
   const { t } = getT()
   return (
     <PublicContainer>
-      <PageTitleBanner title={t("games.title")} />
-      <p className="mt-6 text-muted-foreground">
-        {t("games.lede")}
-      </p>
+      <PageTitleBanner title={t("games.title")} description={t("games.lede")} />
       <div className="mt-8">
         <Suspense fallback={<SteamLibrarySkeleton />}>
           <GamesLibrary page={parseListPage(searchParams?.page)} sort={parseSteamLibrarySort(searchParams?.sort)} />

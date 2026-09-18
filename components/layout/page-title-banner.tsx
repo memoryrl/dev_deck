@@ -1,10 +1,10 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
-import { getT } from "@/lib/i18n/dictionary"
+import { menuBreadcrumbForRequest, type BreadcrumbItem } from "@/lib/menus/breadcrumb"
 import { cn } from "@/lib/utils"
 
-export type BreadcrumbItem = { label: string; href?: string }
+export type { BreadcrumbItem }
 
 // 실사 이미지 대신 사이트 팔레트(--lux-*)로 만든 그라디언트 조합 풀을 두고
 // 페이지마다 다르게 골라 쓴다 — 외부 이미지 fetch 없이 항상 즉시·안정적으로
@@ -26,26 +26,28 @@ function pickArt(seed: string) {
 
 /**
  * 로그인/회원가입/랜딩을 제외한 페이지 상단에 쓰는 범용 타이틀 배너.
- * 브레드크럼은 각 페이지가 실제 메뉴 라벨·경로를 그대로 넘겨야 한다
- * (관리자 섹션은 ADMIN_NAV, 게시판은 boards 테이블 등 — 이 컴포넌트는
- * 렌더링만 담당하고 경로 해석은 하지 않는다).
+ * 브레드크럼은 메뉴 DB(헤더·관리자)의 1depth > 2depth를 현재 경로로 맞춘다.
+ * `breadcrumb`은 메뉴에 없는 하위 화면(글 수정 등)만 뒤에 이어 붙인다.
  */
-export function PageTitleBanner({
+export async function PageTitleBanner({
   title,
+  description,
   breadcrumb = [],
   actions,
   seed,
   className,
 }: {
   title: string
+  description?: string | null
   breadcrumb?: BreadcrumbItem[]
   /** 제목 옆(모바일에선 아래)에 붙는 버튼 등 — 예: "스킬 관리" 바로가기 */
   actions?: ReactNode
   seed?: string
   className?: string
 }) {
-  const { t } = getT()
   const art = pickArt(seed ?? title)
+  const crumbs = await menuBreadcrumbForRequest(breadcrumb, title)
+  const lede = description?.trim() || null
 
   return (
     <div className={cn("relative overflow-hidden rounded-3xl border bg-muted/30 px-6 py-8 md:px-10 md:py-10", className)}>
@@ -54,30 +56,38 @@ export function PageTitleBanner({
       <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/15" />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <nav
-            aria-label="breadcrumb"
-            className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+          {crumbs.length > 0 ? (
+            <nav
+              aria-label="breadcrumb"
+              className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+            >
+              {crumbs.map((item, index) => {
+                const current = !item.href && index === crumbs.length - 1
+                return (
+                  <span key={`${item.label}-${index}`} className="flex items-center gap-1.5">
+                    {index > 0 ? <ChevronRight className="size-3 opacity-50" aria-hidden /> : null}
+                    {item.href ? (
+                      <Link href={item.href} className="rounded transition-colors hover:text-foreground">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span className={current ? "text-foreground" : undefined}>{item.label}</span>
+                    )}
+                  </span>
+                )
+              })}
+            </nav>
+          ) : null}
+          <h1
+            className={cn(
+              "font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl",
+              crumbs.length > 0 ? "mt-3" : null
+            )}
           >
-            <Link href="/" className="rounded transition-colors hover:text-foreground">
-              {t("common.home")}
-            </Link>
-            {breadcrumb.map((item, index) => (
-              <span key={`${item.label}-${index}`} className="flex items-center gap-1.5">
-                <ChevronRight className="size-3 opacity-50" aria-hidden />
-                {item.href ? (
-                  <Link href={item.href} className="rounded transition-colors hover:text-foreground">
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span className="text-foreground">{item.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
-          <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
             {title}
           </h1>
           <div className="mt-4 h-1 w-10 rounded-full bg-[hsl(var(--lux-cognac))]" aria-hidden />
+          {lede ? <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">{lede}</p> : null}
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
       </div>

@@ -40,6 +40,7 @@ devdeck.profiles
     ├── 1:N  devdeck.game_reviews   UNIQUE (user_id, app_id)
     └── 1:N  devdeck.board_posts
 
+devdeck.member_events            -- signup/withdraw 로그. user_id는 탈퇴 후에도 남김 (FK 없음)
 devdeck.boards 1:N board_posts
 devdeck.boards 1:N menus (optional board_id)
 devdeck.menus parent_id → menus (트리)
@@ -242,6 +243,21 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 
 기존 DB는 `supabase/patch-health-checks.sql`을 SQL Editor에서 실행한다.
 
+### 2.12 `member_events`
+
+회원가입·탈퇴 통계용 이벤트 로그. `profiles`는 `auth.users` CASCADE로 지워지므로, 탈퇴 후에도 집계가 남으려면 별도 테이블이 필요하다. `user_id`는 FK를 걸지 않는다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| event_type | TEXT | `signup` / `withdraw` | |
+| user_id | UUID | nullable, FK 없음 | 탈퇴 후에도 유지 |
+| created_at | timestamptz | NOT NULL | |
+
+`profiles` INSERT 시 `devdeck.record_profile_signup` 트리거가 `signup` 행을 넣는다. 탈퇴는 앱이 서비스 롤로 `withdraw`를 넣은 뒤 `auth.admin.deleteUser`를 호출한다. 관리자 계정은 탈퇴하지 않는다.
+
+기존 DB는 `supabase/patch-member-events.sql`을 SQL Editor에서 실행한다.
+
 ## 3. 인덱스
 
 ```sql
@@ -287,6 +303,8 @@ ON auth.users INSERT
 `SECURITY DEFINER`, `search_path = devdeck, public`.
 이미 있는 유저는 앱의 `ensureProfile` upsert가 `devdeck.profiles`를 만든다.
 
+프로필 INSERT 뒤에는 `devdeck.record_profile_signup`가 `member_events(signup)`을 남긴다. 탈퇴는 앱에서 `withdraw` 이벤트를 넣은 다음 Auth 유저를 삭제한다.
+
 ## 5. RLS
 
 모든 테이블 RLS ENABLE. 앱은 anon/authenticated 키만 쓴다.
@@ -298,6 +316,7 @@ ON auth.users INSERT
 | Policy | 역할 | 명령 | 조건 |
 | --- | --- | --- | --- |
 | profiles_select_own | authenticated | SELECT | `id = auth.uid()` |
+| profiles_select_owner | authenticated | SELECT | `devdeck.is_owner()` |
 | profiles_update_own | authenticated | UPDATE | `id = auth.uid()` |
 | profiles_insert_own | authenticated | INSERT | `id = auth.uid()` (기존 유저 첫 로그인 upsert) |
 
@@ -349,6 +368,14 @@ ON auth.users INSERT
 | service_role_manage | service_role | ALL | true |
 
 anon INSERT 없음. Cron이 service_role 키로만 쓴다.
+
+### 5.7 `member_events`
+
+| Policy | 역할 | 명령 | 조건 |
+| --- | --- | --- | --- |
+| member_events_select_owner | authenticated | SELECT | `devdeck.is_owner()` |
+
+INSERT는 `profiles` 트리거(`SECURITY DEFINER`)와 탈퇴 시 서비스 롤만. 일반 회원 INSERT 정책은 없다.
 
 ## 6. 목표 SQL 스케치
 

@@ -12,10 +12,7 @@ export default async function DesignSystemScreensPage() {
     <div className="mx-auto max-w-5xl space-y-12 pb-16">
       <PageTitleBanner
         title="디자인 시스템 - 화면영역"
-        breadcrumb={[
-          { label: "사이트 관리", href: "/site/menus" },
-          { label: "디자인 시스템" },
-        ]}
+        description="DevDeck 프로젝트의 화면별 컴포넌트 가이드입니다. 각 기능 영역에서 사용하는 컴포넌트들의 구조와 사용법을 설명합니다."
         actions={
           <Button asChild variant="outline" className="rounded-full">
             <Link href="/site/design-system/common">
@@ -26,10 +23,6 @@ export default async function DesignSystemScreensPage() {
       />
 
       <section className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          DevDeck 프로젝트의 화면별 컴포넌트 가이드입니다. 각 기능 영역에서 사용하는 컴포넌트들의
-          구조와 사용법을 설명합니다.
-        </p>
         <div className="flex gap-2">
           <Badge>화면 컴포넌트</Badge>
           <Badge variant="secondary">피처별 분류</Badge>
@@ -537,10 +530,7 @@ export default async function DetailPage({ params }) {
     <div className="mx-auto max-w-5xl space-y-8">
       <PageTitleBanner
         title={item.title}
-        breadcrumb={[
-          { label: "목록", href: "/items" },
-          { label: item.title },
-        ]}
+        breadcrumb={[{ label: item.title }]}
       />
 
       <article>

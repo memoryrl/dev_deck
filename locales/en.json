@@ -35,6 +35,7 @@
     "shortcut": "Shortcuts",
     "admin": "Admin",
     "account": "My account",
+    "mypage": "My page",
     "author": "Author",
     "postedAt": "Posted",
     "totalCount": "{{count}} total",
@@ -168,19 +169,18 @@
     "prompt": {
       "label": "AI Prompt",
       "body": "Save vibe-coding prompts and copy them for reuse.",
-      "cta": "Latest prompts",
-      "public": "Public prompts",
-      "publicNote": "Landing recent list",
-      "home": "Hub home",
+      "cta": "View all prompts",
+      "public": "AI Prompt list",
+      "top": "Featured prompts",
       "manage": "Manage prompts"
     },
     "career": {
       "label": "Career log",
       "body": "Turn projects and skills into a board and blog.",
       "cta": "Career board",
-      "all": "All posts",
-      "recent": "Recent career",
+      "all": "What I've worked on",
       "skills": "Skills",
+      "skillsTop": "Featured skills",
       "manage": "Manage posts & skills"
     },
     "games": {
@@ -190,6 +190,14 @@
       "list": "Game list",
       "featured": "Featured games",
       "manage": "Manage reviews"
+    },
+    "community": {
+      "label": "Community",
+      "body": "Share updates and leave a note on the notice board or free board.",
+      "cta": "View boards",
+      "notice": "Notices",
+      "free": "Free board",
+      "manage": "Manage boards"
     }
   },
   "steam": {
@@ -338,7 +346,18 @@
       "noName": "No name",
       "steamLinked": "Steam linked",
       "commentCount": "{{count}} comments",
-      "lastActivity": "Last activity"
+      "lastActivity": "Last activity",
+      "chartTitle": "Sign-ups and withdrawals",
+      "chartRangeYearly": "Last 5 years",
+      "chartRangeMonthly": "Last 12 months",
+      "chartRangeDaily": "Last 30 days",
+      "chartTotals": "{{signups}} joined · {{withdrawals}} left",
+      "chartUnit": "",
+      "signup": "Sign-ups",
+      "withdraw": "Withdrawals",
+      "periodDaily": "Daily",
+      "periodMonthly": "Monthly",
+      "periodYearly": "Yearly"
     },
     "settings": {
       "title": "Site Settings",
@@ -392,13 +411,42 @@
       "agentRef": "Agent reference"
     }
   },
+  "account": {
+    "title": "My page",
+    "description": "View the information for your signed-in account.",
+    "name": "Name",
+    "email": "Email",
+    "username": "Username",
+    "role": "Role",
+    "provider": "Sign-in method",
+    "providerEmail": "Email",
+    "joinedAt": "Joined",
+    "steamId": "Steam ID",
+    "withdraw": "Delete account",
+    "withdrawHint": "Deleting your account removes your profile. This cannot be undone.",
+    "withdrawConfirm": "Delete your account? This cannot be undone.",
+    "withdrawOwner": "Admin accounts cannot be deleted.",
+    "withdrawError": "Could not delete the account. Please try again."
+  },
   "work": {
     "title": "Career",
-    "lede": "Projects and skills"
+    "lede": "Projects and skills",
+    "topTitle": "Featured skills",
+    "topDescription": "Skills Top 10, ordered the way the admin curated them. An Olympic medal-ceremony topology.",
+    "topEmpty": "No skills yet."
   },
   "games": {
     "title": "Steam library",
-    "lede": "Owned games, playtime, and short reviews. Reading does not require sign-in."
+    "lede": "Owned games, playtime, and short reviews. Reading does not require sign-in.",
+    "topTitle": "Featured games",
+    "topDescription": "Steam Top 10 by playtime. An Olympic medal-ceremony topology.",
+    "topEmpty": "No ranking data yet.",
+    "topLoading": "Preparing the ceremony…"
+  },
+  "prompts": {
+    "topTitle": "Featured prompts",
+    "topDescription": "AI Prompt Top 10, most recent first. An Olympic medal-ceremony topology.",
+    "topEmpty": "No public prompts yet."
   },
   "date": {
     "present": "Present"

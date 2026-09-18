@@ -47,7 +47,7 @@ async function BoardHeaderAndSettings({ id }: { id: string }) {
     <>
       <PageTitleBanner
         title={board.name}
-        breadcrumb={[{ label: "게시판", href: "/site/boards" }]}
+        breadcrumb={[{ label: board.name }]}
         actions={
           <>
             <Badge variant="secondary">{kindLabel(board.kind)}</Badge>

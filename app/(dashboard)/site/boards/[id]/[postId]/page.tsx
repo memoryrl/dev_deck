@@ -21,7 +21,7 @@ export default function SiteBoardPostPage({
         <NeighborsPager boardId={params.id} postId={params.postId} listHref={listHref} />
       </Suspense>
       <Suspense
-        fallback={<PageTitleBanner title="글 수정" breadcrumb={[{ label: "게시판", href: "/site/boards" }]} />}
+        fallback={<PageTitleBanner title="글 수정" breadcrumb={[{ label: "글 수정" }]} />}
       >
         <BoardPostTitleSection boardId={params.id} />
       </Suspense>
@@ -63,8 +63,8 @@ async function BoardPostTitleSection({ boardId }: { boardId: string }) {
     <PageTitleBanner
       title="글 수정"
       breadcrumb={[
-        { label: "게시판", href: "/site/boards" },
         { label: board?.name ?? "게시판", href: `/site/boards/${boardId}` },
+        { label: "글 수정" },
       ]}
     />
   )

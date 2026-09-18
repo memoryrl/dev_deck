@@ -39,8 +39,7 @@ export default async function PublicBoardPage({
 
   return (
     <PublicContainer>
-      <PageTitleBanner title={board.name} />
-      {board.description ? <p className="mt-6 text-muted-foreground">{board.description}</p> : null}
+      <PageTitleBanner title={board.name} description={board.description} />
 
       <div className="mt-8 space-y-4">
         {canWrite ? (
@@ -107,7 +106,7 @@ async function BoardPostList({
       paged={paged}
       empty="아직 글이 없습니다."
       items={paged.rows}
-      layout={board.kind === "prompts" ? "cards" : "list"}
+      layout={board.kind === "prompts" ? "cards" : board.slug === "skills" ? "feed" : "list"}
       endAction={endAction}
       composer={composer}
     />
@@ -123,6 +122,7 @@ async function listGenericBoardPage(boardId: string, slug: string, page: number,
       title: post.title,
       createdAt: post.created_at,
       meta: post.is_published ? null : "비공개",
+      excerpt: post.excerpt,
     })),
   } satisfies PagedResult<PostListRow>
 }

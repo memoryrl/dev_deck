@@ -58,7 +58,7 @@ BEGIN
 
   INSERT INTO devdeck.menus (parent_id, label, href, location, view_role, is_active, sort_order) VALUES
     (id_games, '게임 목록', '/games', 'header', 'visitor', true, 0),
-    (id_games, '추천 게임', '/#games', 'header', 'visitor', true, 10),
+    (id_games, '추천 게임', '/games/top', 'header', 'visitor', true, 10),
     (id_games, '리뷰 관리', '/steam', 'header', 'owner', true, 20);
 
   INSERT INTO devdeck.menus (label, href, location, view_role, is_active, sort_order)

@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import type { User } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { cache } from "react"
+import { usernameFromAuth } from "@/lib/auth/session-user"
 import { isInvalidRefreshError } from "@/lib/supabase/auth-error"
 
 export function createClient() {
@@ -63,7 +64,7 @@ export async function upsertProfile(user: User) {
         (user.user_metadata.name as string | undefined) ??
         null,
       avatar_url: (user.user_metadata.avatar_url as string | undefined) ?? null,
-      username: (user.user_metadata.user_name as string | undefined) ?? null,
+      username: usernameFromAuth(user),
     },
     { onConflict: "id" }
   )

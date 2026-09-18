@@ -49,7 +49,7 @@ function CareerArticle({ post }: { post: CareerPost }) {
   const { t } = getT()
   return (
     <>
-      <PageTitleBanner title={post.title} breadcrumb={[{ label: "CareerLog", href: "/work" }]} className="mt-6" />
+      <PageTitleBanner title={post.title} className="mt-6" />
       <p className="mt-4 text-sm text-muted-foreground">
         {[post.company, post.role, formatPeriod(post.period_start, post.period_end, t("date.present"))]
           .filter(Boolean)

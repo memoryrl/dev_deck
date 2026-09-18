@@ -27,10 +27,11 @@ const SCREEN_ROUTES: { pattern: RegExp; label: string }[] = [
   { pattern: /^\/status\/\d{3}\/?$/, label: "오류 페이지" },
   { pattern: /^\/opensource\/?$/, label: "오픈소스 사용정보" },
   { pattern: /^\/login\/?$/, label: "로그인" },
-  { pattern: /^\/account\/?$/, label: "계정" },
+  { pattern: /^\/account\/?$/, label: "마이페이지" },
   { pattern: /^\/work\/?$/, label: "커리어 목록" },
   { pattern: /^\/work\/[^/]+\/?$/, label: "커리어 상세" },
   { pattern: /^\/games\/?$/, label: "게임 목록" },
+  { pattern: /^\/games\/top\/?$/, label: "추천 게임" },
   { pattern: /^\/games\/\d+\/?$/, label: "게임 상세" },
   { pattern: /^\/p\/[^/]+\/?$/, label: "프롬프트 상세" },
   { pattern: /^\/b\/prompts\/?$/, label: "프롬프트 목록" },
@@ -53,6 +54,7 @@ const SCREEN_ROUTES: { pattern: RegExp; label: string }[] = [
   { pattern: /^\/site\/comments\/?$/, label: "댓글 관리" },
   { pattern: /^\/site\/menus\/?$/, label: "메뉴" },
   { pattern: /^\/site\/uploads\/?$/, label: "업로드" },
+  { pattern: /^\/site\/members\/?$/, label: "회원 관리" },
   { pattern: /^\/site\/login-history\/?$/, label: "접속 이력" },
 ]
 

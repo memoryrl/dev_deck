@@ -3,7 +3,10 @@ import type { MenuItem, NavNode } from "@/types/menu"
 
 export function resolveMenuHref(item: Pick<MenuItem, "href" | "boards">) {
   if (item.boards?.slug) return boardPath(item.boards.slug)
-  return item.href?.trim() || null
+  const href = item.href?.trim() || null
+  // 랜딩 해시는 같은 페이지라 클릭이 무시됨 — Top 10 시상식 화면으로 보낸다.
+  if (href === "/#games") return "/games/top"
+  return href
 }
 
 export function treeMenus(items: MenuItem[]): NavNode[] {

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Info } from "lucide-react"
 import { OssBackButton } from "@/components/oss/back-button"
 import { OssLicenseTable } from "@/components/oss/license-table"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
@@ -25,16 +24,11 @@ export default function OpenSourcePage() {
 
   return (
     <PublicContainer>
-      <PageTitleBanner title={t("oss.title")} />
+      <PageTitleBanner title={t("oss.title")} description={t("oss.lede")} />
 
       <div className="mt-8">
         <OssBackButton label={t("oss.goBack")} />
       </div>
-
-      <p className="mt-6 flex items-start gap-2.5 rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-        <Info className="mt-0.5 size-4 shrink-0 text-[hsl(var(--lux-cognac))]" aria-hidden />
-        <span>{t("oss.lede")}</span>
-      </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
         <OssLicenseTable title={t("oss.frontend")} packages={FRONTEND_PACKAGES} labels={labels} />

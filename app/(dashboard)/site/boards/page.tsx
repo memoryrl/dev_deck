@@ -13,11 +13,10 @@ import { ensureProfile } from "@/lib/supabase/server"
 export default function SiteBoardsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <PageTitleBanner title="게시판" />
-      <p className="text-sm text-muted-foreground">
-        PromptKit·CareerLog·Steam 시스템 게시판과 범용 게시판을 함께 관리합니다. 읽기 권한은
-        방문객·회원·관리자 단계입니다.
-      </p>
+      <PageTitleBanner
+        title="게시판"
+        description="PromptKit·CareerLog·Steam 시스템 게시판과 범용 게시판을 함께 관리합니다. 읽기 권한은 방문객·회원·관리자 단계입니다."
+      />
       <Card>
         <h2 className="mb-4 font-display text-xl font-bold">새 게시판</h2>
         <BoardForm />

@@ -37,7 +37,7 @@ export function PostList({
   pathname?: string
   searchQuery?: string
   extraParams?: Record<string, string | number | undefined>
-  layout?: "list" | "cards"
+  layout?: "list" | "cards" | "feed"
   endAction?: React.ReactNode
   composer?: React.ReactNode
 }) {
@@ -93,7 +93,80 @@ export function PostList({
         </p>
       ) : null}
 
-      {layout === "cards" ? (
+      {layout === "feed" ? (
+        rows.length === 0 ? (
+          <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
+            {searchQuery.trim() ? t("list.emptySearch") : emptyText}
+          </p>
+        ) : (
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-8",
+              displayCount || searchable ? "mt-5" : null
+            )}
+          >
+            {[0, 1].map((col) => (
+              <div key={col} className={cn("flex flex-col gap-6", col === 1 && "sm:mt-14")}>
+                {rows
+                  .map((item, index) => ({ item, index }))
+                  .filter((_, i) => i % 2 === col)
+                  .map(({ item, index }) => {
+                    const author = item.author?.trim() || authorName
+                    const number = paged
+                      ? paged.total - ((paged.page - 1) * paged.pageSize + index)
+                      : rows.length - index
+                    const thumb = item.thumbnailUrl?.trim()
+                    const excerpt = item.excerpt?.trim()
+                    return (
+                      <Link
+                        key={`${item.href}-${index}`}
+                        href={item.href}
+                        className="group block overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]"
+                      >
+                        {thumb ? (
+                          <div className="aspect-[16/9] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={thumb}
+                              alt=""
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                            />
+                          </div>
+                        ) : null}
+                        <div className="p-5">
+                          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="font-display tabular-nums text-[hsl(var(--lux-cognac))]">
+                              {String(number).padStart(2, "0")}
+                            </span>
+                            {item.meta ? (
+                              <>
+                                <span className="text-foreground/20">·</span>
+                                <span className="truncate">{item.meta}</span>
+                              </>
+                            ) : null}
+                          </div>
+                          <h3 className="mt-2 font-display text-lg font-bold leading-snug tracking-tight group-hover:underline">
+                            {item.title}
+                          </h3>
+                          {excerpt ? (
+                            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                              {excerpt}
+                            </p>
+                          ) : null}
+                          <p className="mt-4 text-xs text-muted-foreground">
+                            {author}
+                            <span className="mx-1.5 text-foreground/20">·</span>
+                            {formatBoardDateTime(item.createdAt, locale)}
+                          </p>
+                        </div>
+                      </Link>
+                    )
+                  })}
+              </div>
+            ))}
+          </div>
+        )
+      ) : layout === "cards" ? (
         rows.length === 0 ? (
           <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}

@@ -31,6 +31,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  request.headers.set("x-pathname", path)
+
   let csp: string | null = null
   if (process.env.NODE_ENV === "production") {
     const nonce = Buffer.from(crypto.randomUUID()).toString("base64")

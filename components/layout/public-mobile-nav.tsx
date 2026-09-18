@@ -142,13 +142,13 @@ export function PublicMobileNav({
               <AdminMenuGroups groups={adminMenus} onNavigate={onClose} />
             </div>
           ) : null}
-          {account && !account.isOwner ? (
+          {account ? (
             <Link
               href="/account"
               className="mt-2 flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
               onClick={onClose}
             >
-              {t("common.account")}
+              {t("common.mypage")}
             </Link>
           ) : null}
         </nav>

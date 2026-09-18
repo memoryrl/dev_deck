@@ -27,10 +27,7 @@ export default async function DashboardHomePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <PageTitleBanner
-        title={t("admin.dashboard.title")}
-        breadcrumb={[{ label: t("nav.dashboard") }]}
-      />
+      <PageTitleBanner title={t("admin.dashboard.title")} />
 
       <Suspense fallback={<StatsSkeleton />}>
         <DashboardContent />

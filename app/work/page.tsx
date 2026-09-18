@@ -18,8 +18,7 @@ export default function WorkBoardPage({
 
   return (
     <PublicContainer>
-      <PageTitleBanner title={t("work.title")} />
-      <p className="mt-6 text-muted-foreground">{t("work.lede")}</p>
+      <PageTitleBanner title={t("work.title")} description={t("work.lede")} />
       <div className="mt-8">
         <Suspense fallback={<ListSkeleton />}>
           <WorkPostList page={page} q={q} empty={t("list.emptyPublic")} />
@@ -34,6 +33,7 @@ async function WorkPostList({ page, q, empty }: { page: number; q: string; empty
   return (
     <PostList
       searchable
+      layout="feed"
       pathname="/work"
       searchQuery={q}
       paged={posts}
@@ -44,6 +44,7 @@ async function WorkPostList({ page, q, empty }: { page: number; q: string; empty
         createdAt: post.created_at,
         author: post.company,
         meta: post.post_type,
+        excerpt: post.excerpt,
       }))}
     />
   )

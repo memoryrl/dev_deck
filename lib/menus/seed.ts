@@ -48,7 +48,7 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     sort_order: 20,
     children: [
       { label: "게임 목록", href: "/games", view_role: "visitor", sort_order: 0 },
-      { label: "추천 게임", href: "/#games", view_role: "visitor", sort_order: 10 },
+      { label: "추천 게임", href: "/games/top", view_role: "visitor", sort_order: 10 },
       { label: "리뷰 관리", href: "/steam", view_role: "owner", sort_order: 20 },
     ],
   },

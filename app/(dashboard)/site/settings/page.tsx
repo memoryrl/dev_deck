@@ -18,15 +18,8 @@ export default async function SiteSettingsPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <PageTitleBanner
         title={t("admin.settings.title")}
-        breadcrumb={[
-          { label: t("nav.dashboard"), href: "/site/dashboard" },
-          { label: t("admin.settings.title") },
-        ]}
+        description={t("admin.settings.description")}
       />
-
-      <p className="text-sm text-muted-foreground">
-        {t("admin.settings.description")}
-      </p>
 
       <form action={saveSiteSettings} className="space-y-8">
         {/* 기본 정보 */}
