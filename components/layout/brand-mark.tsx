@@ -36,10 +36,13 @@ function DeckGlyph({ className }: { className?: string }) {
 
 export function BrandMark({
   wordmark = true,
+  subtitle,
   className,
   wordmarkClassName,
 }: {
   wordmark?: boolean
+  /** 워드마크 아래 작은 부연 제목 — 헤더처럼 공간이 있는 곳에서만 넘긴다 */
+  subtitle?: string
   className?: string
   wordmarkClassName?: string
 }) {
@@ -49,13 +52,20 @@ export function BrandMark({
         <DeckGlyph className="size-5" />
       </span>
       {wordmark ? (
-        <span
-          className={cn(
-            "font-display text-[1.05rem] font-bold tracking-tight",
-            wordmarkClassName
-          )}
-        >
-          DevDeck
+        <span className="flex flex-col leading-none">
+          <span
+            className={cn(
+              "font-display text-[1.05rem] font-bold leading-tight tracking-tight",
+              wordmarkClassName
+            )}
+          >
+            DevDeck
+          </span>
+          {subtitle ? (
+            <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/70">
+              {subtitle}
+            </span>
+          ) : null}
         </span>
       ) : null}
     </span>

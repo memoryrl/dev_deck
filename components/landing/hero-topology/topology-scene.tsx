@@ -305,13 +305,13 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
   // 로봇청소기가 실제로 우회해야 할 고정 소품들의 위치 — 아래 JSX에 그대로 쓰는
   // 좌표와 같은 값이어야 하므로 여기서 한 번만 정의해서 같이 쓴다.
   const plantPos: [number, number, number] = [floorWidth / 2 - 0.5, 0, LEAD_Z - 0.1]
-  // 로봇청소기 순찰 경로(inset 0.5)와 정확히 겹치지 않도록 네 모서리 모두
-  // 그보다 살짝 더 깊은 inset(0.4)을 쓴다 — 거리 0이 되는 특이점을 피한다.
+  // 이 방은 벽이 두 개뿐이다(뒷벽=TV, 왼쪽 옆벽=화이트보드·책장) — 나머지 두
+  // 모서리(오른쪽 뒤·오른쪽 앞)는 등지고 설 벽이 없어 허허벌판에 놓인 것처럼
+  // 보였다(+ 오른쪽 뒤는 탕비 공간과도 붙어 있었다). 실제 벽이 있는 두 자리,
+  // 그것도 TV·화이트보드·책장·탕비실과 안 겹치는 빈 구간에만 둔다.
   const purifierPositions: [number, number, number][] = [
-    [floorMinX + 0.4, 0, floorMinZ + 0.4],
-    [floorMinX + floorWidth - 0.4, 0, floorMinZ + 0.4],
-    [floorMinX + 0.4, 0, floorMinZ + floorDepth - 0.4],
-    [floorMinX + floorWidth - 0.4, 0, floorMinZ + floorDepth - 0.4],
+    [floorMinX + 0.4, 0, floorMinZ + 0.4], // 뒷벽 왼쪽 끝 — TV(x≈-0.7)에서 충분히 떨어진 구석
+    [floorMinX + 0.4, 0, floorMinZ + floorDepth - 0.4], // 옆벽 앞쪽 끝 — 화이트보드·책장에서 먼 구석
   ]
   // 팀장 자리(LEAD_Z) 옆, TV에서 봤을 때 왼쪽 벽(sideWallX)에 붙는 4단 책장
   const bookshelfPos: [number, number, number] = [sideWallX + WALL_T / 2 + 0.14, 0, LEAD_Z]
@@ -481,7 +481,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         obstacles={vacuumObstacles}
       />
 
-      {/* 공기청정기 4대 — 네 모서리마다 하나씩 */}
+      {/* 공기청정기 2대 — 실제 벽이 있고 다른 가구와 안 겹치는 두 구석에만 */}
       {purifierPositions.map((pos, index) => (
         <TopologyAirPurifier key={index} position={pos} />
       ))}

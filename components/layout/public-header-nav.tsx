@@ -242,7 +242,7 @@ export function PublicHeaderNav({
         <PhotoSkin src={photo} scene={scene} />
         <div className="relative z-10 mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
           <Link href="/" onClick={() => setOpen(null)}>
-            <BrandMark />
+            <BrandMark subtitle={t("landing.kicker")} />
           </Link>
           <nav className="hidden items-center justify-end gap-1 lg:flex">
             {nodes.map((menu) => {
@@ -424,7 +424,7 @@ export function PublicHeaderNav({
       </div>
       {activeNode ? (
         <div className="invisible px-5 py-3" aria-hidden>
-          <BrandMark />
+          <BrandMark subtitle={t("landing.kicker")} />
         </div>
       ) : null}
       <PublicMobileNav
