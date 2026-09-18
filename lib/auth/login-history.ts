@@ -163,3 +163,97 @@ export async function listPageViews(visitId: string): Promise<PageViewEntry[]> {
   if (error) return []
   return (data as PageViewEntry[]) ?? []
 }
+
+export type VisitStatsPeriod = "yearly" | "monthly" | "daily"
+
+export type VisitStatsEntry = {
+  label: string
+  count: number
+}
+
+export async function getVisitStats(period: VisitStatsPeriod): Promise<VisitStatsEntry[]> {
+  if (!isSupabaseConfigured()) return []
+  const supabase = createClient()
+
+  const now = new Date()
+  let startDate: Date
+  let dateFormat: (date: Date) => string
+  let points: number
+
+  switch (period) {
+    case "yearly":
+      startDate = new Date(now.getFullYear() - 4, 0, 1)
+      dateFormat = (d) => `${d.getFullYear()}년`
+      points = 5
+      break
+    case "monthly":
+      startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+      dateFormat = (d) => `${d.getMonth() + 1}월`
+      points = 12
+      break
+    case "daily":
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29)
+      dateFormat = (d) => `${d.getMonth() + 1}/${d.getDate()}`
+      points = 30
+      break
+  }
+
+  const { data, error } = await supabase
+    .from("login_history")
+    .select("created_at")
+    .gte("created_at", startDate.toISOString())
+    .order("created_at", { ascending: true })
+
+  if (error) return []
+
+  const rows = (data as { created_at: string }[]) ?? []
+  const counts: Record<string, number> = {}
+
+  for (const row of rows) {
+    const date = new Date(row.created_at)
+    let key: string
+
+    switch (period) {
+      case "yearly":
+        key = `${date.getFullYear()}`
+        break
+      case "monthly":
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+        break
+      case "daily":
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+        break
+    }
+
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+
+  const result: VisitStatsEntry[] = []
+
+  for (let i = 0; i < points; i++) {
+    let pointDate: Date
+    let key: string
+
+    switch (period) {
+      case "yearly":
+        pointDate = new Date(now.getFullYear() - (points - 1 - i), 0, 1)
+        key = `${pointDate.getFullYear()}`
+        break
+      case "monthly":
+        pointDate = new Date(now.getFullYear(), now.getMonth() - (points - 1 - i), 1)
+        key = `${pointDate.getFullYear()}-${String(pointDate.getMonth() + 1).padStart(2, "0")}`
+        break
+      case "daily":
+        pointDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (points - 1 - i))
+        key = `${pointDate.getFullYear()}-${String(pointDate.getMonth() + 1).padStart(2, "0")}-${String(pointDate.getDate()).padStart(2, "0")}`
+        break
+    }
+
+    result.push({
+      label: dateFormat(pointDate),
+      count: counts[key] ?? 0,
+    })
+  }
+
+  return result
+}
