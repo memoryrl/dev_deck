@@ -27,22 +27,22 @@ export default function MembersPage({
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <PageTitleBanner
-        title="회원 관리"
+        title={t("admin.members.title")}
         breadcrumb={[
-          { label: "사이트 관리", href: "/site/dashboard" },
-          { label: "회원 관리" },
+          { label: t("nav.dashboard"), href: "/site/dashboard" },
+          { label: t("admin.members.title") },
         ]}
       />
 
       <p className="text-sm text-muted-foreground">
-        사이트에 가입한 회원 목록입니다. 회원의 활동 내역을 확인할 수 있습니다.
+        {t("admin.members.description")}
       </p>
 
       <form action="/site/members" className="flex flex-wrap items-center gap-2">
         <Input
           name="q"
           defaultValue={q}
-          placeholder="이름 또는 사용자명 검색"
+          placeholder={t("admin.members.searchPlaceholder")}
           className="h-10 min-w-[12rem] flex-1 rounded-full shadow-none"
           aria-label={t("common.searchPlaceholder")}
         />
@@ -71,10 +71,12 @@ async function MemberList({ page, q }: { page: number; q: string }) {
 
   return (
     <div>
-      <h2 className="font-display text-xl font-bold">총 {result.total}명</h2>
+      <h2 className="font-display text-xl font-bold">
+        {t("admin.members.total", { count: result.total })}
+      </h2>
       {result.total === 0 ? (
         <p className="mt-5 text-sm text-muted-foreground">
-          {searched ? t("list.emptySearch") : "아직 가입한 회원이 없습니다."}
+          {searched ? t("list.emptySearch") : t("admin.members.empty")}
         </p>
       ) : (
         <>
@@ -95,7 +97,8 @@ async function MemberList({ page, q }: { page: number; q: string }) {
 }
 
 function MemberCard({ member, locale }: { member: MemberListEntry; locale: AppLocale }) {
-  const displayName = member.full_name || member.username || "이름 없음"
+  const { t } = getT()
+  const displayName = member.full_name || member.username || t("admin.members.noName")
 
   return (
     <li className="rounded-xl border bg-white p-5 dark:bg-card">
@@ -124,15 +127,15 @@ function MemberCard({ member, locale }: { member: MemberListEntry; locale: AppLo
           <div className="mt-2 flex flex-wrap gap-2">
             {member.steam_id && (
               <Badge variant="outline" className="text-xs">
-                Steam 연동
+                {t("admin.members.steamLinked")}
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">
-              댓글 {member.commentCount}개
+              {t("admin.members.commentCount", { count: member.commentCount })}
             </Badge>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            마지막 활동: {formatBoardDateTime(member.updated_at, locale)}
+            {t("admin.members.lastActivity")}: {formatBoardDateTime(member.updated_at, locale)}
           </p>
         </div>
       </div>

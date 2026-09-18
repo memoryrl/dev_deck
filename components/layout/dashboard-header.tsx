@@ -3,18 +3,67 @@
 import Link from "next/link"
 import { useEffect, useId, useState } from "react"
 import { usePathname } from "next/navigation"
-import { Home, LogOut, Menu, X } from "lucide-react"
+import {
+  Briefcase,
+  Gamepad2,
+  History,
+  Home,
+  LayoutDashboard,
+  LayoutList,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Monitor,
+  Palette,
+  Settings,
+  Sparkles,
+  Upload,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { signOut } from "@/app/(dashboard)/promptkit/actions"
-import { ADMIN_NAV } from "@/components/layout/admin-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import { cn } from "@/lib/utils"
 
-export function DashboardHeader({ account }: { account: SessionUserView }) {
+export type AdminMenuItemForHeader = {
+  id: string
+  label: string
+  href: string
+  iconName: string
+}
+
+type Props = {
+  account: SessionUserView
+  menus?: AdminMenuItemForHeader[]
+}
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Sparkles,
+  Briefcase,
+  Gamepad2,
+  LayoutList,
+  MessageSquare,
+  Menu,
+  Upload,
+  Users,
+  History,
+  Settings,
+  Monitor,
+  Palette,
+}
+
+function getIconComponent(name: string): LucideIcon {
+  return ICON_MAP[name] ?? LayoutDashboard
+}
+
+export function DashboardHeader({ account, menus = [] }: Props) {
   const [drawer, setDrawer] = useState(false)
   const pathname = usePathname()
   const titleId = useId()
@@ -105,12 +154,13 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
               <Home className="size-4 opacity-70" />
               {t("common.siteHome")}
             </Link>
-            {ADMIN_NAV.map((item) => {
-              const Icon = item.icon
+            {menus.map((item) => {
+              const Icon = getIconComponent(item.iconName)
               const active = pathname.startsWith(item.href)
+              const label = t(item.label) || item.label
               return (
                 <Link
-                  key={item.href}
+                  key={item.id}
                   href={item.href}
                   className={cn(
                     "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold",
@@ -119,7 +169,7 @@ export function DashboardHeader({ account }: { account: SessionUserView }) {
                   onClick={() => setDrawer(false)}
                 >
                   <Icon className="size-4 opacity-70" />
-                  {t(item.labelKey)}
+                  {label}
                 </Link>
               )
             })}

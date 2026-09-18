@@ -32,27 +32,28 @@ async function refreshSystemStatus() {
 
 export default async function SystemStatusPage() {
   await requireOwner()
+  const { t } = getT()
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <PageTitleBanner
-        title="시스템 상태"
+        title={t("admin.system.title")}
         breadcrumb={[
-          { label: "사이트 관리", href: "/site/dashboard" },
-          { label: "시스템 상태" },
+          { label: t("nav.dashboard"), href: "/site/dashboard" },
+          { label: t("admin.system.title") },
         ]}
         actions={
           <form action={refreshSystemStatus}>
             <Button type="submit" variant="outline" className="rounded-full">
               <RefreshCw className="mr-2 size-4" />
-              새로고침
+              {t("admin.system.refresh")}
             </Button>
           </form>
         }
       />
 
       <p className="text-sm text-muted-foreground">
-        사이트 시스템의 현재 상태를 확인합니다.
+        {t("admin.system.description")}
       </p>
 
       <Suspense fallback={<SystemStatusSkeleton />}>
@@ -63,7 +64,7 @@ export default async function SystemStatusPage() {
 }
 
 async function SystemStatusContent() {
-  const { locale } = getT()
+  const { t, locale } = getT()
   const [healthCheck, latestLog] = await Promise.all([
     runSupabaseHealthCheck(),
     getLatestHealthLog(),
@@ -87,13 +88,13 @@ async function SystemStatusContent() {
           )}
           <div>
             <h2 className="font-display text-2xl font-bold">
-              {healthCheck.ok ? "시스템 정상" : "시스템 이상 감지"}
+              {healthCheck.ok ? t("admin.system.systemNormal") : t("admin.system.systemError")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              마지막 확인: {formatBoardDateTime(healthCheck.checkedAt, locale)}
+              {t("admin.system.lastChecked")}: {formatBoardDateTime(healthCheck.checkedAt, locale)}
             </p>
             <p className="text-sm text-muted-foreground">
-              응답 시간: {healthCheck.durationMs}ms
+              {t("admin.system.responseTime")}: {healthCheck.durationMs}ms
             </p>
           </div>
         </div>
@@ -102,101 +103,125 @@ async function SystemStatusContent() {
       {/* 서비스별 상태 */}
       <div className="grid gap-4 sm:grid-cols-2">
         <StatusCard
-          title="Supabase Auth"
+          title={t("admin.system.supabaseAuth")}
           icon={Server}
           status={healthCheck.auth?.ok ? "ok" : "error"}
           details={[
-            { label: "상태", value: healthCheck.auth?.ok ? "정상" : "오류" },
-            { label: "HTTP 상태", value: String(healthCheck.auth?.status ?? "N/A") },
+            { label: t("admin.system.status"), value: healthCheck.auth?.ok ? t("admin.system.normal") : t("admin.system.error") },
+            { label: t("admin.system.httpStatus"), value: String(healthCheck.auth?.status ?? "N/A") },
           ]}
         />
         <StatusCard
-          title="Supabase Database"
+          title={t("admin.system.supabaseDb")}
           icon={Database}
           status={healthCheck.db?.ok ? "ok" : "error"}
           details={[
-            { label: "상태", value: healthCheck.db?.ok ? "정상" : "오류" },
-            { label: "에러", value: healthCheck.db?.error ?? "없음" },
+            { label: t("admin.system.status"), value: healthCheck.db?.ok ? t("admin.system.normal") : t("admin.system.error") },
+            { label: t("admin.system.error"), value: healthCheck.db?.error ?? t("admin.system.noError") },
           ]}
         />
       </div>
 
       {/* 마지막 헬스체크 로그 */}
       {latestLog && (
-        <div className="rounded-xl border bg-white p-6 dark:bg-card">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-display text-lg font-bold">
-              <Clock className="size-5" />
-              마지막 정기 헬스체크
-            </h3>
-            {isStale && (
-              <Badge variant="destructive">오래됨</Badge>
-            )}
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">확인 시간</span>
-              <span>{formatBoardDateTime(latestLog.checked_at, locale)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">상태</span>
-              <span>{latestLog.ok ? "정상" : "오류"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">응답 시간</span>
-              <span>{latestLog.duration_ms ?? "N/A"}ms</span>
-            </div>
-            {latestLog.error_message && (
-              <div className="mt-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                {latestLog.error_message}
-              </div>
-            )}
-          </div>
-        </div>
+        <HealthLogSection latestLog={latestLog} isStale={isStale} />
       )}
 
       {/* 환경 정보 */}
-      <div className="rounded-xl border bg-white p-6 dark:bg-card">
-        <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
-          <HardDrive className="size-5" />
-          환경 정보
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Node.js 버전</span>
-            <span className="font-mono">{process.version}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">환경</span>
-            <span className="font-mono">{process.env.NODE_ENV}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Supabase URL</span>
-            <span className="truncate font-mono text-xs">
-              {process.env.NEXT_PUBLIC_SUPABASE_URL ? "설정됨" : "미설정"}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Service Role Key</span>
-            <span className="font-mono">
-              {process.env.SUPABASE_SERVICE_ROLE_KEY ? "설정됨" : "미설정"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <EnvironmentInfo />
 
       {/* 에러 메시지 */}
       {healthCheck.error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-900/20">
-          <h3 className="mb-2 flex items-center gap-2 font-semibold text-red-700 dark:text-red-400">
-            <AlertCircle className="size-5" />
-            오류 상세
-          </h3>
-          <pre className="whitespace-pre-wrap font-mono text-sm text-red-600 dark:text-red-400">
-            {healthCheck.error}
-          </pre>
-        </div>
+        <ErrorDetail error={healthCheck.error} />
       )}
+    </div>
+  )
+}
+
+function HealthLogSection({ latestLog, isStale }: { latestLog: HealthLogRow; isStale: boolean }) {
+  const { t, locale } = getT()
+
+  return (
+    <div className="rounded-xl border bg-white p-6 dark:bg-card">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+          <Clock className="size-5" />
+          {t("admin.system.lastHealthCheck")}
+        </h3>
+        {isStale && (
+          <Badge variant="destructive">{t("admin.system.stale")}</Badge>
+        )}
+      </div>
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("admin.system.checkTime")}</span>
+          <span>{formatBoardDateTime(latestLog.checked_at, locale)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("admin.system.status")}</span>
+          <span>{latestLog.ok ? t("admin.system.normal") : t("admin.system.error")}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("admin.system.responseTime")}</span>
+          <span>{latestLog.duration_ms ?? "N/A"}ms</span>
+        </div>
+        {latestLog.error_message && (
+          <div className="mt-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            {latestLog.error_message}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function EnvironmentInfo() {
+  const { t } = getT()
+
+  return (
+    <div className="rounded-xl border bg-white p-6 dark:bg-card">
+      <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+        <HardDrive className="size-5" />
+        {t("admin.system.envInfo")}
+      </h3>
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("admin.system.nodeVersion")}</span>
+          <span className="font-mono">{process.version}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("admin.system.environment")}</span>
+          <span className="font-mono">{process.env.NODE_ENV}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Supabase URL</span>
+          <span className="truncate font-mono text-xs">
+            {process.env.NEXT_PUBLIC_SUPABASE_URL ? t("admin.system.configured") : t("admin.system.notConfigured")}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Service Role Key</span>
+          <span className="font-mono">
+            {process.env.SUPABASE_SERVICE_ROLE_KEY ? t("admin.system.configured") : t("admin.system.notConfigured")}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ErrorDetail({ error }: { error: string }) {
+  const { t } = getT()
+
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-900/20">
+      <h3 className="mb-2 flex items-center gap-2 font-semibold text-red-700 dark:text-red-400">
+        <AlertCircle className="size-5" />
+        {t("admin.system.errorDetail")}
+      </h3>
+      <pre className="whitespace-pre-wrap font-mono text-sm text-red-600 dark:text-red-400">
+        {error}
+      </pre>
     </div>
   )
 }

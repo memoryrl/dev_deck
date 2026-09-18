@@ -1,12 +1,14 @@
 import type { AccessRole } from "@/lib/access"
 
-export type MenuLocation = "header" | "footer"
+export type MenuLocation = "header" | "footer" | "admin"
 
 export type MenuItem = {
   id: string
   parent_id: string | null
   board_id: string | null
   label: string
+  label_key: string | null
+  icon: string | null
   href: string | null
   location: MenuLocation
   view_role: AccessRole

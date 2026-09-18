@@ -23,12 +23,13 @@ import { getT } from "@/lib/i18n/dictionary"
 
 export default async function DashboardHomePage() {
   await requireOwner()
+  const { t } = getT()
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageTitleBanner
-        title="대시보드"
-        breadcrumb={[{ label: "사이트 관리" }]}
+        title={t("admin.dashboard.title")}
+        breadcrumb={[{ label: t("nav.dashboard") }]}
       />
 
       <Suspense fallback={<StatsSkeleton />}>
@@ -43,7 +44,7 @@ async function DashboardContent() {
     getDashboardStats(),
     getRecentActivity(8),
   ])
-  const { locale } = getT()
+  const { t, locale } = getT()
 
   return (
     <div className="space-y-8">
@@ -51,25 +52,25 @@ async function DashboardContent() {
       <section>
         <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
           <TrendingUp className="size-5" />
-          방문자 통계
+          {t("admin.dashboard.visitorStats")}
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard
-            label="오늘"
+            label={t("admin.dashboard.today")}
             value={stats.totalVisitsToday}
             icon={Eye}
             color="text-green-600"
             bgColor="bg-green-50 dark:bg-green-950/30"
           />
           <StatCard
-            label="최근 7일"
+            label={t("admin.dashboard.week")}
             value={stats.totalVisitsWeek}
             icon={Eye}
             color="text-blue-600"
             bgColor="bg-blue-50 dark:bg-blue-950/30"
           />
           <StatCard
-            label="최근 30일"
+            label={t("admin.dashboard.month")}
             value={stats.totalVisitsMonth}
             icon={Eye}
             color="text-purple-600"
@@ -82,29 +83,29 @@ async function DashboardContent() {
       <section>
         <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
           <Activity className="size-5" />
-          콘텐츠 현황
+          {t("admin.dashboard.contentStatus")}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="게시글"
+            label={t("admin.dashboard.posts")}
             value={stats.totalPosts}
             icon={FileText}
             href="/site/boards"
           />
           <StatCard
-            label="댓글"
+            label={t("admin.dashboard.comments")}
             value={stats.totalComments}
             icon={MessageSquare}
             href="/site/comments"
           />
           <StatCard
-            label="프롬프트"
+            label={t("admin.dashboard.prompts")}
             value={stats.totalPrompts}
             icon={Sparkles}
             href="/promptkit"
           />
           <StatCard
-            label="업로드"
+            label={t("admin.dashboard.uploads")}
             value={stats.totalUploads}
             icon={Upload}
             href="/site/uploads"
@@ -116,11 +117,11 @@ async function DashboardContent() {
       <section>
         <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
           <Users className="size-5" />
-          회원 현황
+          {t("admin.dashboard.memberStatus")}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <StatCard
-            label="가입 회원"
+            label={t("admin.dashboard.members")}
             value={stats.totalProfiles}
             icon={Users}
             href="/site/members"
@@ -133,14 +134,14 @@ async function DashboardContent() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold">
             <Clock className="size-5" />
-            최근 활동
+            {t("admin.dashboard.recentActivity")}
           </h2>
           <Button asChild variant="outline" size="sm" className="rounded-full">
-            <Link href="/site/login-history">전체 보기</Link>
+            <Link href="/site/login-history">{t("admin.dashboard.viewAll")}</Link>
           </Button>
         </div>
         {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">최근 활동이 없습니다.</p>
+          <p className="text-sm text-muted-foreground">{t("common.empty")}</p>
         ) : (
           <div className="rounded-xl border bg-white dark:bg-card">
             <ul className="divide-y">
@@ -154,19 +155,19 @@ async function DashboardContent() {
 
       {/* 빠른 링크 */}
       <section>
-        <h2 className="mb-4 font-display text-xl font-bold">빠른 링크</h2>
+        <h2 className="mb-4 font-display text-xl font-bold">{t("admin.dashboard.quickLinks")}</h2>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" className="rounded-full">
-            <Link href="/site/menus">메뉴 관리</Link>
+            <Link href="/site/menus">{t("nav.menus")}</Link>
           </Button>
           <Button asChild variant="outline" className="rounded-full">
-            <Link href="/site/design-system/common">디자인 시스템</Link>
+            <Link href="/site/design-system/common">{t("nav.designSystem")}</Link>
           </Button>
           <Button asChild variant="outline" className="rounded-full">
-            <Link href="/site/settings">사이트 설정</Link>
+            <Link href="/site/settings">{t("nav.settings")}</Link>
           </Button>
           <Button asChild variant="outline" className="rounded-full">
-            <Link href="/site/system">시스템 상태</Link>
+            <Link href="/site/system">{t("nav.system")}</Link>
           </Button>
         </div>
       </section>
@@ -210,10 +211,11 @@ function StatCard({
 }
 
 function ActivityItem({ activity, locale }: { activity: RecentActivity; locale: AppLocale }) {
+  const { t } = getT()
   const typeConfig = {
-    comment: { badge: "댓글", variant: "default" as const },
-    visit: { badge: "접속", variant: "secondary" as const },
-    post: { badge: "게시글", variant: "outline" as const },
+    comment: { badge: t("admin.dashboard.comment"), variant: "default" as const },
+    visit: { badge: t("admin.dashboard.visit"), variant: "secondary" as const },
+    post: { badge: t("admin.dashboard.post"), variant: "outline" as const },
   }
 
   const config = typeConfig[activity.type]
