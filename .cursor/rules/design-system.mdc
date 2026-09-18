@@ -1,0 +1,46 @@
+# DevDeck 디자인 시스템 참조
+
+UI 또는 화면을 수정/추가할 때는 반드시 디자인 시스템을 참고한다.
+
+## 디자인 시스템 페이지
+
+1. **공통영역** `/site/design-system/common`
+   - UI 컴포넌트: Button, Input, Textarea, Select, Badge, Card, Switch, Skeleton
+   - 레이아웃: PageTitleBanner, ListPager, AppSidebar, PublicHeader, PublicFooter
+   - 색상 토큰, 타이포그래피, 간격 패턴
+
+2. **화면영역** `/site/design-system/screens`
+   - Board: BulletinList, ArticleReader, WritePanel
+   - Comments: CommentSection, CommentForm
+   - Editor: RichEditor, RichContent
+   - Steam, Landing, Prompts, Upload, Errors, i18n 컴포넌트
+   - 페이지 구조 패턴 (목록/상세/폼)
+
+## 필수 준수 사항
+
+### 컴포넌트 사용
+- 새 UI 요소 추가 전에 기존 컴포넌트 확인: `components/ui/`, `components/layout/`
+- Button, Input, Badge 등은 반드시 `@/components/ui/`에서 import
+- 커스텀 스타일보다 variant/size props 우선 사용
+
+### 레이아웃 패턴
+- 페이지 컨테이너: `<div className="mx-auto max-w-5xl space-y-8">`
+- 페이지 상단: `<PageTitleBanner title="..." breadcrumb={[...]} />`
+- 목록 하단: `<ListPager pathname="..." result={...} />`
+
+### 스타일 규칙
+- 색상: CSS 변수 사용 `hsl(var(--primary))`, `text-muted-foreground`
+- 라운딩: 큰 요소 `rounded-xl`, 버튼/인풋 `rounded-md`, pill `rounded-full`
+- 간격: Tailwind 유틸리티 (`space-y-4`, `gap-3`, `p-6`)
+
+### 폼 작성
+- Server Action 기반 (`"use server"`)
+- Label + Input 조합
+- RichEditor for 본문 입력
+- 로딩/에러 처리 포함
+
+## 파일 위치 규칙
+- 공통 UI: `components/ui/`
+- 레이아웃: `components/layout/`
+- 기능별: `components/[feature]/` (board, comments, steam 등)
+- 페이지: `app/(dashboard)/` 또는 `app/(home)/`
