@@ -349,6 +349,7 @@ CREATE TABLE IF NOT EXISTS devdeck.menus (
   board_id UUID REFERENCES devdeck.boards(id) ON DELETE SET NULL,
   label TEXT NOT NULL,
   label_key TEXT,
+  labels JSONB NOT NULL DEFAULT '{}'::jsonb,
   icon TEXT,
   href TEXT,
   location TEXT NOT NULL DEFAULT 'header'

@@ -8,7 +8,7 @@ import { SkillManager } from "./skill-manager"
 
 export default function CareerSkillsPage() {
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="w-full">
       <PageTitleBanner title="스킬" breadcrumb={[{ label: "스킬" }]} className="mb-6" />
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <CareerSkillsBody />

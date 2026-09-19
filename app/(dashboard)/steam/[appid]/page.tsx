@@ -20,7 +20,7 @@ export default function SteamDetailPage({
   const appId = Number(params.appid)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager appId={appId} />
       </Suspense>

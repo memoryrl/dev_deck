@@ -4,12 +4,13 @@ import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { requireOwner } from "@/lib/auth/owner"
+import { PREVIEWS } from "./previews"
 
 export default async function DesignSystemScreensPage() {
   await requireOwner()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12 pb-16">
+    <div className="w-full space-y-12 pb-16">
       <PageTitleBanner
         title="디자인 시스템 - 화면영역"
         description="DevDeck 프로젝트의 화면별 컴포넌트 가이드입니다. 각 기능 영역에서 사용하는 컴포넌트들의 구조와 사용법을 설명합니다."
@@ -488,7 +489,7 @@ export default function ListPage({ searchParams }) {
   const q = parseSearchQuery(searchParams?.q)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner title="목록" />
       
       {/* 검색 폼 */}
@@ -527,7 +528,7 @@ export default async function DetailPage({ params }) {
   if (!item) notFound()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title={item.title}
         breadcrumb={[{ label: item.title }]}
@@ -655,6 +656,8 @@ function ComponentCard({
         </div>
       )}
       
+      {PREVIEWS[name]}
+
       <CodeBlock>{usage}</CodeBlock>
     </div>
   )

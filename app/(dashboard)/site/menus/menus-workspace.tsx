@@ -211,7 +211,7 @@ export function MenusWorkspace({
           <p className="mt-1 text-sm text-muted-foreground">
             {selection.mode === "edit"
               ? selectedMenu
-                ? `"${selectedMenu.label}" 상세 정보를 수정합니다.`
+                ? `"${selectedMenu.label}"${selectedMenu.labels?.en ? ` / ${selectedMenu.labels.en}` : ""} 상세 정보를 수정합니다.`
                 : "선택한 메뉴를 찾을 수 없습니다."
               : selection.parentId
                 ? "선택한 항목의 하위 메뉴를 추가합니다."

@@ -18,13 +18,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomSelect } from "@/components/ui/custom-select"
+import { ListPager } from "@/components/layout/list-pager"
 import { requireOwner } from "@/lib/auth/owner"
 
 export default async function DesignSystemCommonPage() {
   await requireOwner()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12 pb-16">
+    <div className="w-full space-y-12 pb-16">
       <PageTitleBanner
         title="디자인 시스템 - 공통영역"
         description="DevDeck 프로젝트의 공통 UI 컴포넌트 가이드입니다. 에이전트(Cursor, Claude)가 작업 시 이 페이지를 참고하여 일관된 디자인을 유지합니다."
@@ -383,6 +384,13 @@ import { Label } from "@/components/ui/label"
         path="components/layout/list-pager.tsx"
         description="페이지네이션 컴포넌트입니다. PagedResult 타입과 함께 사용합니다."
       >
+        <div className="rounded-xl border bg-muted/30 p-4">
+          <ListPager
+            pathname="/site/design-system/common"
+            className="!mt-0"
+            result={{ rows: [], total: 47, page: 2, pageSize: 10, pageCount: 5 }}
+          />
+        </div>
         <CodeBlock>{`import { ListPager } from "@/components/layout/list-pager"
 import type { PagedResult } from "@/lib/pagination"
 
@@ -530,8 +538,38 @@ background: hsl(var(--lux-espresso));`}</CodeBlock>
         path=""
         description="자주 사용하는 간격과 레이아웃 유틸리티입니다."
       >
+        <div className="space-y-6">
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-muted-foreground">반응형 그리드 (sm 2열 · lg 3열)</h4>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((n) => (
+                <Card key={n}>
+                  <CardHeader>
+                    <CardTitle className="text-base">카드 {n}</CardTitle>
+                    <CardDescription>화면 폭에 맞춰 열 수가 바뀝니다.</CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-muted-foreground">라운딩 단계</h4>
+            <div className="flex flex-wrap items-center gap-4 text-xs">
+              {[
+                ["rounded-xl", "rounded-xl"],
+                ["rounded-lg", "rounded-lg"],
+                ["rounded-md", "rounded-md"],
+                ["rounded-full", "rounded-full"],
+              ].map(([cls, label]) => (
+                <div key={cls} className={`flex size-20 items-center justify-center border bg-muted ${cls}`}>
+                  {label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
         <CodeBlock>{`/* 페이지 컨테이너 */
-<div className="mx-auto max-w-5xl space-y-8">
+<div className="w-full space-y-8">
   {/* 콘텐츠 */}
 </div>
 

@@ -16,7 +16,7 @@ export default function SiteBoardPostPage({
   const listHref = `/site/boards/${params.id}`
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager boardId={params.id} postId={params.postId} listHref={listHref} />
       </Suspense>

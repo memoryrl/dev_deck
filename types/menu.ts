@@ -1,6 +1,9 @@
 import type { AccessRole } from "@/lib/access"
+import type { AppLocale } from "@/lib/i18n/config"
 
 export type MenuLocation = "header" | "footer" | "admin"
+
+export type MenuLabels = Partial<Record<AppLocale, string>>
 
 export type MenuItem = {
   id: string
@@ -8,6 +11,7 @@ export type MenuItem = {
   board_id: string | null
   label: string
   label_key: string | null
+  labels?: MenuLabels | null
   icon: string | null
   href: string | null
   location: MenuLocation
@@ -22,6 +26,8 @@ export type MenuItem = {
 export type NavChild = {
   id: string
   label: string
+  labelKey?: string | null
+  labels?: MenuLabels | null
   href: string
   note?: string
 }
@@ -29,6 +35,8 @@ export type NavChild = {
 export type NavNode = {
   id: string
   label: string
+  labelKey?: string | null
+  labels?: MenuLabels | null
   href: string | null
   children: NavChild[]
 }

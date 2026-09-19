@@ -7,7 +7,7 @@ import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
 import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { UserAvatar } from "@/components/layout/account-menu"
-import { MENU_ICON, type MegaId } from "@/components/layout/public-nav-data"
+import { MENU_ICON, megaIdFromLabelKey, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
@@ -85,7 +85,8 @@ export function PublicMobileNav({
         ) : null}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {navNodes.map((menu) => {
-            const Icon = MENU_ICON[menu.id as MegaId]
+            const megaId = (menu.id as MegaId) in MENU_ICON ? (menu.id as MegaId) : megaIdFromLabelKey(menu.labelKey)
+            const Icon = megaId ? MENU_ICON[megaId] : undefined
             const expanded = section === menu.id
             if (menu.href && menu.children.length === 0) {
               return (

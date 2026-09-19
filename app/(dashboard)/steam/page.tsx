@@ -17,7 +17,7 @@ export default function SteamPage({
   searchParams?: { page?: string; sort?: string }
 }) {
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="w-full">
       <PageTitleBanner title="Steam Tracker" className="mb-6" />
       <Suspense fallback={<SteamLibrarySkeleton />}>
         <SteamLibraryBody

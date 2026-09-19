@@ -2,8 +2,10 @@ import { cache } from "react"
 import { headers } from "next/headers"
 import { adminNavLabel, type AdminSidebarGroup } from "@/components/layout/admin-nav"
 import { getT } from "@/lib/i18n/dictionary"
+import { menuLabel } from "@/lib/menus/label"
 import { listAdminMenus } from "@/lib/menus/admin"
 import { listNavMenus } from "@/lib/menus/public"
+import type { AppLocale } from "@/lib/i18n/config"
 import type { NavNode } from "@/types/menu"
 
 export type BreadcrumbItem = { label: string; href?: string }
@@ -26,11 +28,16 @@ function pathMatches(path: string, href: string) {
   return current === target || current.startsWith(`${target}/`)
 }
 
-function fromAdmin(groups: AdminSidebarGroup[], path: string, t: (key: string) => string): Candidate[] {
+function fromAdmin(
+  groups: AdminSidebarGroup[],
+  path: string,
+  t: (key: string) => string,
+  locale: AppLocale
+): Candidate[] {
   const matches: Candidate[] = []
   for (const group of groups) {
     const groupCrumb: BreadcrumbItem = {
-      label: adminNavLabel(t, group),
+      label: adminNavLabel(t, group, locale),
       href: group.href || undefined,
     }
     if (group.href && pathMatches(path, group.href)) {
@@ -40,26 +47,31 @@ function fromAdmin(groups: AdminSidebarGroup[], path: string, t: (key: string) =
       if (!pathMatches(path, item.href)) continue
       matches.push({
         href: item.href,
-        items: [groupCrumb, { label: adminNavLabel(t, item), href: item.href }],
+        items: [groupCrumb, { label: adminNavLabel(t, item, locale), href: item.href }],
       })
     }
   }
   return matches
 }
 
-function fromNav(nodes: NavNode[], path: string): Candidate[] {
+function fromNav(
+  nodes: NavNode[],
+  path: string,
+  t: (key: string) => string,
+  locale: AppLocale
+): Candidate[] {
   const matches: Candidate[] = []
   for (const node of nodes) {
     if (node.href && pathMatches(path, node.href)) {
-      matches.push({ href: node.href, items: [{ label: node.label, href: node.href }] })
+      matches.push({ href: node.href, items: [{ label: menuLabel(t, node, locale), href: node.href }] })
     }
     for (const child of node.children) {
       if (!pathMatches(path, child.href)) continue
       matches.push({
         href: child.href,
         items: [
-          { label: node.label, href: node.href || undefined },
-          { label: child.label, href: child.href },
+          { label: menuLabel(t, node, locale), href: node.href || undefined },
+          { label: menuLabel(t, child, locale), href: child.href },
         ],
       })
     }
@@ -97,7 +109,7 @@ export async function resolveMenuBreadcrumb(
   extra: BreadcrumbItem[] = [],
   currentLabel?: string
 ): Promise<BreadcrumbItem[]> {
-  const { t } = getT()
+  const { t, locale } = getT()
   const [admin, header, footer] = await Promise.all([
     listAdminMenus(),
     listNavMenus("header"),
@@ -108,10 +120,10 @@ export async function resolveMenuBreadcrumb(
     path.startsWith("/promptkit") ||
     path.startsWith("/career") ||
     path.startsWith("/steam")
-  const primary = dashboard ? fromAdmin(admin, path, t) : fromNav(header, path)
+  const primary = dashboard ? fromAdmin(admin, path, t, locale) : fromNav(header, path, t, locale)
   const secondary = dashboard
-    ? [...fromNav(header, path), ...fromNav(footer, path)]
-    : [...fromAdmin(admin, path, t), ...fromNav(footer, path)]
+    ? [...fromNav(header, path, t, locale), ...fromNav(footer, path, t, locale)]
+    : [...fromAdmin(admin, path, t, locale), ...fromNav(footer, path, t, locale)]
   const best = pickBest([...primary, ...secondary])
   if (!best) return fallbackTrail(t, extra, currentLabel)
 

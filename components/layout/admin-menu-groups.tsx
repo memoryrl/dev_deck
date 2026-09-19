@@ -17,7 +17,7 @@ export function AdminMenuGroups({
   onNavigate?: () => void
   className?: string
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [openId, setOpenId] = useState<string | null>(null)
 
   if (groups.length === 0) return null
@@ -26,7 +26,7 @@ export function AdminMenuGroups({
     <div className={className}>
       {groups.map((group) => {
         const GroupIcon = getAdminNavIcon(group.iconName)
-        const groupLabel = adminNavLabel(t, group)
+        const groupLabel = adminNavLabel(t, group, locale)
         const hasChildren = group.items.length > 0
 
         if (!hasChildren && group.href) {
@@ -75,7 +75,7 @@ export function AdminMenuGroups({
                       onClick={onNavigate}
                     >
                       <Icon className="size-3.5 opacity-70" />
-                      {adminNavLabel(t, item)}
+                      {adminNavLabel(t, item, locale)}
                     </Link>
                   )
                 })}

@@ -1,11 +1,14 @@
 import { forgetMemoryCache, MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib/cache/memory"
 import { ensureAdminMenus } from "@/lib/menus/admin"
+import { inferMenuLabelKey } from "@/lib/menus/label"
+import { labelsFromKey, mergeMenuLabels } from "@/lib/menus/labels-seed"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { AccessRole } from "@/lib/access"
 
 type MenuSeed = {
   label: string
+  labelKey: string
   href: string | null
   location: "header" | "footer"
   view_role: AccessRole
@@ -17,112 +20,155 @@ type MenuSeed = {
 const DEFAULT_MENU_SEEDS: MenuSeed[] = [
   {
     label: "AI Prompt",
+    labelKey: "mega.prompt.label",
     href: null,
     location: "header",
     view_role: "visitor",
     sort_order: 0,
     children: [
-      { label: "공개 프롬프트", href: "/#prompts", view_role: "visitor", sort_order: 0 },
-      { label: "허브 홈", href: "/", view_role: "visitor", sort_order: 10 },
-      { label: "프롬프트 관리", href: "/promptkit", view_role: "owner", sort_order: 20 },
+      { label: "공개 프롬프트", labelKey: "footer.publicPrompts", href: "/#prompts", view_role: "visitor", sort_order: 0 },
+      { label: "허브 홈", labelKey: "mega.prompt.home", href: "/", view_role: "visitor", sort_order: 10 },
+      { label: "프롬프트 관리", labelKey: "mega.prompt.manage", href: "/promptkit", view_role: "owner", sort_order: 20 },
     ],
   },
   {
     label: "커리어로그",
+    labelKey: "mega.career.label",
     href: null,
     location: "header",
     view_role: "visitor",
     sort_order: 10,
     children: [
-      { label: "전체 글", href: "/work", view_role: "visitor", sort_order: 0 },
-      { label: "최근 커리어", href: "/#career", view_role: "visitor", sort_order: 10 },
-      { label: "스킬", href: "/#skills", view_role: "visitor", sort_order: 20 },
-      { label: "글·스킬 관리", href: "/career", view_role: "owner", sort_order: 30 },
+      { label: "전체 글", labelKey: "mega.career.posts", href: "/work", view_role: "visitor", sort_order: 0 },
+      { label: "최근 커리어", labelKey: "mega.career.recent", href: "/#career", view_role: "visitor", sort_order: 10 },
+      { label: "스킬", labelKey: "mega.career.skills", href: "/#skills", view_role: "visitor", sort_order: 20 },
+      { label: "글·스킬 관리", labelKey: "mega.career.manage", href: "/career", view_role: "owner", sort_order: 30 },
     ],
   },
   {
     label: "게임리뷰",
+    labelKey: "mega.games.label",
     href: null,
     location: "header",
     view_role: "visitor",
     sort_order: 20,
     children: [
-      { label: "게임 목록", href: "/games", view_role: "visitor", sort_order: 0 },
-      { label: "추천 게임", href: "/games/top", view_role: "visitor", sort_order: 10 },
-      { label: "리뷰 관리", href: "/steam", view_role: "owner", sort_order: 20 },
+      { label: "게임 목록", labelKey: "mega.games.list", href: "/games", view_role: "visitor", sort_order: 0 },
+      { label: "추천 게임", labelKey: "mega.games.featured", href: "/games/top", view_role: "visitor", sort_order: 10 },
+      { label: "리뷰 관리", labelKey: "mega.games.manage", href: "/steam", view_role: "owner", sort_order: 20 },
     ],
   },
   {
     label: "커뮤니티",
+    labelKey: "mega.community.label",
     href: null,
     location: "header",
     view_role: "visitor",
     sort_order: 30,
     children: [
-      { label: "공지사항", href: "/b/notice", view_role: "visitor", sort_order: 0 },
-      { label: "자유게시판", href: "/b/free", view_role: "visitor", sort_order: 10 },
+      { label: "공지사항", labelKey: "mega.community.notice", href: "/b/notice", view_role: "visitor", sort_order: 0 },
+      { label: "자유게시판", labelKey: "mega.community.free", href: "/b/free", view_role: "visitor", sort_order: 10 },
     ],
   },
   {
     label: "둘러보기",
+    labelKey: "footer.browse",
     href: null,
     location: "footer",
     view_role: "visitor",
     sort_order: 0,
     children: [
-      { label: "홈", href: "/", view_role: "visitor", sort_order: 0 },
-      { label: "커리어", href: "/work", view_role: "visitor", sort_order: 10 },
-      { label: "게임", href: "/games", view_role: "visitor", sort_order: 20 },
+      { label: "홈", labelKey: "common.home", href: "/", view_role: "visitor", sort_order: 0 },
+      { label: "커리어", labelKey: "footer.career", href: "/work", view_role: "visitor", sort_order: 10 },
+      { label: "게임", labelKey: "footer.games", href: "/games", view_role: "visitor", sort_order: 20 },
     ],
   },
   {
     label: "PromptKit",
+    labelKey: "nav.promptkit",
     href: null,
     location: "footer",
     view_role: "visitor",
     sort_order: 10,
     children: [
-      { label: "대시보드", href: "/login", view_role: "visitor", sort_order: 0 },
-      { label: "공개 프롬프트", href: "/", view_role: "visitor", sort_order: 10 },
-      { label: "프롬프트 관리", href: "/promptkit", view_role: "owner", sort_order: 20 },
+      { label: "대시보드", labelKey: "footer.dashboard", href: "/login", view_role: "visitor", sort_order: 0 },
+      { label: "공개 프롬프트", labelKey: "footer.publicPrompts", href: "/", view_role: "visitor", sort_order: 10 },
+      { label: "프롬프트 관리", labelKey: "mega.prompt.manage", href: "/promptkit", view_role: "owner", sort_order: 20 },
     ],
   },
   {
     label: "CareerLog",
+    labelKey: "nav.career",
     href: null,
     location: "footer",
     view_role: "visitor",
     sort_order: 20,
     children: [
-      { label: "게시판", href: "/work", view_role: "visitor", sort_order: 0 },
-      { label: "스킬", href: "/work", view_role: "visitor", sort_order: 10 },
-      { label: "글·스킬 관리", href: "/career", view_role: "owner", sort_order: 20 },
+      { label: "게시판", labelKey: "footer.board", href: "/work", view_role: "visitor", sort_order: 0 },
+      { label: "스킬", labelKey: "footer.skills", href: "/work", view_role: "visitor", sort_order: 10 },
+      { label: "글·스킬 관리", labelKey: "mega.career.manage", href: "/career", view_role: "owner", sort_order: 20 },
     ],
   },
   {
     label: "Steam",
+    labelKey: "steam.title",
     href: null,
     location: "footer",
     view_role: "visitor",
     sort_order: 30,
     children: [
-      { label: "라이브러리", href: "/games", view_role: "visitor", sort_order: 0 },
-      { label: "리뷰", href: "/games", view_role: "visitor", sort_order: 10 },
-      { label: "리뷰 관리", href: "/steam", view_role: "owner", sort_order: 20 },
+      { label: "라이브러리", labelKey: "footer.library", href: "/games", view_role: "visitor", sort_order: 0 },
+      { label: "리뷰", labelKey: "footer.reviews", href: "/games", view_role: "visitor", sort_order: 10 },
+      { label: "리뷰 관리", labelKey: "mega.games.manage", href: "/steam", view_role: "owner", sort_order: 20 },
     ],
   },
   {
     label: "커뮤니티",
+    labelKey: "mega.community.label",
     href: null,
     location: "footer",
     view_role: "visitor",
     sort_order: 40,
     children: [
-      { label: "공지사항", href: "/b/notice", view_role: "visitor", sort_order: 0 },
-      { label: "자유게시판", href: "/b/free", view_role: "visitor", sort_order: 10 },
+      { label: "공지사항", labelKey: "mega.community.notice", href: "/b/notice", view_role: "visitor", sort_order: 0 },
+      { label: "자유게시판", labelKey: "mega.community.free", href: "/b/free", view_role: "visitor", sort_order: 10 },
     ],
   },
 ]
+
+async function backfillPublicMenuLabelKeys() {
+  const supabase = createClient()
+  let { data, error } = await supabase
+    .from("menus")
+    .select("id, label, label_key, labels")
+    .in("location", ["header", "footer", "admin"])
+  if (error && /labels/.test(error.message)) {
+    const retry = await supabase
+      .from("menus")
+      .select("id, label, label_key")
+      .in("location", ["header", "footer", "admin"])
+    data = retry.data as typeof data
+    error = retry.error
+  }
+  if (error || !data) return
+
+  let changed = false
+  for (const row of data) {
+    const key = row.label_key || inferMenuLabelKey(row.label) || null
+    const nextLabels = mergeMenuLabels(row.labels, row.label, key)
+    const needKey = !row.label_key && key
+    const currentKo = (row.labels as { ko?: string } | null)?.ko
+    const currentEn = (row.labels as { en?: string } | null)?.en
+    const needLabels = currentKo !== nextLabels.ko || currentEn !== nextLabels.en
+    if (!needKey && !needLabels) continue
+    const patch: { label_key?: string; labels?: typeof nextLabels } = {}
+    if (needKey && key) patch.label_key = key
+    if (needLabels) patch.labels = nextLabels
+    const { error: updateError } = await supabase.from("menus").update(patch).eq("id", row.id)
+    if (!updateError) changed = true
+  }
+  if (changed) forgetMemoryCache("menus")
+}
 
 /**
  * menus 테이블이 비어 있을 때만 기본 메뉴를 채웁니다.
@@ -142,6 +188,7 @@ export async function ensureDefaultMenus() {
     return (count ?? 0) > 0
   })
   if (alreadySeeded) {
+    await backfillPublicMenuLabelKeys()
     const admin = await ensureAdminMenus()
     return { seeded: false as const, reason: "already_has_rows" as const, admin }
   }
@@ -153,6 +200,7 @@ export async function ensureDefaultMenus() {
 
   if (countError) return { seeded: false as const, reason: "count_failed" as const, error: countError.message }
   if ((count ?? 0) > 0) {
+    await backfillPublicMenuLabelKeys()
     const admin = await ensureAdminMenus()
     return { seeded: false as const, reason: "already_has_rows" as const, admin }
   }
@@ -162,6 +210,8 @@ export async function ensureDefaultMenus() {
       .from("menus")
       .insert({
         label: parent.label,
+        label_key: parent.labelKey,
+        labels: labelsFromKey(parent.label, parent.labelKey),
         href: parent.href,
         location: parent.location,
         view_role: parent.view_role,
@@ -187,6 +237,8 @@ export async function ensureDefaultMenus() {
     const { error: childError } = await supabase.from("menus").insert(
       children.map((child) => ({
         label: child.label,
+        label_key: child.labelKey,
+        labels: labelsFromKey(child.label, child.labelKey),
         href: child.href,
         location: parent.location,
         view_role: child.view_role,

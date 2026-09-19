@@ -3,6 +3,8 @@ import { forgetMemoryCache, MEMORY_TTL, memoryKey, withMemoryCache } from "@/lib
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { parseMenuLabels } from "@/lib/menus/label"
+import { labelsFromKey } from "@/lib/menus/labels-seed"
 import type { MenuItem } from "@/types/menu"
 
 type AdminMenuSeed = {
@@ -82,6 +84,7 @@ export function defaultAdminMenuGroups(): AdminSidebarGroup[] {
     id: `default-${group.labelKey}`,
     label: group.label,
     labelKey: group.labelKey,
+    labels: labelsFromKey(group.label, group.labelKey),
     iconName: group.icon,
     href: group.href,
     items: (group.children ?? [])
@@ -90,6 +93,7 @@ export function defaultAdminMenuGroups(): AdminSidebarGroup[] {
         id: `default-${child.labelKey}`,
         label: child.label,
         labelKey: child.labelKey,
+        labels: labelsFromKey(child.label, child.labelKey),
         href: child.href,
         iconName: child.icon,
       })),
@@ -117,6 +121,7 @@ function groupsFromRows(rows: MenuItem[]): AdminSidebarGroup[] {
           id: child.id,
           label: child.label,
           labelKey: child.label_key,
+          labels: parseMenuLabels(child.labels, child.label),
           href,
           iconName: iconOf(child),
         }
@@ -130,6 +135,7 @@ function groupsFromRows(rows: MenuItem[]): AdminSidebarGroup[] {
         id: root.id,
         label: root.label,
         labelKey: root.label_key,
+        labels: parseMenuLabels(root.labels, root.label),
         iconName: iconOf(root, "Layers"),
         href: root.href,
         items: children,
@@ -144,17 +150,27 @@ async function insertMenuRow(
   supabase: MenuWriteClient,
   payload: Record<string, unknown>
 ): Promise<{ id: string } | { error: string }> {
-  const first = await supabase.from("menus").insert(payload).select("id").single()
-  if (!first.error && first.data?.id) return { id: first.data.id }
-
-  if (first.error && /label_key|icon/.test(first.error.message)) {
-    const { label_key: _labelKey, icon: _icon, ...withoutExtra } = payload
-    const retry = await supabase.from("menus").insert(withoutExtra).select("id").single()
-    if (!retry.error && retry.data?.id) return { id: retry.data.id }
-    return { error: retry.error?.message ?? first.error.message }
+  const attempts = [
+    payload,
+    omitKeys(payload, ["labels"]),
+    omitKeys(payload, ["labels", "label_key", "icon"]),
+  ]
+  let lastError = "insert failed"
+  for (const body of attempts) {
+    const result = await supabase.from("menus").insert(body).select("id").single()
+    if (!result.error && result.data?.id) return { id: result.data.id }
+    lastError = result.error?.message ?? lastError
+    if (!result.error) break
+    const missingExtra = /label_key|icon|labels/.test(result.error.message)
+    if (!missingExtra) return { error: result.error.message }
   }
+  return { error: lastError }
+}
 
-  return { error: first.error?.message ?? "insert failed" }
+function omitKeys(payload: Record<string, unknown>, keys: string[]) {
+  const next = { ...payload }
+  for (const key of keys) delete next[key]
+  return next
 }
 
 export const listAdminMenus = cache(async (): Promise<AdminSidebarGroup[]> => {
@@ -209,6 +225,7 @@ export async function ensureAdminMenus(): Promise<{ seeded: boolean; error?: str
     const inserted = await insertMenuRow(supabase, {
       label: parent.label,
       label_key: parent.labelKey,
+      labels: labelsFromKey(parent.label, parent.labelKey),
       href: parent.href,
       icon: parent.icon,
       location: "admin",
@@ -227,6 +244,7 @@ export async function ensureAdminMenus(): Promise<{ seeded: boolean; error?: str
       const childInserted = await insertMenuRow(supabase, {
         label: child.label,
         label_key: child.labelKey,
+        labels: labelsFromKey(child.label, child.labelKey),
         href: child.href,
         icon: child.icon,
         location: "admin",

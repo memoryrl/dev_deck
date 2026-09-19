@@ -22,7 +22,7 @@ export default function SiteCommentsPage({
   const wordPage = parseListPage(searchParams?.words)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title="댓글 관리"
         description="모든 게시글·게임 상세 댓글을 조회하고 숨기거나 삭제합니다. 욕설 단어는 저장 시 자동 치환됩니다."

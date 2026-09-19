@@ -13,6 +13,18 @@ import type { Board } from "@/types/board"
 import type { MenuItem, MenuLocation } from "@/types/menu"
 import { ADMIN_NAV_ICON_MAP } from "@/components/layout/admin-nav-icons"
 import { MENU_LOCATIONS, menuLocationLabel } from "@/lib/menus/locations"
+import { inferMenuLabelKey, parseMenuLabels } from "@/lib/menus/label"
+import en from "@/locales/en.json"
+import { t as tDict, type Messages } from "@/lib/i18n/t"
+
+function englishDefault(menu?: MenuItem) {
+  const labels = parseMenuLabels(menu?.labels, menu?.label)
+  if (labels.en) return labels.en
+  const key = menu?.label_key || (menu?.label ? inferMenuLabelKey(menu.label) : undefined)
+  if (!key) return ""
+  const translated = tDict(en as Messages, key)
+  return translated && translated !== key ? translated : ""
+}
 
 export function MenuForm({
   menu,
@@ -62,22 +74,46 @@ export function MenuForm({
     onDeleted?.()
   }
 
+  const labels = parseMenuLabels(menu?.labels, menu?.label)
+
   return (
     <form action={onSubmit} className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
         <div>
-          <Label htmlFor={`label-${formId}`}>이름</Label>
-          <Input id={`label-${formId}`} name="label" required defaultValue={menu?.label} />
+          <p className="text-sm font-semibold">다국어</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            사이트 언어에 따라 헤더·푸터·관리자 메뉴에 표시됩니다. 영어를 비우면 한국어를 사용합니다.
+          </p>
         </div>
-        <div>
-          <Label htmlFor={`href-${formId}`}>직접 링크</Label>
-          <Input
-            id={`href-${formId}`}
-            name="href"
-            defaultValue={menu?.href ?? ""}
-            placeholder="/work 또는 비움(하위 메뉴용)"
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label htmlFor={`label-ko-${formId}`}>한국어</Label>
+            <Input
+              id={`label-ko-${formId}`}
+              name="label_ko"
+              required
+              defaultValue={labels.ko ?? menu?.label ?? ""}
+            />
+          </div>
+          <div>
+            <Label htmlFor={`label-en-${formId}`}>English</Label>
+            <Input
+              id={`label-en-${formId}`}
+              name="label_en"
+              defaultValue={englishDefault(menu)}
+              placeholder="Optional"
+            />
+          </div>
         </div>
+      </div>
+      <div>
+        <Label htmlFor={`href-${formId}`}>직접 링크</Label>
+        <Input
+          id={`href-${formId}`}
+          name="href"
+          defaultValue={menu?.href ?? ""}
+          placeholder="/work 또는 비움(하위 메뉴용)"
+        />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div>

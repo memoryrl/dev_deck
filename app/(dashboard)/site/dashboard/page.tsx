@@ -26,7 +26,7 @@ export default async function DashboardHomePage() {
   const { t } = getT()
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner title={t("admin.dashboard.title")} />
 
       <Suspense fallback={<StatsSkeleton />}>

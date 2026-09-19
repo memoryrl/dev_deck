@@ -20,7 +20,7 @@ export default function CareerPage({
   const q = parseSearchQuery(searchParams?.q)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title="CareerLog"
         actions={

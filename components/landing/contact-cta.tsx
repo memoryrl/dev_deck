@@ -1,7 +1,7 @@
 import { Github, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getT } from "@/lib/i18n/dictionary"
-import { SITE_CONTACT, SITE_INTRO } from "@/lib/site/profile"
+import { SITE_CONTACT } from "@/lib/site/profile"
 
 export function ContactCta() {
   const { t } = getT()
@@ -19,17 +19,16 @@ export function ContactCta() {
         <div className="relative flex flex-col gap-8 p-7 md:flex-row md:items-end md:justify-between md:p-10">
           <div className="max-w-xl">
             <p className="text-sm font-semibold text-muted-foreground">
-              {SITE_INTRO.role}
+              {t("landing.role")}
               <span className="mx-2 text-border">·</span>
-              {SITE_INTRO.name}
+              {t("landing.name")}
             </p>
             <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
-              {SITE_INTRO.ctaTitle}
+              {t("landing.ctaTitle")}
             </h2>
             <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground md:text-base">
-              {SITE_INTRO.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
+              <p>{t("landing.intro1")}</p>
+              <p>{t("landing.intro2")}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">

@@ -1,20 +1,18 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { RefreshCw, User } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListPager } from "@/components/layout/list-pager"
 import { ListSkeleton } from "@/components/layout/skeletons"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { requireOwner } from "@/lib/auth/owner"
-import { listMembers, type MemberListEntry } from "@/lib/site/members"
+import { listMembers } from "@/lib/site/members"
 import { getMemberStats } from "@/lib/site/member-stats"
-import { formatBoardDateTime } from "@/lib/i18n/format"
-import type { AppLocale } from "@/lib/i18n/config"
 import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { MemberStatsChart } from "./member-stats-chart"
+import { MembersBrowser } from "./members-browser"
 
 export default function MembersPage({
   searchParams,
@@ -26,7 +24,7 @@ export default function MembersPage({
   const q = parseSearchQuery(searchParams?.q)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title={t("admin.members.title")}
         description={t("admin.members.description")}
@@ -63,7 +61,7 @@ export default function MembersPage({
 
 async function MemberList({ page, q }: { page: number; q: string }) {
   await requireOwner()
-  const { t, locale } = getT()
+  const { t } = getT()
   const result = await listMembers({ page, q })
   const searched = Boolean(q)
 
@@ -78,11 +76,9 @@ async function MemberList({ page, q }: { page: number; q: string }) {
         </p>
       ) : (
         <>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-            {result.rows.map((member) => (
-              <MemberCard key={member.id} member={member} locale={locale} />
-            ))}
-          </ul>
+          <div className="mt-4">
+            <MembersBrowser key={`${result.page}:${q}`} members={result.rows} />
+          </div>
           <ListPager
             pathname="/site/members"
             result={result}
@@ -118,51 +114,4 @@ async function MemberStatsChartWrapper() {
   ])
 
   return <MemberStatsChart yearlyData={yearlyData} monthlyData={monthlyData} dailyData={dailyData} />
-}
-
-function MemberCard({ member, locale }: { member: MemberListEntry; locale: AppLocale }) {
-  const { t } = getT()
-  const displayName = member.full_name || member.username || t("admin.members.noName")
-
-  return (
-    <li className="rounded-xl border bg-white p-5 dark:bg-card">
-      <div className="flex items-start gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted">
-          {member.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- OAuth 아바타 호스트가 다양해서 next/image 허용 목록에 묶지 않는다
-            <img
-              src={member.avatar_url}
-              alt=""
-              referrerPolicy="no-referrer"
-              className="size-12 rounded-full object-cover"
-            />
-          ) : (
-            <User className="size-6 text-muted-foreground" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{displayName}</p>
-          {member.username && member.full_name && (
-            <p className="truncate text-sm text-muted-foreground">@{member.username}</p>
-          )}
-          {member.email && (
-            <p className="truncate text-sm text-muted-foreground">{member.email}</p>
-          )}
-          <div className="mt-2 flex flex-wrap gap-2">
-            {member.steam_id && (
-              <Badge variant="outline" className="text-xs">
-                {t("admin.members.steamLinked")}
-              </Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              {t("admin.members.commentCount", { count: member.commentCount })}
-            </Badge>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("admin.members.lastActivity")}: {formatBoardDateTime(member.updated_at, locale)}
-          </p>
-        </div>
-      </div>
-    </li>
-  )
 }

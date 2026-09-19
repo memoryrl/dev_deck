@@ -2,6 +2,14 @@ import { Briefcase, Gamepad2, Sparkles, Users } from "lucide-react"
 
 export type MegaId = "prompt" | "career" | "games" | "community"
 
+export function megaIdFromLabelKey(key?: string | null): MegaId | undefined {
+  if (!key) return undefined
+  if (key.startsWith("mega.prompt")) return "prompt"
+  if (key.startsWith("mega.career")) return "career"
+  if (key.startsWith("mega.games")) return "games"
+  if (key.startsWith("mega.community")) return "community"
+}
+
 export const MENU_ICON = {
   prompt: Sparkles,
   career: Briefcase,

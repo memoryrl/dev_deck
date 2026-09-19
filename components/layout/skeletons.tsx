@@ -239,7 +239,7 @@ export function FormCardSkeleton() {
 
 export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" | "grid" | "article" }) {
   return (
-    <Screen label={getT().t("loading.dashboard")} className="mx-auto max-w-5xl space-y-8">
+    <Screen label={getT().t("loading.dashboard")} className="w-full space-y-8">
       <TitleSkeleton />
       {variant === "grid" ? <CardGridSkeleton /> : null}
       {variant === "list" ? <ListSkeleton /> : null}

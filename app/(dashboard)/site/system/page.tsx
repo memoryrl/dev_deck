@@ -35,7 +35,7 @@ export default async function SystemStatusPage() {
   const { t } = getT()
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title={t("admin.system.title")}
         description={t("admin.system.description")}

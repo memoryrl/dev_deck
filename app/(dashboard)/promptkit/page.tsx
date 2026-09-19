@@ -18,7 +18,7 @@ export default function PromptKitPage({
   const q = parseSearchQuery(searchParams?.q)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner title="PromptKit" />
       <WritePanel label="새 프롬프트" closeLabel="접기">
         <div className="flex justify-end">

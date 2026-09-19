@@ -1,4 +1,5 @@
 import { boardPath } from "@/lib/access"
+import { parseMenuLabels } from "@/lib/menus/label"
 import type { MenuItem, NavNode } from "@/types/menu"
 
 export function resolveMenuHref(item: Pick<MenuItem, "href" | "boards">) {
@@ -29,11 +30,15 @@ export function treeMenus(items: MenuItem[]): NavNode[] {
         .map((child) => ({
           id: child.id,
           label: child.label,
+          labelKey: child.label_key,
+          labels: parseMenuLabels(child.labels, child.label),
           href: resolveMenuHref(child) ?? "/",
         }))
       return {
         id: item.id,
         label: item.label,
+        labelKey: item.label_key,
+        labels: parseMenuLabels(item.labels, item.label),
         href: kids.length > 0 ? null : resolveMenuHref(item),
         children: kids,
       }

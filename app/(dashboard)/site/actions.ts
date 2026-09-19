@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server"
 import type { Board } from "@/types/board"
 import type { MenuLocation } from "@/types/menu"
 import { isMenuLocation } from "@/lib/menus/locations"
+import { buildMenuLabels } from "@/lib/menus/label"
 
 function refreshSite() {
   forgetMemoryCache("menus:")
@@ -106,8 +107,9 @@ export async function upsertMenu(formData: FormData) {
   await requireOwner()
   const supabase = createClient()
   const id = String(formData.get("id") ?? "")
-  const label = String(formData.get("label") ?? "").trim()
+  const label = String(formData.get("label_ko") ?? formData.get("label") ?? "").trim()
   if (!label) return { ok: false as const, error: "메뉴 이름은 필수입니다." }
+  const labelEn = String(formData.get("label_en") ?? "").trim()
 
   const location = String(formData.get("location") ?? "header")
   if (!isMenuLocation(location)) {
@@ -133,6 +135,7 @@ export async function upsertMenu(formData: FormData) {
 
   const payload = {
     label,
+    labels: buildMenuLabels(label, labelEn),
     href: boardId ? null : href,
     parent_id: parentId,
     board_id: boardId,
@@ -143,7 +146,7 @@ export async function upsertMenu(formData: FormData) {
     sort_order: Number(formData.get("sort_order") ?? 0) || 0,
   }
 
-  const persist = async (body: typeof payload | Omit<typeof payload, "icon">) => {
+  const persist = async (body: Record<string, unknown>) => {
     const query = id
       ? supabase.from("menus").update(body).eq("id", id).select("id").single()
       : supabase.from("menus").insert(body).select("id").single()
@@ -151,6 +154,12 @@ export async function upsertMenu(formData: FormData) {
   }
 
   let { data, error } = await persist(payload)
+  if (error && /labels/.test(error.message)) {
+    return {
+      ok: false as const,
+      error: "menus.labels 컬럼이 없습니다. supabase/patch-menu-labels.sql 을 SQL Editor에서 실행하세요.",
+    }
+  }
   if (error && /icon/.test(error.message)) {
     const { icon: _omit, ...withoutIcon } = payload
     const retry = await persist(withoutIcon)

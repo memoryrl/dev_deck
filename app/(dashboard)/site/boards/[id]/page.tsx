@@ -26,7 +26,7 @@ export default function SiteBoardDetailPage({
   const q = parseSearchQuery(searchParams?.q)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <Suspense fallback={<TitleSkeleton />}>
         <BoardHeaderAndSettings id={params.id} />
       </Suspense>

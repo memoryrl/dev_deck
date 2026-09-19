@@ -15,7 +15,7 @@ export default async function SiteSettingsPage() {
   const { t } = getT()
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="w-full space-y-8">
       <PageTitleBanner
         title={t("admin.settings.title")}
         description={t("admin.settings.description")}

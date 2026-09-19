@@ -15,7 +15,7 @@ export default function PromptDetailPage({
   params: { id: string }
 }) {
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="w-full">
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager id={params.id} />
       </Suspense>

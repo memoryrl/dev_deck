@@ -1,8 +1,9 @@
 import { ADMIN_NAV } from "@/components/layout/admin-nav"
-import { publicMenus } from "@/components/layout/public-nav-data"
+import { megaIdFromLabelKey, publicMenus } from "@/components/layout/public-nav-data"
 import { roleAtLeast } from "@/lib/access"
 import { currentViewer } from "@/lib/boards/access"
 import { getT } from "@/lib/i18n/dictionary"
+import { menuLabel, resolveMenuLabelKey } from "@/lib/menus/label"
 import { listAllMenus } from "@/lib/menus/public"
 import type { MenuItem } from "@/types/menu"
 
@@ -57,12 +58,17 @@ function isVisible(item: MenuItem) {
 }
 
 function resolveModuleGuideDescription(
-  label: string,
+  item: Pick<MenuItem, "label" | "label_key">,
   t: (key: string) => string,
   isAdminModule: boolean,
 ): string {
   if (isAdminModule) return t("landing.moduleAdminGuide")
-  const mega = publicMenus.find((menu) => t(menu.labelKey) === label)
+  const key = resolveMenuLabelKey({ label: item.label, labelKey: item.label_key })
+  const megaId = megaIdFromLabelKey(key)
+  const mega =
+    publicMenus.find((menu) => menu.labelKey === key) ??
+    publicMenus.find((menu) => menu.id === megaId) ??
+    publicMenus.find((menu) => t(menu.labelKey) === item.label)
   if (mega) return t(mega.highlight.bodyKey)
   return t("mega.fallbackBody")
 }
@@ -79,7 +85,7 @@ function buildAdminModule(t: (key: string) => string, vacant: boolean): Topology
     isLead: true,
     restricted: vacant,
     vacant,
-    guideDescription: resolveModuleGuideDescription(t("dashboard.adminMenu"), t, true),
+    guideDescription: resolveModuleGuideDescription({ label: t("dashboard.adminMenu"), label_key: "dashboard.adminMenu" }, t, true),
     items: vacant
       ? []
       : ADMIN_NAV.slice(0, MAX_ITEMS_PER_MODULE).map((entry) => ({
@@ -96,7 +102,7 @@ function buildAdminModule(t: (key: string) => string, vacant: boolean): Topology
 // 이 함수 하나를 같이 써서, 메뉴가 추가/변경되면 두 군데 다 자동으로 반영된다.
 export async function listLandingModules(): Promise<TopologyModuleNode[]> {
   const allMenus = await listAllMenus()
-  const { t } = getT()
+  const { t, locale } = getT()
 
   const headerItems = allMenus.filter((item) => item.location === "header" && isVisible(item))
   const byParent = new Map<string | null, MenuItem[]>()
@@ -115,20 +121,20 @@ export async function listLandingModules(): Promise<TopologyModuleNode[]> {
     const children = byParent.get(root.id) ?? []
     const items: TopologyItemNode[] = children.slice(0, MAX_ITEMS_PER_MODULE).map((child) => ({
       id: child.id,
-      label: child.label,
+      label: menuLabel(t, { label: child.label, labelKey: child.label_key, labels: child.labels }, locale),
       meta: null,
       href: resolveHref(child),
     }))
 
     return {
       id: root.id,
-      label: root.label,
+      label: menuLabel(t, { label: root.label, labelKey: root.label_key, labels: root.labels }, locale),
       href: resolveHref(root, items[0]?.href ?? "/"),
       tint: TINTS[index % TINTS.length],
       isLead: false,
       restricted: false,
       vacant: false,
-      guideDescription: resolveModuleGuideDescription(root.label, t, false),
+      guideDescription: resolveModuleGuideDescription(root, t, false),
       items,
     }
   })

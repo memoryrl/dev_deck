@@ -18,7 +18,7 @@ type Props = {
 
 export function AdminSidebarNav({ groups, onNavigate }: Props) {
   const pathname = usePathname()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const activeGroupId = useMemo(
     () =>
@@ -56,7 +56,7 @@ export function AdminSidebarNav({ groups, onNavigate }: Props) {
       {groups.map((group) => {
         const GroupIcon = getAdminNavIcon(group.iconName)
         const hasChildren = group.items.length > 0
-        const groupLabel = adminNavLabel(t, group)
+        const groupLabel = adminNavLabel(t, group, locale)
 
         if (!hasChildren && group.href) {
           const active = isAdminNavActive(pathname, group.href)
@@ -71,7 +71,7 @@ export function AdminSidebarNav({ groups, onNavigate }: Props) {
               )}
             >
               <GroupIcon className="size-4 shrink-0 opacity-70" />
-              {adminNavLabel(t, group)}
+              {adminNavLabel(t, group, locale)}
             </Link>
           )
         }
@@ -119,7 +119,7 @@ export function AdminSidebarNav({ groups, onNavigate }: Props) {
                         )}
                       >
                         <Icon className="size-4 shrink-0 opacity-70" />
-                        {adminNavLabel(t, item)}
+                        {adminNavLabel(t, item, locale)}
                       </Link>
                     )
                   })}

@@ -15,6 +15,8 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react"
+import { menuLabel, type MenuLabelSource } from "@/lib/menus/label"
+import type { AppLocale } from "@/lib/i18n/config"
 
 export const ADMIN_NAV: { href: string; labelKey: string; label: string; icon: LucideIcon }[] = [
   { href: "/site/dashboard", labelKey: "nav.dashboard", label: "대시보드", icon: LayoutDashboard },
@@ -37,6 +39,7 @@ export type AdminSidebarItem = {
   id: string
   label: string
   labelKey?: string | null
+  labels?: MenuLabelSource["labels"]
   href: string
   iconName: string
 }
@@ -45,6 +48,7 @@ export type AdminSidebarGroup = {
   id: string
   label: string
   labelKey?: string | null
+  labels?: MenuLabelSource["labels"]
   iconName: string
   href: string | null
   items: AdminSidebarItem[]
@@ -56,12 +60,8 @@ export function isAdminNavActive(pathname: string, href: string) {
 
 export function adminNavLabel(
   t: (key: string) => string,
-  item: { label: string; labelKey?: string | null }
+  item: MenuLabelSource,
+  locale?: AppLocale
 ) {
-  if (item.labelKey) {
-    const translated = t(item.labelKey)
-    if (translated && translated !== item.labelKey) return translated
-  }
-  const translated = t(item.label)
-  return translated && translated !== item.label ? translated : item.label
+  return menuLabel(t, item, locale)
 }

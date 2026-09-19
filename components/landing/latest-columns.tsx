@@ -19,7 +19,7 @@ export function LatestColumns({
       <div className="grid gap-10 md:grid-cols-2">
         <ScrollReveal variant="left" duration={600}>
           <div id="prompts">
-            <h2 className="font-display text-2xl font-extrabold md:text-3xl">AI Prompt</h2>
+            <h2 className="font-display text-2xl font-extrabold md:text-3xl">{t("mega.prompt.label")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("landing.latestPosts")}</p>
             {prompts.length === 0 ? (
               <EmptyPlaceholder className="mt-5">{t("landing.emptyPrompts")}</EmptyPlaceholder>

@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/layout/brand-mark"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { Badge } from "@/components/ui/badge"
 import { getT } from "@/lib/i18n/dictionary"
+import { menuLabel } from "@/lib/menus/label"
 import { SITE_CONTACT } from "@/lib/site/profile"
 import { listNavMenus } from "@/lib/menus/public"
 
@@ -42,18 +43,18 @@ function fallbackColumns(t: (key: string) => string) {
 }
 
 export async function PublicFooter() {
-  const { t } = getT()
+  const { t, locale } = getT()
   const dbFooter = await listNavMenus("footer")
   const footerColumns =
     dbFooter.length > 0
       ? dbFooter
           .map((item) => ({
-            title: item.label,
+            title: menuLabel(t, item, locale),
             links:
               item.children.length > 0
-                ? item.children.map((child) => ({ href: child.href, label: child.label }))
+                ? item.children.map((child) => ({ href: child.href, label: menuLabel(t, child, locale) }))
                 : item.href
-                  ? [{ href: item.href, label: item.label }]
+                  ? [{ href: item.href, label: menuLabel(t, item, locale) }]
                   : [],
           }))
           .filter((column) => column.links.length > 0)
@@ -142,7 +143,7 @@ export async function PublicFooter() {
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 DevDeck. Created by nckim. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <p>Personal Developer Hub</p>
+            <p>{t("landing.kicker")}</p>
             <Link href="/opensource" className="hover:text-foreground">
               {t("footer.opensource")}
             </Link>

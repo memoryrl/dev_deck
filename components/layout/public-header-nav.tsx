@@ -6,9 +6,10 @@ import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { AccountMenu } from "@/components/layout/account-menu"
 import { BrandMark } from "@/components/layout/brand-mark"
 import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
-import { MENU_ICON, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
+import { MENU_ICON, megaIdFromLabelKey, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { localizeNavNodes } from "@/lib/menus/label"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
@@ -154,11 +155,13 @@ function fallbackNodes(
   return publicMenus.map((menu) => ({
     id: menu.id,
     label: t(menu.labelKey),
+    labelKey: menu.labelKey,
     href: null,
     children: menu.groups.flatMap((group) =>
       group.links.map((link) => ({
         id: link.href + link.labelKey,
         label: t(link.labelKey),
+        labelKey: link.labelKey,
         href: edit[link.href as keyof typeof edit] ?? link.href,
         note: link.noteKey ? t(link.noteKey) : undefined,
       }))
@@ -180,7 +183,7 @@ export function PublicHeaderNav({
   const [photos, setPhotos] = useState<Partial<Record<SceneId, string>>>({})
   const rootRef = useRef<HTMLDivElement>(null)
   const labelId = useId()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const owner = Boolean(account?.isOwner)
   const edit = {
     __prompt__: owner ? "/promptkit" : "/login",
@@ -188,14 +191,16 @@ export function PublicHeaderNav({
     __steam__: owner ? "/steam" : "/login",
     __boards__: owner ? "/site/boards" : "/login",
   }
-  const nodes = navNodes.length > 0 ? navNodes : fallbackNodes(edit, t)
+  const nodes = localizeNavNodes(navNodes.length > 0 ? navNodes : fallbackNodes(edit, t), t, locale)
   const activeNode = nodes.find((menu) => menu.id === open)
   // DB 메뉴 id는 UUID라 MegaId(prompt/career/games)와 다르다.
-  // id로 못 찾으면 라벨로 static mega 카피(부연설명·아이콘·씬)를 매칭한다.
+  // label_key(또는 한글 라벨에서 추론한 키)로 static mega 카피(부연설명·아이콘·씬)를 맞춘다.
   const staticMega =
     publicMenus.find((menu) => menu.id === open) ??
     (activeNode
-      ? publicMenus.find((menu) => t(menu.labelKey) === activeNode.label)
+      ? publicMenus.find((menu) => menu.labelKey === activeNode.labelKey) ??
+        publicMenus.find((menu) => menu.id === megaIdFromLabelKey(activeNode.labelKey)) ??
+        publicMenus.find((menu) => t(menu.labelKey) === activeNode.label)
       : undefined)
   const scene: SceneId = staticMega?.id ?? "default"
   const ActiveIcon = staticMega ? MENU_ICON[staticMega.id] : undefined
@@ -255,7 +260,8 @@ export function PublicHeaderNav({
           <nav className="hidden items-center justify-end gap-1 lg:flex">
             {nodes.map((menu) => {
               const expanded = open === menu.id
-              const Icon = MENU_ICON[menu.id as MegaId]
+              const megaId = (menu.id as MegaId) in MENU_ICON ? (menu.id as MegaId) : megaIdFromLabelKey(menu.labelKey)
+              const Icon = megaId ? MENU_ICON[megaId] : undefined
               if (menu.href && menu.children.length === 0) {
                 return (
                   <Link
