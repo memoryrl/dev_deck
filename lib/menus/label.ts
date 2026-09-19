@@ -1,10 +1,6 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type AppLocale } from "@/lib/i18n/config"
 import type { MenuLabels, NavNode } from "@/types/menu"
 
-export type { MenuLabels }
-
-export type MenuLabels = Partial<Record<AppLocale, string>>
-
 /** DB에 저장된 한글(또는 브랜드) 라벨 → locales 키. labels JSON이 비어 있을 때 보조. */
 export const PUBLIC_MENU_LABEL_KEYS: Record<string, string> = {
   "AI Prompt": "mega.prompt.label",
