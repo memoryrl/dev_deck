@@ -100,7 +100,7 @@ export function CustomSelect({
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => event.stopPropagation()}
                   placeholder={searchPlaceholder}
-                  className="h-8 w-full rounded-md border border-input bg-transparent pl-7 pr-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-8 w-full rounded-md border border-input bg-field pl-7 pr-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               </div>
             </div>

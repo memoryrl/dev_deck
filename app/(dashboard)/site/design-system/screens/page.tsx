@@ -172,7 +172,7 @@ export default async function DesignSystemScreensPage() {
         <ComponentCard
           name="RichEditor"
           path="components/editor/rich-editor.tsx"
-          description="CKEditor 5 기반 WYSIWYG 에디터입니다. 이미지 업로드, 서식, 링크 등을 지원합니다."
+          description="CKEditor 5 기반 WYSIWYG 에디터입니다. 이미지 업로드, 서식, 링크를 지원하고, 본문 영역 배경은 라이트 모드에서 흰색(`--field`)입니다."
           usage={`import { RichEditor } from "@/components/editor/rich-editor"
 
 <RichEditor

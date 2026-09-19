@@ -25,6 +25,8 @@
     --destructive-foreground: 37 42% 94%;
     --border: 36 20% 81%;
     --input: 36 20% 81%;
+    /* 입력란·셀렉트·에디터 본문. 페이지 배경(Parchment)과 구분되는 흰색 */
+    --field: 0 0% 100%;
     --ring: 37 40% 61%;
     --radius: 0.5rem;
     --lux-champagne: 37 40% 61%;
@@ -52,6 +54,7 @@
     --destructive-foreground: 37 42% 94%;
     --border: 28 14% 21%;
     --input: 28 14% 21%;
+    --field: 24 10% 12%;
     --ring: 37 40% 61%;
     --lux-champagne: 37 36% 56%;
     --lux-cognac: 26 28% 48%;
@@ -218,6 +221,10 @@
   margin-top: 0.4em;
 }
 
+.rich-editor {
+  --ck-color-base-background: hsl(var(--field));
+}
+
 .rich-editor .ck.ck-editor {
   @apply w-full;
 }
@@ -228,7 +235,8 @@
 
 .rich-editor .ck.ck-editor__main > .ck-editor__editable {
   min-height: 16rem;
-  @apply !rounded-b-xl !border-border !bg-background px-4 py-3 text-[15px] leading-relaxed;
+  background-color: hsl(var(--field)) !important;
+  @apply !rounded-b-xl !border-border px-4 py-3 text-[15px] leading-relaxed;
 }
 
 .rich-editor-compact .ck.ck-editor__main > .ck-editor__editable {

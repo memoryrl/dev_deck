@@ -37,6 +37,7 @@ module.exports = {
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
+        field: "hsl(var(--field))",
         ring: "hsl(var(--ring))",
       },
       borderRadius: {

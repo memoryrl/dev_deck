@@ -113,7 +113,7 @@ export default async function DesignSystemCommonPage() {
         id="input"
         title="Input"
         path="components/ui/input.tsx"
-        description="폼에서 사용하는 텍스트 입력 필드입니다."
+        description="폼에서 사용하는 텍스트 입력 필드입니다. 라이트 모드 배경은 흰색(`--field`)입니다."
       >
         <div className="max-w-md space-y-4">
           <Input placeholder="기본 입력 필드" />
@@ -143,7 +143,7 @@ export default async function DesignSystemCommonPage() {
         id="textarea"
         title="Textarea"
         path="components/ui/textarea.tsx"
-        description="여러 줄의 텍스트를 입력받는 필드입니다."
+        description="여러 줄의 텍스트를 입력받는 필드입니다. 라이트 모드 배경은 흰색(`--field`)입니다."
       >
         <div className="max-w-md">
           <Textarea placeholder="내용을 입력하세요..." rows={4} />
@@ -178,7 +178,7 @@ import { Input } from "@/components/ui/input"
         id="select"
         title="Select"
         path="components/ui/select.tsx"
-        description="Radix UI 기반의 드롭다운 선택 컴포넌트입니다."
+        description="Radix UI 기반의 드롭다운 선택 컴포넌트입니다. 트리거 배경은 입력란과 같이 `--field`입니다."
       >
         <div className="flex flex-wrap gap-4">
           <Select>
@@ -227,7 +227,7 @@ import { Input } from "@/components/ui/input"
               { value: "tech", label: "기술" },
               { value: "design", label: "디자인" },
             ]}
-            triggerClassName="h-10 rounded-full bg-background pl-4 pr-3 font-medium"
+            triggerClassName="h-10 rounded-full bg-field pl-4 pr-3 font-medium"
           />
         </div>
         <CodeBlock>{`import { CustomSelect } from "@/components/ui/custom-select"
@@ -457,9 +457,11 @@ const result: PagedResult<Item> = await fetchItems({ page })
         id="colors"
         title="색상 토큰"
         path="app/globals.css"
-        description="프로젝트에서 사용하는 CSS 변수 기반 색상 시스템입니다."
+        description="프로젝트에서 사용하는 CSS 변수 기반 색상 시스템입니다. 입력·에디터 본문은 `--field`(라이트: 흰색)를 씁니다."
       >
         <div className="grid gap-4 sm:grid-cols-2">
+          <ColorSwatch name="--background" label="Background" />
+          <ColorSwatch name="--field" label="Field (입력·에디터)" />
           <ColorSwatch name="--primary" label="Primary" />
           <ColorSwatch name="--secondary" label="Secondary" />
           <ColorSwatch name="--muted" label="Muted" />
@@ -475,6 +477,9 @@ const result: PagedResult<Item> = await fetchItems({ page })
   color: hsl(var(--primary-foreground));
   border-color: hsl(var(--border));
 }
+
+/* 입력란·에디터 본문 (라이트: #fff) */
+background: hsl(var(--field));
 
 /* 럭셔리 팔레트 (배너 그라디언트 등) */
 background: hsl(var(--lux-champagne));

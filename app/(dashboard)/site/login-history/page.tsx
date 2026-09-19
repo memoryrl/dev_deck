@@ -69,7 +69,7 @@ export default function LoginHistoryPage({
           options={TYPE_OPTIONS}
           aria-label="구분"
           className="shrink-0"
-          triggerClassName="h-10 rounded-full bg-background pl-4 pr-3 font-medium"
+          triggerClassName="h-10 rounded-full bg-field pl-4 pr-3 font-medium"
         />
         <CustomSelect
           name="field"
@@ -77,7 +77,7 @@ export default function LoginHistoryPage({
           options={FIELD_OPTIONS}
           aria-label={t("common.searchField")}
           className="shrink-0"
-          triggerClassName="h-10 rounded-full bg-background pl-4 pr-3 font-medium"
+          triggerClassName="h-10 rounded-full bg-field pl-4 pr-3 font-medium"
         />
         <Input
           name="q"

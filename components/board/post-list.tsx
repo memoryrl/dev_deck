@@ -62,7 +62,7 @@ export function PostList({
             options={[{ value: "title", label: t("common.title") }]}
             aria-label={t("common.searchField")}
             className="shrink-0"
-            triggerClassName="h-9 rounded-sm bg-background px-3 font-medium"
+            triggerClassName="h-9 rounded-sm bg-field px-3 font-medium"
           />
           <Input
             name="q"
