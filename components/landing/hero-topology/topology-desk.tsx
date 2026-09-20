@@ -4,11 +4,12 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 import { Html } from "@react-three/drei"
 import { useThree, type ThreeEvent } from "@react-three/fiber"
 import { Lock } from "lucide-react"
-import type { Vector3 } from "three"
+import { Color, DoubleSide, type Vector3 } from "three"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { TopologyRobot } from "@/components/landing/hero-topology/topology-robot"
 import { cn } from "@/lib/utils"
 import type { TopologyModuleNode } from "@/lib/landing/topology"
+import { useTone, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 
 function legOffsets(halfWidth: number): [number, number][] {
   const dx = halfWidth - 0.12
@@ -28,6 +29,7 @@ const SEAT_RADIUS = 0.22
 // 서 있게 하자" — 좌석면을 로봇 발 높이(SEAT_HEIGHT)에 맞춰 두고 다리 3개로
 // 바닥까지 받친다(등받이 없는 스툴).
 function Stool() {
+  const tone = useTone()
   const legHeight = SEAT_HEIGHT - SEAT_THICKNESS / 2
   const legRadius = SEAT_RADIUS - 0.05
   const legs: [number, number][] = [
@@ -40,12 +42,12 @@ function Stool() {
     <group>
       <mesh position={[0, SEAT_HEIGHT - SEAT_THICKNESS / 2, 0]}>
         <cylinderGeometry args={[SEAT_RADIUS, SEAT_RADIUS, SEAT_THICKNESS, 20]} />
-        <meshStandardMaterial color="#8a7a63" roughness={0.6} />
+        <meshStandardMaterial color={tone("#8a7a63")} roughness={0.6} />
       </mesh>
       {legs.map(([dx, dz], index) => (
         <mesh key={index} position={[dx, legHeight / 2, dz]}>
           <cylinderGeometry args={[0.035, 0.035, legHeight, 10]} />
-          <meshStandardMaterial color="#5b4f3f" roughness={0.5} />
+          <meshStandardMaterial color={tone("#5b4f3f")} roughness={0.5} />
         </mesh>
       ))}
     </group>
@@ -65,6 +67,7 @@ function hashIndex(id: string, mod: number) {
 // 모듈 변주(variant)와 무관하게 항상 그린다 — 책상마다 빠짐없이 있어야 하는
 // 기본 소품이라서.
 function KeyboardAndMouse({ color }: { color: string }) {
+  const tone = useTone()
   // 책상 상판 박스가 position=[0,0.5,0], height=0.1이라 상판면은 y=0.55다.
   // 이보다 낮게 두면 상판 속에 파묻혀 안 보인다 — 상판면 바로 위에 얹는다.
   return (
@@ -72,18 +75,18 @@ function KeyboardAndMouse({ color }: { color: string }) {
       {/* 키보드 본체 */}
       <mesh>
         <boxGeometry args={[0.32, 0.018, 0.1]} />
-        <meshStandardMaterial color="#cdc6b8" roughness={0.6} />
+        <meshStandardMaterial color={tone("#cdc6b8")} roughness={0.6} />
       </mesh>
       {/* 키캡 면 — 살짝 어두운 상판으로 키 배열 느낌만 준다 */}
       <mesh position={[0, 0.011, 0]}>
         <boxGeometry args={[0.29, 0.006, 0.075]} />
-        <meshStandardMaterial color="#3a3532" roughness={0.5} />
+        <meshStandardMaterial color={tone("#3a3532")} roughness={0.5} />
       </mesh>
       {/* 마우스 — 키보드 오른쪽 옆 */}
       <group position={[0.22, 0, -0.01]}>
         <mesh>
           <boxGeometry args={[0.055, 0.02, 0.085]} />
-          <meshStandardMaterial color="#e8e4da" roughness={0.4} />
+          <meshStandardMaterial color={tone("#e8e4da")} roughness={0.4} />
         </mesh>
         <mesh position={[0, 0.012, -0.018]}>
           <boxGeometry args={[0.01, 0.005, 0.018]} />
@@ -94,20 +97,67 @@ function KeyboardAndMouse({ color }: { color: string }) {
   )
 }
 
+const SCREEN_GLOW = new Color("#bcd4ff")
+
+// 다크 모드에서 켜지는 스탠드 조명. 갓 안쪽 발광 + 책상 위 빛 웅덩이 + 실제 포인트 라이트.
+// 책상마다 하나씩이라 라이트 수가 책상 수만큼 늘어난다 — 그림자는 끄고 거리를 짧게 잡아
+// 옆 책상까지 번지지 않게 한다.
+function DeskLamp({ x }: { x: number }) {
+  return (
+    <group position={[x, 0.55, -0.28]}>
+      <mesh position={[0, 0.012, 0]}>
+        <cylinderGeometry args={[0.06, 0.07, 0.024, 16]} />
+        <meshStandardMaterial color="#2a2624" roughness={0.5} metalness={0.3} />
+      </mesh>
+      <mesh position={[0, 0.16, 0]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.29, 8]} />
+        <meshStandardMaterial color="#2a2624" roughness={0.4} metalness={0.4} />
+      </mesh>
+      {/* 갓 — 책상 안쪽(+x 방향)을 비스듬히 내려다본다 */}
+      <group position={[0.03, 0.3, 0]} rotation={[0, 0, 0.5]}>
+        <mesh>
+          <coneGeometry args={[0.09, 0.11, 20, 1, true]} />
+          <meshStandardMaterial color="#e8dcc4" roughness={0.5} side={DoubleSide} emissive="#ffd9a0" emissiveIntensity={0.9} />
+        </mesh>
+        <mesh position={[0, -0.045, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.07, 20]} />
+          <meshBasicMaterial color="#fff0cf" />
+        </mesh>
+      </group>
+      <pointLight position={[0.1, 0.24, 0.02]} color="#ffd7a0" intensity={1.3} distance={2.2} decay={2} />
+      {/* 책상 위에 번지는 빛 웅덩이 */}
+      <mesh position={[0.32, 0.008, 0.08]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.34, 28]} />
+        <meshBasicMaterial color="#ffcf8a" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+    </group>
+  )
+}
+
 // 요청사항: "책상 위에는 모니터들이 있어야 한다" — 모듈 종류와 무관하게 모니터는
 // 공통으로 두고, 소품 하나를 더 얹어 책상마다 약간의 변주를 준다.
-function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
+function DeskProp({ moduleId, color, vacant }: { moduleId: string; color: string; vacant: boolean }) {
+  const tone = useTone()
+  const dark = useTopologyDark()
+  // 다크: 자리를 지키는 책상의 모니터만 켜져 있다 — 모듈 색에 차가운 화이트를 섞어 화면이 밝게 보이게 한다.
+  const screenOn = dark && !vacant
+  const screenGlow = screenOn ? `#${new Color(color).lerp(SCREEN_GLOW, 0.4).getHexString()}` : color
   const variant = hashIndex(moduleId, 3)
   return (
     <group>
       <group position={[0, 0.5, -0.2]}>
         <mesh position={[0, 0.03, 0]}>
           <boxGeometry args={[0.22, 0.06, 0.14]} />
-          <meshStandardMaterial color="#3a3532" />
+          <meshStandardMaterial color={tone("#3a3532")} />
         </mesh>
         <mesh position={[0, 0.24, 0]}>
           <boxGeometry args={[0.46, 0.28, 0.03]} />
-          <meshStandardMaterial color={color} roughness={0.35} emissive={color} emissiveIntensity={0.12} />
+          <meshStandardMaterial
+            color={screenOn ? screenGlow : color}
+            roughness={0.35}
+            emissive={screenOn ? screenGlow : color}
+            emissiveIntensity={screenOn ? 0.75 : 0.12}
+          />
         </mesh>
       </group>
       <KeyboardAndMouse color={color} />
@@ -126,7 +176,7 @@ function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
       {variant === 2 ? (
         <mesh position={[0, 0.03, 0.15]}>
           <boxGeometry args={[0.3, 0.06, 0.16]} />
-          <meshStandardMaterial color="#3a3532" />
+          <meshStandardMaterial color={tone("#3a3532")} />
         </mesh>
       ) : null}
     </group>
@@ -134,20 +184,21 @@ function DeskProp({ moduleId, color }: { moduleId: string; color: string }) {
 }
 
 function AwaySign({ label }: { label: string }) {
+  const tone = useTone()
   // 팀장 자리는 yaw=π라 로컬 -Z가 카메라(팀원) 쪽이다. 팻말은 모니터 옆, 객석을 향해 세운다.
   return (
     <group position={[-0.58, 0.55, -0.08]}>
       <mesh position={[0, 0.01, 0]}>
         <boxGeometry args={[0.18, 0.02, 0.12]} />
-        <meshStandardMaterial color="#8a6a45" roughness={0.7} />
+        <meshStandardMaterial color={tone("#8a6a45")} roughness={0.7} />
       </mesh>
       <mesh position={[0, 0.11, 0.055]} rotation={[0.62, 0, 0]}>
         <boxGeometry args={[0.56, 0.24, 0.018]} />
-        <meshStandardMaterial color="#d4c09a" roughness={0.72} />
+        <meshStandardMaterial color={tone("#d4c09a")} roughness={0.72} />
       </mesh>
       <mesh position={[0, 0.11, -0.055]} rotation={[-0.62, 0, 0]}>
         <boxGeometry args={[0.56, 0.24, 0.018]} />
-        <meshStandardMaterial color="#f3e6cc" roughness={0.55} />
+        <meshStandardMaterial color={tone("#f3e6cc")} roughness={0.55} />
       </mesh>
       <Html
         position={[0, 0.17, -0.12]}
@@ -156,7 +207,7 @@ function AwaySign({ label }: { label: string }) {
         zIndexRange={[15, 0]}
         className="pointer-events-none select-none"
       >
-        <div className="whitespace-nowrap rounded-[2px] bg-[#f6ead2] px-2 py-[3px] text-[10px] font-bold tracking-wide text-[#5a4632] shadow-sm ring-1 ring-[#cbb48a]">
+        <div className="whitespace-nowrap rounded-[2px] bg-[#f6ead2] px-2 py-[3px] text-[10px] font-bold tracking-wide text-[#5a4632] shadow-sm ring-1 ring-[#cbb48a] dark:bg-[#3a322a] dark:text-[#eadfc8] dark:ring-[#6b5a44]">
           {label}
         </div>
       </Html>
@@ -185,6 +236,8 @@ export function TopologyDesk({
   skinIndex = 0,
   onSelect,
 }: TopologyDeskProps) {
+  const tone = useTone()
+  const dark = useTopologyDark()
   const { gl } = useThree()
   const { t } = useI18n()
   const [hovered, setHovered] = useState(false)
@@ -241,12 +294,12 @@ export function TopologyDesk({
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh position={[0, 0.5, 0]}>
         <boxGeometry args={[width, 0.1, 0.95]} />
-        <meshStandardMaterial color="#e6d6ba" roughness={0.5} />
+        <meshStandardMaterial color={tone("#e6d6ba")} roughness={0.5} />
       </mesh>
       {legOffsets(width / 2).map(([dx, dz], index) => (
         <mesh key={index} position={[dx, 0.25, dz]}>
           <boxGeometry args={[0.08, 0.5, 0.08]} />
-          <meshStandardMaterial color="#cab89a" />
+          <meshStandardMaterial color={tone("#cab89a")} />
         </mesh>
       ))}
 
@@ -273,7 +326,8 @@ export function TopologyDesk({
         </>
       ) : null}
 
-      <DeskProp moduleId={module.id} color={color} />
+      <DeskProp moduleId={module.id} color={color} vacant={Boolean(module.vacant)} />
+      {dark && !module.vacant ? <DeskLamp x={-(width / 2 - 0.22)} /> : null}
 
       <group position={[0, 0, 0.55]}>
         <Stool />

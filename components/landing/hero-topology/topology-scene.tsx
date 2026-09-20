@@ -11,6 +11,7 @@ import { TopologyAirPurifier } from "@/components/landing/hero-topology/topology
 import { TopologyBookshelf } from "@/components/landing/hero-topology/topology-bookshelf"
 import { PANTRY_PURIFIER_OFFSET, TopologyPantry } from "@/components/landing/hero-topology/topology-pantry"
 import { FOCUS_WORLD_OFFSET } from "@/components/landing/hero-topology/topology-camera"
+import { TOPOLOGY_PALETTE, useTone, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
 
 // 문서가 백그라운드 탭으로 가려지면(document.hidden) 씬이 보이지 않아도
@@ -69,11 +70,6 @@ function memberSeatPose(col: number): { x: number; rotationY: number } {
     rotationY: isLeft ? FACE_LEFT : FACE_RIGHT,
   }
 }
-
-const FLOOR_BASE_COLOR = "#cbb28f"
-const FLOOR_TOP_COLOR = "#f3ead9"
-const WALL_COLOR = "#d7e6ea"
-const PARTITION_COLOR = "#a9c9bb"
 
 type Seat = { position: [number, number, number]; rotationY: number; wide: boolean }
 type RowPartition = { x: number; z: number }
@@ -244,23 +240,24 @@ function ViewportPan({ panPixels }: { panPixels: number }) {
 }
 
 function OfficePlant({ position }: { position: [number, number, number] }) {
+  const tone = useTone()
   return (
     <group position={position}>
       <mesh position={[0, 0.18, 0]}>
         <cylinderGeometry args={[0.16, 0.13, 0.34, 12]} />
-        <meshStandardMaterial color="#c17a4f" roughness={0.7} />
+        <meshStandardMaterial color={tone("#c17a4f")} roughness={0.7} />
       </mesh>
       <mesh position={[0, 0.5, 0]}>
         <sphereGeometry args={[0.22, 10, 10]} />
-        <meshStandardMaterial color="#6f9a5e" roughness={0.8} />
+        <meshStandardMaterial color={tone("#6f9a5e")} roughness={0.8} />
       </mesh>
       <mesh position={[0.14, 0.62, 0.05]}>
         <sphereGeometry args={[0.15, 10, 10]} />
-        <meshStandardMaterial color="#7fac6c" roughness={0.8} />
+        <meshStandardMaterial color={tone("#7fac6c")} roughness={0.8} />
       </mesh>
       <mesh position={[-0.13, 0.58, -0.08]}>
         <sphereGeometry args={[0.13, 10, 10]} />
-        <meshStandardMaterial color="#5e8a50" roughness={0.8} />
+        <meshStandardMaterial color={tone("#5e8a50")} roughness={0.8} />
       </mesh>
     </group>
   )
@@ -270,6 +267,9 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const dragging = useRef(false)
   const documentVisible = useDocumentVisible()
+  const dark = useTopologyDark()
+  const tone = useTone()
+  const palette = dark ? TOPOLOGY_PALETTE.dark : TOPOLOGY_PALETTE.light
   const frameloop = active && documentVisible ? "always" : "never"
 
   const layout = useMemo(() => computeLayout(data.modules), [data.modules])
@@ -349,7 +349,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         width: "100%",
         height: "100%",
         display: "block",
-        background: FLOOR_TOP_COLOR,
+        background: palette.background,
         cursor: "grab",
         touchAction: "none",
       }}
@@ -368,7 +368,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         camera.updateProjectionMatrix()
       }}
     >
-      <color attach="background" args={[FLOOR_TOP_COLOR]} />
+      <color attach="background" args={[palette.background]} />
       <ViewportPan panPixels={panPixels} />
       <OrbitControls
         ref={controlsRef}
@@ -390,31 +390,44 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         controlsRef={controlsRef}
       />
 
-      <hemisphereLight args={["#fff8ee", "#cbbba4", 1]} />
-      <directionalLight position={[7, 10, 5]} intensity={1.05} />
-      <directionalLight position={[-6, 3, -4]} intensity={0.22} />
+      {/* 다크: 밤 사무실 — 차가운 달빛 톤의 약한 환경광 + TV에서 새는 푸른 빛 */}
+      {dark ? (
+        <>
+          <hemisphereLight args={["#9fb2d8", "#2a231d", 0.62]} />
+          <directionalLight position={[7, 10, 5]} intensity={0.55} color="#b8c6ee" />
+          <directionalLight position={[-6, 3, -4]} intensity={0.12} color="#8fa0d0" />
+          {/* 책상 스탠드(책상마다 하나)가 따뜻한 빛을 맡으므로 방 전체용은 TV 불빛만 둔다 */}
+          <pointLight position={[-0.7, 1.6, LEAD_Z - 0.4]} intensity={3.2} distance={7} color="#7ea2ff" />
+        </>
+      ) : (
+        <>
+          <hemisphereLight args={["#fff8ee", "#cbbba4", 1]} />
+          <directionalLight position={[7, 10, 5]} intensity={1.05} />
+          <directionalLight position={[-6, 3, -4]} intensity={0.22} />
+        </>
+      )}
 
       {/* 바닥 — 끝없는 평면 대신 두께가 있는 플랫폼으로 경계를 뚜렷하게 준다.
           아이소메트릭 카메라에서 이 사각 플랫폼은 마름모(다이아몬드) 형태로 보인다.
           루트 메뉴 수(책상 수·줄 수)에 맞춰 폭과 깊이가 함께 늘고 준다. */}
       <mesh position={[0, -0.09, floorCenterZ]}>
         <boxGeometry args={[floorWidth + FLOOR_OVERHANG * 2, 0.14, floorDepth + FLOOR_OVERHANG * 2]} />
-        <meshStandardMaterial color={FLOOR_BASE_COLOR} roughness={0.9} />
+        <meshStandardMaterial color={palette.floorBase} roughness={0.9} />
       </mesh>
       <mesh position={[0, -0.02, floorCenterZ]}>
         <boxGeometry args={[floorWidth, 0.08, floorDepth]} />
-        <meshStandardMaterial color={FLOOR_TOP_COLOR} roughness={0.85} />
+        <meshStandardMaterial color={palette.floorTop} roughness={0.85} />
       </mesh>
 
       {/* 뒷벽(TV) + 옆벽(화이트보드) — 바닥 상판 테두리에 맞춘 반투명 가벽.
           옆벽은 뒷벽 두께만큼 짧게 해서 코너에서 맞댄다. */}
       <mesh position={[0, WALL_H / 2, backWallZ]}>
         <boxGeometry args={[floorWidth, WALL_H, WALL_T]} />
-        <meshStandardMaterial color={WALL_COLOR} transparent opacity={0.24} roughness={0.15} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[sideWallX, WALL_H / 2, sideWallCenterZ]}>
         <boxGeometry args={[WALL_T, WALL_H, sideWallDepth]} />
-        <meshStandardMaterial color={WALL_COLOR} transparent opacity={0.24} roughness={0.15} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
 
       {/* TV — 팀장 책상 뒤(팀장 자리가 있을 때). "팀장이 TV 등지고 앉는다"는 요청의 기준점 */}
@@ -425,7 +438,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         </mesh>
         <mesh position={[0, 0, 0.035]}>
           <boxGeometry args={[1.36, 0.72, 0.02]} />
-          <meshStandardMaterial color="#15131a" emissive="#4a4038" emissiveIntensity={0.5} />
+          <meshStandardMaterial color="#15131a" emissive={dark ? "#3d5a9a" : "#4a4038"} emissiveIntensity={dark ? 0.9 : 0.5} />
         </mesh>
         <Html position={[0, 0, 0.05]} center occlude={false} className="pointer-events-none select-none">
           <div className="whitespace-nowrap text-[11px] font-bold tracking-wide text-white/90">DevDeck</div>
@@ -436,7 +449,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
       <group position={[sideWallX + WALL_T / 2 + 0.01, 1.35, floorCenterZ + 0.35]}>
         <mesh>
           <boxGeometry args={[0.05, 1.0, 1.5]} />
-          <meshStandardMaterial color="#f7f4ee" roughness={0.6} />
+          <meshStandardMaterial color={tone("#f7f4ee")} roughness={0.6} />
         </mesh>
         {[0.26, 0.4, 0.32].map((h, index) => (
           <mesh key={index} position={[0.035, -0.32 + h / 2, -0.35 + index * 0.35]}>
@@ -450,7 +463,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
       {layout.hasLead ? (
         <mesh position={[0, 0.55, (LEAD_Z + MEMBER_Z_START) / 2 - 0.15]}>
           <boxGeometry args={[Math.max(floorWidth - 1.6, 2.0), 0.9, 0.08]} />
-          <meshStandardMaterial color={PARTITION_COLOR} roughness={0.75} />
+          <meshStandardMaterial color={palette.partition} roughness={0.75} />
         </mesh>
       ) : null}
 
@@ -458,7 +471,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
       {layout.partitions.map((partition, index) => (
         <mesh key={index} position={[partition.x, 0.55, partition.z]}>
           <boxGeometry args={[0.08, 0.9, 1.7]} />
-          <meshStandardMaterial color={PARTITION_COLOR} roughness={0.75} />
+          <meshStandardMaterial color={palette.partition} roughness={0.75} />
         </mesh>
       ))}
 

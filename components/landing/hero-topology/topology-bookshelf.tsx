@@ -1,5 +1,7 @@
 "use client"
 
+import { useTone } from "@/components/landing/hero-topology/topology-theme"
+
 // 팀장 자리 옆 왼쪽 벽에 붙는 4단 책장. 순수 장식용 정적 오브젝트라 애니메이션은
 // 없다 — 책/게임 케이스는 고정 팔레트에서 결정론적으로 골라 새로고침해도 항상
 // 같은 모습을 유지한다.
@@ -41,13 +43,14 @@ function Book({ z, depth, height, color }: { z: number; depth: number; height: n
 }
 
 function GameCase({ z, depth, accent }: { z: number; depth: number; accent: string }) {
+  const tone = useTone()
   const width = 0.016
   const height = 0.19
   return (
     <group position={[0, height / 2, z]}>
       <mesh>
         <boxGeometry args={[depth, height, width]} />
-        <meshStandardMaterial color="#1c1c1f" roughness={0.35} metalness={0.1} />
+        <meshStandardMaterial color={tone("#1c1c1f")} roughness={0.35} metalness={0.1} />
       </mesh>
       <mesh position={[depth / 2 + 0.001, 0.015, 0]}>
         <boxGeometry args={[0.002, height - 0.05, width - 0.004]} />
@@ -93,6 +96,7 @@ export function TopologyBookshelf({
   position: [number, number, number]
   rotationY?: number
 }) {
+  const tone = useTone()
   const totalH = TIER_H * TIERS + FRAME_T
 
   return (
@@ -101,20 +105,20 @@ export function TopologyBookshelf({
       {[-1, 1].map((side) => (
         <mesh key={side} position={[0, totalH / 2, ((SHELF_W - FRAME_T) / 2) * side]}>
           <boxGeometry args={[SHELF_D, totalH, FRAME_T]} />
-          <meshStandardMaterial color={FRAME_COLOR} roughness={0.65} />
+          <meshStandardMaterial color={tone(FRAME_COLOR)} roughness={0.65} />
         </mesh>
       ))}
       {/* 4단 칸을 만드는 선반판 5장(바닥 포함) */}
       {Array.from({ length: TIERS + 1 }, (_, i) => (
         <mesh key={i} position={[0, i * TIER_H, 0]}>
           <boxGeometry args={[SHELF_D, FRAME_T, SHELF_W]} />
-          <meshStandardMaterial color={SHELF_COLOR} roughness={0.6} />
+          <meshStandardMaterial color={tone(SHELF_COLOR)} roughness={0.6} />
         </mesh>
       ))}
       {/* 뒤판 */}
       <mesh position={[-SHELF_D / 2 + 0.011, totalH / 2, 0]}>
         <boxGeometry args={[0.02, totalH, SHELF_W]} />
-        <meshStandardMaterial color={BACK_COLOR} roughness={0.7} />
+        <meshStandardMaterial color={tone(BACK_COLOR)} roughness={0.7} />
       </mesh>
 
       {/* 각 칸의 책/게임 케이스 — 선반 길이(로컬 Z)를 따라 늘어놓는다 */}

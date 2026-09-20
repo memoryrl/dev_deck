@@ -113,7 +113,7 @@ export function TopologyPanel({
   const tint = activeCard ? TINT_FACE[activeCard.tint] : TINT_FACE.champagne
 
   return (
-    <div className={cn("relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] md:h-[640px]", className)}>
+    <div className={cn("relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] dark:bg-[#1d1a17] md:h-[640px]", className)}>
       <TopologyScene
         data={data}
         activeModuleId={activeModuleId}

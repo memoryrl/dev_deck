@@ -182,7 +182,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
                 active={slide === 1}
               />
             ) : (
-              <div className="h-full bg-[#efe6d8]" />
+              <div className="h-full bg-[#efe6d8] dark:bg-[#1d1a17]" />
             )}
           </div>
         </div>

@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
-import type { Group } from "three"
+import type { Group, Object3D, SpotLight } from "three"
+import { useTone, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 
 // 로보락 S10 MaxV류 — 낮고 넓은 원반형 바디 + 앞쪽 가장자리에 살짝 튀어나온
 // 라이다 터렛. 실사 모델 대신 저폴리 프리미티브 조합으로, 이 씬의 다른 오브젝트와
@@ -30,7 +31,19 @@ export function TopologyRobotVacuum({
   floorDepth: number
   obstacles?: VacuumObstacle[]
 }) {
+  const tone = useTone()
+  const dark = useTopologyDark()
   const groupRef = useRef<Group>(null)
+  const headlightRef = useRef<SpotLight>(null)
+  const headlightTarget = useRef<Object3D>(null)
+
+  // 스포트라이트의 target은 기본이 월드 원점이라, 청소기 그룹 안의 빈 오브젝트로 바꿔 줘야
+  // 진행방향을 따라 빛이 같이 돈다.
+  useEffect(() => {
+    const light = headlightRef.current
+    const target = headlightTarget.current
+    if (light && target) light.target = target
+  }, [dark])
   const prevPos = useRef<{ x: number; z: number } | null>(null)
 
   // 벽 안쪽 테두리를 따라 도는 사각 순찰 경로 — 방 크기(모듈 수)에 맞춰 매번
@@ -115,22 +128,22 @@ export function TopologyRobotVacuum({
       {/* 바디 */}
       <mesh>
         <cylinderGeometry args={[BODY_RADIUS, BODY_RADIUS, BODY_HEIGHT, 32]} />
-        <meshStandardMaterial color="#2a2a2e" roughness={0.38} metalness={0.12} />
+        <meshStandardMaterial color={tone("#2a2a2e")} roughness={0.38} metalness={0.12} />
       </mesh>
       {/* 범퍼 하단 림 */}
       <mesh position={[0, -BODY_HEIGHT / 2 - 0.008, 0]}>
         <cylinderGeometry args={[BODY_RADIUS + 0.006, BODY_RADIUS + 0.006, 0.014, 32]} />
-        <meshStandardMaterial color="#151517" roughness={0.6} />
+        <meshStandardMaterial color={tone("#151517")} roughness={0.6} />
       </mesh>
       {/* 상판 광택 림 */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, BODY_HEIGHT / 2 + 0.001, 0]}>
         <ringGeometry args={[BODY_RADIUS - 0.012, BODY_RADIUS - 0.002, 32]} />
-        <meshStandardMaterial color="#57575e" roughness={0.2} metalness={0.6} />
+        <meshStandardMaterial color={tone("#57575e")} roughness={0.2} metalness={0.6} />
       </mesh>
       {/* 라이다 터렛 — 진행방향(+Z) 쪽에 살짝 치우쳐 배치 */}
       <mesh position={[0, BODY_HEIGHT / 2 + TURRET_HEIGHT / 2, BODY_RADIUS * 0.45]}>
         <cylinderGeometry args={[TURRET_RADIUS, TURRET_RADIUS, TURRET_HEIGHT, 20]} />
-        <meshStandardMaterial color="#141416" roughness={0.3} metalness={0.4} />
+        <meshStandardMaterial color={tone("#141416")} roughness={0.3} metalness={0.4} />
       </mesh>
       {/* 카메라 렌즈 포인트 */}
       <mesh position={[0, BODY_HEIGHT / 2 + TURRET_HEIGHT / 2, BODY_RADIUS * 0.45 + TURRET_RADIUS + 0.001]}>
@@ -142,6 +155,30 @@ export function TopologyRobotVacuum({
         <circleGeometry args={[0.016, 12]} />
         <meshStandardMaterial color="#43e08a" emissive="#43e08a" emissiveIntensity={0.7} />
       </mesh>
+      {/* 다크 모드 전조등 — 진행방향(+Z) 바닥을 비스듬히 비춘다 */}
+      {dark ? (
+        <>
+          <mesh position={[-0.055, 0, BODY_RADIUS - 0.004]} rotation={[0, 0, 0]}>
+            <circleGeometry args={[0.014, 12]} />
+            <meshBasicMaterial color="#fff6dc" />
+          </mesh>
+          <mesh position={[0.055, 0, BODY_RADIUS - 0.004]}>
+            <circleGeometry args={[0.014, 12]} />
+            <meshBasicMaterial color="#fff6dc" />
+          </mesh>
+          <spotLight
+            ref={headlightRef}
+            position={[0, 0.02, BODY_RADIUS]}
+            color="#fff1cf"
+            intensity={4}
+            distance={3}
+            angle={0.55}
+            penumbra={0.85}
+            decay={1.6}
+          />
+          <object3D ref={headlightTarget} position={[0, -0.06, 1.4]} />
+        </>
+      ) : null}
     </group>
   )
 }
