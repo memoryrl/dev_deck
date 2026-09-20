@@ -24,9 +24,9 @@ export function LoginRobotBackdrop() {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
       <LoginRobotScene />
-      {/* 카드 가독성용 좌→우 페이드. 로봇 얼굴은 우측~중앙에 두고 카피는 왼쪽. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-background/78 to-background/15 dark:from-background dark:via-background/82 dark:to-background/25" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background/90 to-transparent" />
+      {/* 카드 쪽(좌)만 가독성 페이드. 우측 로봇 얼굴은 거의 그대로 드러낸다. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background from-0% via-background/70 via-35% to-transparent to-62%" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/55 to-transparent" />
     </div>
   )
 }
