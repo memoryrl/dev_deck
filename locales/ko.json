@@ -313,6 +313,7 @@
   },
   "auth": {
     "title": "로그인",
+    "watchTitle": "보고 있어요",
     "lede": "로그인은 글·리뷰를 편집할 때만 필요합니다. 게임 목록은 로그인 없이 볼 수 있습니다.",
     "missingEnv": "Supabase 환경변수가 없습니다.",
     "googleDisabled": "Supabase에서 Google 로그인이 꺼져 있습니다. Authentication → Providers → Google을 Enable 하고 Client ID/Secret을 넣으세요."

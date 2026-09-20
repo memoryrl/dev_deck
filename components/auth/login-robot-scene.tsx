@@ -1,50 +1,48 @@
 "use client"
 
-import { useEffect, useMemo, useRef, type MutableRefObject } from "react"
+import { Suspense, useEffect, useMemo, useRef, type MutableRefObject } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { useAnimations, useGLTF } from "@react-three/drei"
+import { ContactShadows, useAnimations, useGLTF } from "@react-three/drei"
 import { SkeletonUtils } from "three-stdlib"
 import {
-  Box3,
   Color,
   MathUtils,
   MeshStandardMaterial,
-  Vector3,
   type Bone,
   type Group,
   type Material,
   type Mesh,
   type Object3D,
 } from "three"
-import { TOPOLOGY_PALETTE, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
+import { useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 
-// 토폴로지와 동일 에셋: quaternius.itch.io/lowpoly-robot (CC0)
+// quaternius.itch.io/lowpoly-robot (CC0) — 토폴로지와 동일 에셋
 const MODEL_URL = "/models/robot.glb"
-const MODEL_SCALE = 0.55
+const MODEL_SCALE = 0.72
 const IDLE_CLIP = "RobotArmature|Robot_Idle"
-
-const SKIN = { main: "#e08a3c", grey: "#f0e0c8", black: "#3d291c" }
-
 const FLOATING_MESH_NAMES = new Set(["Hand.L", "Hand.R", "HandL", "HandR"])
 
-const LOOK_YAW = 0.7
-const LOOK_PITCH = 0.4
-const LOOK_NECK = 0.45
-const LOOK_SMOOTH = 6.5
+// 참고(Chroma형): 단색 배경 위 캐릭터 대비. 라이트=골드 위 딥 틸, 다크=잉크 위 샴페인.
+const SKIN_LIGHT = { main: "#2f8f86", grey: "#d7ebe7", black: "#1a3f3b" }
+const SKIN_DARK = { main: "#e08a3c", grey: "#efe0c8", black: "#3d291c" }
 
-const ROBOT_X = 0.55
+const LOOK_YAW = 0.75
+const LOOK_PITCH = 0.42
+const LOOK_NECK = 0.48
+const LOOK_SMOOTH = 7
 
 type PointerTarget = { x: number; y: number }
+type Skin = { main: string; grey: string; black: string }
 
-function tintClone(material: Material): Material {
+function tintClone(material: Material, skin: Skin): Material {
   const cloned = material.clone()
   if (!(cloned instanceof MeshStandardMaterial)) return cloned
-  if (cloned.name === "Main") cloned.color = new Color(SKIN.main)
-  else if (cloned.name === "Grey") cloned.color = new Color(SKIN.grey)
+  if (cloned.name === "Main") cloned.color = new Color(skin.main)
+  else if (cloned.name === "Grey") cloned.color = new Color(skin.grey)
   else if (cloned.name === "Black") {
-    cloned.color = new Color(SKIN.black)
-    cloned.roughness = 0.15
-    cloned.metalness = 0.65
+    cloned.color = new Color(skin.black)
+    cloned.roughness = 0.14
+    cloned.metalness = 0.7
   }
   return cloned
 }
@@ -59,16 +57,19 @@ function findBone(root: Object3D, name: string): Bone | null {
   return found
 }
 
-function LoginRobot({ pointer }: { pointer: MutableRefObject<PointerTarget> }) {
+function LoginRobot({
+  pointer,
+  skin,
+}: {
+  pointer: MutableRefObject<PointerTarget>
+  skin: Skin
+}) {
   const { scene, animations } = useGLTF(MODEL_URL)
   const clonedScene = useMemo(() => SkeletonUtils.clone(scene) as Group, [scene])
   const { actions } = useAnimations(animations, clonedScene)
-  const wrapRef = useRef<Group>(null)
   const headRef = useRef<Bone | null>(null)
   const neckRef = useRef<Bone | null>(null)
   const look = useRef({ yaw: 0, pitch: 0 })
-  const framed = useRef(false)
-  const headWorld = useRef(new Vector3())
 
   useEffect(() => {
     clonedScene.traverse((child) => {
@@ -84,62 +85,38 @@ function LoginRobot({ pointer }: { pointer: MutableRefObject<PointerTarget> }) {
       if (!mesh.isMesh) return
       mesh.frustumCulled = false
       mesh.material = Array.isArray(mesh.material)
-        ? mesh.material.map((mat) => tintClone(mat))
-        : tintClone(mesh.material)
+        ? mesh.material.map((mat) => tintClone(mat, skin))
+        : tintClone(mesh.material, skin)
     })
-  }, [clonedScene])
+  }, [clonedScene, skin])
 
   useEffect(() => {
     const idle = actions[IDLE_CLIP]
-    idle?.reset().fadeIn(0.25).play()
+    idle?.reset().fadeIn(0.3).play()
     return () => {
       idle?.fadeOut(0.15)
     }
   }, [actions])
 
-  useFrame((state, delta) => {
-    // 첫 프레임에 바운딩 박스로 발을 맞추고, 카메라가 머리를 바라보게 한다.
-    if (!framed.current && wrapRef.current) {
-      wrapRef.current.updateWorldMatrix(true, true)
-      const box = new Box3().setFromObject(wrapRef.current)
-      if (box.isEmpty()) return
-      const height = box.max.y - box.min.y
-      if (height < 0.1) return
-      wrapRef.current.position.y -= box.min.y
-      wrapRef.current.updateWorldMatrix(true, true)
-      const head = headRef.current
-      if (head) {
-        head.getWorldPosition(headWorld.current)
-      } else {
-        headWorld.current.set(ROBOT_X, box.max.y - height * 0.08, 0)
-      }
-      const lookY = headWorld.current.y - 0.12
-      state.camera.position.set(ROBOT_X - 0.05, lookY + 0.05, 1.55)
-      state.camera.lookAt(ROBOT_X, lookY, 0)
-      state.camera.updateProjectionMatrix()
-      framed.current = true
-    }
-
+  useFrame((_, delta) => {
     const targetYaw = MathUtils.clamp(pointer.current.x, -1, 1) * LOOK_YAW
     const targetPitch = MathUtils.clamp(-pointer.current.y, -1, 1) * LOOK_PITCH
     look.current.yaw = MathUtils.damp(look.current.yaw, targetYaw, LOOK_SMOOTH, delta)
     look.current.pitch = MathUtils.damp(look.current.pitch, targetPitch, LOOK_SMOOTH, delta)
 
-    const neck = neckRef.current
-    if (neck) {
-      neck.rotation.y += look.current.yaw * LOOK_NECK
-      neck.rotation.x += look.current.pitch * LOOK_NECK
+    if (neckRef.current) {
+      neckRef.current.rotation.y += look.current.yaw * LOOK_NECK
+      neckRef.current.rotation.x += look.current.pitch * LOOK_NECK
     }
-    const head = headRef.current
-    if (head) {
-      head.rotation.y += look.current.yaw
-      head.rotation.x += look.current.pitch
+    if (headRef.current) {
+      headRef.current.rotation.y += look.current.yaw
+      headRef.current.rotation.x += look.current.pitch
     }
   }, 2)
 
-  // 네이티브 모델은 -Z를 향하므로 π를 더해 카메라(+Z)를 보게 한다.
+  // 스케일 0.72 실측: 발≈0, 머리≈2.9. 얼굴·상반신이 프레임 중앙에 오도록 내린다.
   return (
-    <group ref={wrapRef} position={[ROBOT_X, 0, 0]}>
+    <group position={[0.35, -1.55, 0]}>
       <group scale={MODEL_SCALE} rotation={[0, Math.PI, 0]}>
         <primitive object={clonedScene} />
       </group>
@@ -150,17 +127,23 @@ function LoginRobot({ pointer }: { pointer: MutableRefObject<PointerTarget> }) {
 function LoginLights({ dark }: { dark: boolean }) {
   return (
     <>
-      <ambientLight intensity={dark ? 0.55 : 0.75} />
-      <directionalLight position={[2.2, 4, 3]} intensity={dark ? 1.6 : 2.1} color={dark ? "#f2e3c8" : "#fffaf0"} />
-      <directionalLight position={[-2, 2.5, 1.5]} intensity={dark ? 0.55 : 0.7} color="#9eb9cb" />
-      <pointLight position={[ROBOT_X, 2.2, 1.2]} intensity={dark ? 1 : 0.7} color="#e8b866" distance={7} />
+      <ambientLight intensity={dark ? 0.45 : 0.7} />
+      <directionalLight
+        position={[2.6, 3.4, 2.8]}
+        intensity={dark ? 1.7 : 2.15}
+        color={dark ? "#ffe2b8" : "#fff7ea"}
+      />
+      <directionalLight position={[-2.4, 1.8, 1.2]} intensity={dark ? 0.55 : 0.75} color="#8eb8c8" />
+      <pointLight position={[0.4, 1.6, 1.5]} intensity={dark ? 0.9 : 0.55} color="#ffd089" distance={6} />
     </>
   )
 }
 
 export function LoginRobotScene() {
   const dark = useTopologyDark()
-  const palette = dark ? TOPOLOGY_PALETTE.dark : TOPOLOGY_PALETTE.light
+  const skin = dark ? SKIN_DARK : SKIN_LIGHT
+  // 참고 이미지처럼 단색 스테이지. 브랜드 골드 / 딥 잉크.
+  const stage = dark ? "#1a1512" : "#e0b34a"
   const pointer = useRef<PointerTarget>({ x: 0, y: 0 })
 
   useEffect(() => {
@@ -174,17 +157,34 @@ export function LoginRobotScene() {
 
   return (
     <Canvas
-      camera={{ position: [ROBOT_X, 1.4, 1.8], fov: 32, near: 0.05, far: 50 }}
+      camera={{ position: [0.2, 1.15, 2.55], fov: 30, near: 0.1, far: 40 }}
       dpr={[1, 1.75]}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      style={{ width: "100%", height: "100%", display: "block" }}
-      onCreated={({ gl }) => {
-        gl.setClearColor(0x000000, 0)
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: "high-performance",
+        failIfMajorPerformanceCaveat: false,
+        preserveDrawingBuffer: true,
+      }}
+      style={{ width: "100%", height: "100%", display: "block", background: stage }}
+      onCreated={({ camera, gl }) => {
+        camera.lookAt(0.35, 1.2, 0)
+        gl.setClearColor(new Color(stage), 1)
       }}
     >
-      <color attach="background" args={[palette.background]} />
+      <color attach="background" args={[stage]} />
       <LoginLights dark={dark} />
-      <LoginRobot pointer={pointer} />
+      <Suspense fallback={null}>
+        <LoginRobot pointer={pointer} skin={skin} />
+        <ContactShadows
+          position={[0.35, -1.54, 0]}
+          opacity={dark ? 0.55 : 0.4}
+          scale={4.5}
+          blur={2.4}
+          far={3.5}
+          color="#1a1512"
+        />
+      </Suspense>
     </Canvas>
   )
 }
