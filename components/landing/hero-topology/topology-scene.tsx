@@ -11,6 +11,7 @@ import { TopologyAirPurifier } from "@/components/landing/hero-topology/topology
 import { TopologyBookshelf } from "@/components/landing/hero-topology/topology-bookshelf"
 import { PANTRY_PURIFIER_OFFSET, TopologyPantry } from "@/components/landing/hero-topology/topology-pantry"
 import { FOCUS_WORLD_OFFSET } from "@/components/landing/hero-topology/topology-camera"
+import { HexFloorTop } from "@/components/landing/hero-topology/topology-floor"
 import { TOPOLOGY_PALETTE, useTone, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
 
@@ -414,10 +415,16 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         <boxGeometry args={[floorWidth + FLOOR_OVERHANG * 2, 0.14, floorDepth + FLOOR_OVERHANG * 2]} />
         <meshStandardMaterial color={palette.floorBase} roughness={0.9} />
       </mesh>
-      <mesh position={[0, -0.02, floorCenterZ]}>
-        <boxGeometry args={[floorWidth, 0.08, floorDepth]} />
-        <meshStandardMaterial color={palette.floorTop} roughness={0.85} />
-      </mesh>
+      <HexFloorTop
+        position={[0, -0.02, floorCenterZ]}
+        width={floorWidth}
+        depth={floorDepth}
+        baseColor={palette.floorTop}
+        edgeColor={palette.floorTop}
+        lineColor={palette.tileLine}
+        variance={palette.tileVariance}
+        seamGlow={palette.seamGlow}
+      />
 
       {/* 뒷벽(TV) + 옆벽(화이트보드) — 바닥 상판 테두리에 맞춘 반투명 가벽.
           옆벽은 뒷벽 두께만큼 짧게 해서 코너에서 맞댄다. */}

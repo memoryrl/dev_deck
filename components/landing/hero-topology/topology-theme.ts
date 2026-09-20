@@ -62,6 +62,9 @@ export const TOPOLOGY_PALETTE = {
     wallOpacity: 0.24,
     partition: "#a9c9bb",
     background: "#f3ead9",
+    tileLine: "#e0d1b5",
+    tileVariance: 0.028,
+    seamGlow: undefined,
   },
   dark: {
     floorBase: "#3a2f26",
@@ -70,5 +73,9 @@ export const TOPOLOGY_PALETTE = {
     wallOpacity: 0.2,
     partition: "#4b665b",
     background: "#1d1a17",
+    tileLine: "#1c1815",
+    tileVariance: 0.02,
+    // 브랜드 샴페인 골드 — 스탠드의 따뜻한 빛과 결이 맞고 TV의 푸른 빛과 대비된다
+    seamGlow: "#e8b866" as string | undefined,
   },
 } as const
