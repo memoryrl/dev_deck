@@ -38,7 +38,7 @@ export function LoginButtons() {
   return (
     <div className="space-y-3">
       <Button
-        className="w-full bg-white text-foreground hover:bg-white/90 [&_svg]:size-5"
+        className="w-full border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f7f8f8] hover:text-[#1f1f1f] dark:border-[#dadce0] dark:bg-white dark:text-[#1f1f1f] dark:hover:bg-[#f7f8f8] dark:hover:text-[#1f1f1f] [&_svg]:size-5"
         type="button"
         variant="outline"
         onClick={signIn}
