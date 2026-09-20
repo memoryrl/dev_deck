@@ -95,10 +95,26 @@ function LoginRobot({
   const headRef = useRef<Bone | null>(null)
   const neckRef = useRef<Bone | null>(null)
   const look = useRef({ yaw: 0, pitch: 0 })
+  const baseHead = useRef({ x: 0, y: 0, z: 0 })
+  const baseNeck = useRef({ x: 0, y: 0, z: 0 })
 
   useEffect(() => {
     headRef.current = findBone(robot, "Head")
     neckRef.current = findBone(robot, "Neck")
+    if (headRef.current) {
+      baseHead.current = {
+        x: headRef.current.rotation.x,
+        y: headRef.current.rotation.y,
+        z: headRef.current.rotation.z,
+      }
+    }
+    if (neckRef.current) {
+      baseNeck.current = {
+        x: neckRef.current.rotation.x,
+        y: neckRef.current.rotation.y,
+        z: neckRef.current.rotation.z,
+      }
+    }
   }, [robot])
 
   useFrame((state, delta) => {
@@ -112,12 +128,12 @@ function LoginRobot({
     }
 
     if (neckRef.current) {
-      neckRef.current.rotation.y += look.current.yaw * LOOK_NECK
-      neckRef.current.rotation.x += look.current.pitch * LOOK_NECK
+      neckRef.current.rotation.y = baseNeck.current.y + look.current.yaw * LOOK_NECK
+      neckRef.current.rotation.x = baseNeck.current.x + look.current.pitch * LOOK_NECK
     }
     if (headRef.current) {
-      headRef.current.rotation.y += look.current.yaw
-      headRef.current.rotation.x += look.current.pitch
+      headRef.current.rotation.y = baseHead.current.y + look.current.yaw
+      headRef.current.rotation.x = baseHead.current.x + look.current.pitch
     }
   })
 
