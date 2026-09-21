@@ -3,7 +3,7 @@ import type { User } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { cache } from "react"
 import { usernameFromAuth } from "@/lib/auth/session-user"
-import { isInvalidRefreshError } from "@/lib/supabase/auth-error"
+import { isConsumedRefreshError, isInvalidRefreshError } from "@/lib/supabase/auth-error"
 
 export function createClient() {
   const cookieStore = cookies()
@@ -37,13 +37,22 @@ export const getAuthUser = cache(async () => {
   const supabase = createClient()
   try {
     const { data, error } = await supabase.auth.getUser()
+    if (isConsumedRefreshError(error)) {
+      const { data: sessionData } = await supabase.auth.getSession()
+      return sessionData.session?.user ?? data.user ?? null
+    }
     if (isInvalidRefreshError(error)) {
       await supabase.auth.signOut({ scope: "local" }).catch(() => {})
       return null
     }
     return data.user ?? null
   } catch (error) {
-    if (isInvalidRefreshError(error instanceof Error ? error : null)) {
+    const thrown = error instanceof Error ? error : null
+    if (isConsumedRefreshError(thrown)) {
+      const { data: sessionData } = await supabase.auth.getSession()
+      return sessionData.session?.user ?? null
+    }
+    if (isInvalidRefreshError(thrown)) {
       await supabase.auth.signOut({ scope: "local" }).catch(() => {})
     }
     return null

@@ -43,6 +43,11 @@ function expireAuthCookies(request: NextRequest, response: NextResponse) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
   const path = request.nextUrl.pathname
+  // 방문 기록 API는 본문에서 필요하면 getAuthUser()를 따로 한다. 미들웨어까지
+  // 리프레시하면 랜딩 문서 요청과 refresh token을 두고 경쟁한다.
+  if (path.startsWith("/api/track-visit") || path.startsWith("/api/track-pageview")) {
+    return response
+  }
   if (!hasAuthCookies(request) && !needsAuthCheck(path)) return response
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
