@@ -41,6 +41,8 @@ devdeck.profiles
     └── 1:N  devdeck.board_posts
 
 devdeck.member_events            -- signup/withdraw 로그. user_id는 탈퇴 후에도 남김 (FK 없음)
+devdeck.terms_documents 1:N terms_revisions   -- 이용약관·개인정보처리방침 본문과 버전 이력
+devdeck.profiles 1:N terms_consents           -- 회원별 약관 동의 (문서마다 1행)
 devdeck.boards 1:N board_posts
 devdeck.boards 1:N menus (optional board_id)
 devdeck.menus parent_id → menus (트리)
@@ -258,6 +260,42 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 
 기존 DB는 `supabase/patch-member-events.sql`을 SQL Editor에서 실행한다.
 
+### 2.13 `terms_documents` / `terms_revisions` / `terms_consents`
+
+이용약관(`terms`)과 개인정보처리방침(`privacy`) 본문, 그 수정 이력, 회원 동의 기록. 회원가입(첫 Google 로그인) 직후 `/signup/terms`에서 두 문서를 모두 확인해야 가입이 완료된다.
+
+`terms_documents` — 현재 본문. slug 두 개만 존재한다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| slug | TEXT | PK, `terms` / `privacy` | |
+| title | TEXT | NOT NULL | 한국어 제목 |
+| content | TEXT | NOT NULL | 한국어 본문. CKEditor HTML. 서버에서 sanitize 후 저장 |
+| title_en | TEXT | NOT NULL, 기본 `''` | 영문 제목. 비어 있으면 화면은 한국어로 대체 |
+| content_en | TEXT | NOT NULL, 기본 `''` | 영문 본문. 제목과 둘 다 있거나 둘 다 비어야 한다(앱 검증) |
+| version | INT | NOT NULL, 기본 1 | 저장마다 +1 |
+| updated_by | UUID | FK profiles, SET NULL | |
+| updated_at | timestamptz | NOT NULL | |
+
+`terms_revisions` — 저장할 때마다 한 행. 본문 스냅샷을 그대로 들고 있어 그 시점 문구를 다시 볼 수 있다. `UNIQUE (slug, version)`.
+
+| 컬럼 | 타입 | 설명 |
+| --- | --- | --- |
+| id | UUID | PK |
+| slug / version / title / content / title_en / content_en | | 저장 시점 스냅샷(한/영) |
+| note | TEXT | 변경 메모(선택) |
+| edited_by | UUID | FK profiles, SET NULL |
+| edited_by_email | TEXT | 표시용. `profiles`에 이메일이 없어 JWT에서 받아 저장 |
+| created_at | timestamptz | |
+
+`terms_consents` — 회원별·문서별 한 행(`UNIQUE (user_id, slug)`). 동의한 버전과 IP·UA를 남긴다. `profiles` CASCADE로 탈퇴·가입 취소 시 함께 지워진다.
+
+쓰기는 `devdeck.terms_save(p_slug, p_title, p_content, p_title_en, p_content_en, p_note)` 함수(`SECURITY DEFINER`, `is_owner()` 검사)로만 한다. 본문(한/영) 갱신 + 버전 증가 + 이력 INSERT를 한 트랜잭션으로 처리하고 새 버전 번호를 돌려준다. 영문 인자가 없던 초기 서명(4개 인자)은 패치가 DROP 한다 — PostgREST는 동명 함수가 둘이면 RPC를 거절한다.
+
+기존 DB는 `supabase/patch-terms.sql`을 SQL Editor에서 실행한다. 기본 본문(한/영)과 관리자 메뉴(`/site/terms`)도 이 패치가 넣는다. 영문 컬럼이 없는 초기 버전 위에 재실행해도 `ADD COLUMN IF NOT EXISTS`로 붙고, 영문이 비어 있는 문서에만 기본 영문을 채운다.
+
+화면 언어 선택은 `lib/terms/documents.ts`의 `localizeTerms(doc, locale)`이 한다. `en`이면서 `content_en`이 비어 있지 않을 때만 영문을 내고, 그 외에는 한국어. 대체된 경우 가입 화면에 안내 문구가 붙는다.
+
 ## 3. 인덱스
 
 ```sql
@@ -376,6 +414,20 @@ anon INSERT 없음. Cron이 service_role 키로만 쓴다.
 | member_events_select_owner | authenticated | SELECT | `devdeck.is_owner()` |
 
 INSERT는 `profiles` 트리거(`SECURITY DEFINER`)와 탈퇴 시 서비스 롤만. 일반 회원 INSERT 정책은 없다.
+
+### 5.8 `terms_documents` / `terms_revisions` / `terms_consents`
+
+| Policy | 역할 | 명령 | 조건 |
+| --- | --- | --- | --- |
+| terms_documents_select_public | anon, authenticated | SELECT | `true` |
+| terms_documents_write_owner | authenticated | ALL | `devdeck.is_owner()` |
+| terms_revisions_select_owner | authenticated | SELECT | `devdeck.is_owner()` |
+| terms_revisions_insert_owner | authenticated | INSERT | `devdeck.is_owner()` |
+| terms_consents_select_own | authenticated | SELECT | `user_id = auth.uid() OR devdeck.is_owner()` |
+| terms_consents_insert_own | authenticated | INSERT | `user_id = auth.uid()` |
+| terms_consents_update_own | authenticated | UPDATE | `user_id = auth.uid()` |
+
+`terms_save()`는 `anon`에서 REVOKE, `authenticated`에 EXECUTE. 함수 안에서 다시 `is_owner()`를 검사한다.
 
 ## 6. 목표 SQL 스케치
 
