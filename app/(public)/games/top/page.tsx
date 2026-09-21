@@ -9,7 +9,11 @@ import { getTopSteamGames, type PodiumEntry } from "@/lib/steam/top"
 import { cn } from "@/lib/utils"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
-const MEDAL_TONE = ["border-[#d4af37] bg-[#fff6d8]", "border-[#9aa3b0] bg-[#eef1f5]", "border-[#b87333] bg-[#f4e3d1]"]
+const MEDAL_TONE = [
+  "border-[#d4af37] bg-[#fff6d8] dark:bg-[#2d2510]",
+  "border-[#9aa3b0] bg-[#eef1f5] dark:bg-[#20242b]",
+  "border-[#b87333] bg-[#f4e3d1] dark:bg-[#30231a]",
+]
 
 export default async function GamesTopPage() {
   const { t } = await getT()

@@ -55,7 +55,7 @@ async function Body({ target }: { target: SharedTarget }) {
 
   switch (target.kind) {
     case "board_post":
-      return <RichContent content={target.content} />
+      return <RichContent content={target.content} variant="article" />
 
     case "prompt": {
       const embed = target.resultHtml.trim() ? await resolveResultEmbed(target.resultHtml) : null
@@ -92,7 +92,7 @@ async function Body({ target }: { target: SharedTarget }) {
             ))}
           </div>
           <div className="mt-8">
-            <RichContent content={target.content} />
+            <RichContent content={target.content} variant="article" />
           </div>
         </>
       )
@@ -112,7 +112,7 @@ async function Body({ target }: { target: SharedTarget }) {
           </div>
           {target.reviewText.trim() ? (
             <div className="mt-6">
-              <RichContent content={target.reviewText} />
+              <RichContent content={target.reviewText} variant="article" />
             </div>
           ) : null}
         </>

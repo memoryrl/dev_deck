@@ -38,8 +38,8 @@ BEGIN
   RETURNING id INTO id_prompt;
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
-    (id_prompt, '공개 프롬프트', 'footer.publicPrompts', '/#prompts', 'header', 'visitor', true, 0),
-    (id_prompt, '허브 홈', 'mega.prompt.home', '/', 'header', 'visitor', true, 10),
+    (id_prompt, 'AI 프롬프트 목록', 'mega.prompt.public', '/b/prompts', 'header', 'visitor', true, 0),
+    (id_prompt, '등록된 프롬프트 시상식', 'mega.prompt.top', '/b/prompts/top', 'header', 'visitor', true, 10),
     (id_prompt, '프롬프트 관리', 'mega.prompt.manage', '/promptkit', 'header', 'owner', true, 20);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)
@@ -47,9 +47,9 @@ BEGIN
   RETURNING id INTO id_career;
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
-    (id_career, '전체 글', 'mega.career.posts', '/work', 'header', 'visitor', true, 0),
-    (id_career, '최근 커리어', 'mega.career.recent', '/#career', 'header', 'visitor', true, 10),
-    (id_career, '스킬', 'mega.career.skills', '/#skills', 'header', 'visitor', true, 20),
+    (id_career, '그동안의 업무내용', 'mega.career.all', '/work', 'header', 'visitor', true, 0),
+    (id_career, '스킬', 'mega.career.skills', '/b/skills', 'header', 'visitor', true, 10),
+    (id_career, '등록된 스킬 시상식', 'mega.career.skillsTop', '/b/skills/top', 'header', 'visitor', true, 20),
     (id_career, '글·스킬 관리', 'mega.career.manage', '/career', 'header', 'owner', true, 30);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)
@@ -58,7 +58,7 @@ BEGIN
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
     (id_games, '게임 목록', 'mega.games.list', '/games', 'header', 'visitor', true, 0),
-    (id_games, '추천 게임', 'mega.games.featured', '/games/top', 'header', 'visitor', true, 10),
+    (id_games, '플레이한 게임 시상식', 'mega.games.featured', '/games/top', 'header', 'visitor', true, 10),
     (id_games, '리뷰 관리', 'mega.games.manage', '/steam', 'header', 'owner', true, 20);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)
@@ -83,8 +83,8 @@ BEGIN
   RETURNING id INTO id_pk;
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
-    (id_pk, '대시보드', 'footer.dashboard', '/login', 'footer', 'visitor', true, 0),
-    (id_pk, '공개 프롬프트', 'footer.publicPrompts', '/', 'footer', 'visitor', true, 10),
+    (id_pk, 'AI 프롬프트 목록', 'mega.prompt.public', '/b/prompts', 'footer', 'visitor', true, 0),
+    (id_pk, '등록된 프롬프트 시상식', 'mega.prompt.top', '/b/prompts/top', 'footer', 'visitor', true, 10),
     (id_pk, '프롬프트 관리', 'mega.prompt.manage', '/promptkit', 'footer', 'owner', true, 20);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)
@@ -92,17 +92,18 @@ BEGIN
   RETURNING id INTO id_cl;
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
-    (id_cl, '게시판', 'footer.board', '/work', 'footer', 'visitor', true, 0),
-    (id_cl, '스킬', 'footer.skills', '/work', 'footer', 'visitor', true, 10),
-    (id_cl, '글·스킬 관리', 'mega.career.manage', '/career', 'footer', 'owner', true, 20);
+    (id_cl, '그동안의 업무내용', 'mega.career.all', '/work', 'footer', 'visitor', true, 0),
+    (id_cl, '스킬', 'mega.career.skills', '/b/skills', 'footer', 'visitor', true, 10),
+    (id_cl, '등록된 스킬 시상식', 'mega.career.skillsTop', '/b/skills/top', 'footer', 'visitor', true, 20),
+    (id_cl, '글·스킬 관리', 'mega.career.manage', '/career', 'footer', 'owner', true, 30);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)
   VALUES ('Steam', 'steam.title', NULL, 'footer', 'visitor', true, 30)
   RETURNING id INTO id_st;
 
   INSERT INTO devdeck.menus (parent_id, label, label_key, href, location, view_role, is_active, sort_order) VALUES
-    (id_st, '라이브러리', 'footer.library', '/games', 'footer', 'visitor', true, 0),
-    (id_st, '리뷰', 'footer.reviews', '/games', 'footer', 'visitor', true, 10),
+    (id_st, '게임 목록', 'mega.games.list', '/games', 'footer', 'visitor', true, 0),
+    (id_st, '플레이한 게임 시상식', 'mega.games.featured', '/games/top', 'footer', 'visitor', true, 10),
     (id_st, '리뷰 관리', 'mega.games.manage', '/steam', 'footer', 'owner', true, 20);
 
   INSERT INTO devdeck.menus (label, label_key, href, location, view_role, is_active, sort_order)

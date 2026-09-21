@@ -4,12 +4,14 @@ import { BrandMark } from "@/components/layout/brand-mark"
 import { FooterNav } from "@/components/layout/footer-nav"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { Badge } from "@/components/ui/badge"
+import { accessRoleOf } from "@/lib/access"
+import { currentViewer } from "@/lib/boards/access"
 import { getT } from "@/lib/i18n/dictionary"
 import { menuLabel } from "@/lib/menus/label"
 import { SITE_CONTACT } from "@/lib/site/profile"
 import { listNavMenus } from "@/lib/menus/public"
 
-function fallbackColumns(t: (key: string) => string) {
+function fallbackColumns(t: (key: string) => string, owner: boolean) {
   return [
     {
       title: t("footer.browse"),
@@ -22,22 +24,33 @@ function fallbackColumns(t: (key: string) => string) {
     {
       title: "PromptKit",
       links: [
-        { href: "/login", label: t("footer.dashboard") },
-        { href: "/", label: t("footer.publicPrompts") },
+        { href: "/b/prompts", label: t("mega.prompt.public") },
+        { href: "/b/prompts/top", label: t("mega.prompt.top") },
+        ...(owner ? [{ href: "/promptkit", label: t("mega.prompt.manage") }] : []),
       ],
     },
     {
       title: "CareerLog",
       links: [
-        { href: "/work", label: t("footer.board") },
-        { href: "/work", label: t("footer.skills") },
+        { href: "/work", label: t("mega.career.all") },
+        { href: "/b/skills", label: t("mega.career.skills") },
+        { href: "/b/skills/top", label: t("mega.career.skillsTop") },
+        ...(owner ? [{ href: "/career", label: t("mega.career.manage") }] : []),
       ],
     },
     {
       title: "Steam",
       links: [
-        { href: "/games", label: t("footer.library") },
-        { href: "/games", label: t("footer.reviews") },
+        { href: "/games", label: t("mega.games.list") },
+        { href: "/games/top", label: t("mega.games.featured") },
+        ...(owner ? [{ href: "/steam", label: t("mega.games.manage") }] : []),
+      ],
+    },
+    {
+      title: t("mega.community.label"),
+      links: [
+        { href: "/b/notice", label: t("mega.community.notice") },
+        { href: "/b/free", label: t("mega.community.free") },
       ],
     },
   ]
@@ -45,7 +58,10 @@ function fallbackColumns(t: (key: string) => string) {
 
 export async function PublicFooter() {
   const { t, locale } = await getT()
-  const dbFooter = await listNavMenus("footer")
+  const viewer = await currentViewer()
+  const role = accessRoleOf(viewer.user)
+  const owner = role === "owner"
+  const dbFooter = await listNavMenus("footer", role)
   const footerColumns =
     dbFooter.length > 0
       ? dbFooter
@@ -59,9 +75,9 @@ export async function PublicFooter() {
                   : [],
           }))
           .filter((column) => column.links.length > 0)
-      : fallbackColumns(t)
+      : fallbackColumns(t, owner)
   return (
-    <footer className="dark bg-background text-foreground">
+    <footer className="dark border-t border-border bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xs shrink-0 space-y-4">

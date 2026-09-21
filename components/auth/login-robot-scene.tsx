@@ -562,7 +562,7 @@ function ZoomControls({
   onZoomOut: () => void
 }) {
   return (
-    <div className="pointer-events-auto absolute bottom-40 right-4 z-20 flex flex-col gap-2 md:bottom-8 md:right-6">
+    <div className="pointer-events-auto absolute right-4 top-4 z-20 flex flex-col gap-2 md:bottom-8 md:right-6 md:top-auto">
       <button
         type="button"
         aria-label="Zoom in"

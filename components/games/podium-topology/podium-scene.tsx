@@ -6,13 +6,11 @@ import { Html, OrbitControls } from "@react-three/drei"
 import { useRouter } from "next/navigation"
 import * as THREE from "three"
 import { TopologyRobot } from "@/components/landing/hero-topology/topology-robot"
+import { TOPOLOGY_PALETTE, useTopologyDark } from "@/components/landing/hero-topology/topology-theme"
 import { SteamCover } from "@/components/steam/steam-cover"
 import { steamCoverSources } from "@/lib/steam/images"
 import type { PodiumEntry } from "@/lib/steam/top"
 
-const FLOOR_BASE = "#cbb28f"
-const FLOOR_TOP = "#f3ead9"
-const WALL = "#d7e6ea"
 
 const MEDAL = {
   1: { metal: "#f4c430", ribbon: "#c1121f", badge: "#f5c542", label: "금" },
@@ -230,6 +228,8 @@ function RankedRobot({
 }
 
 function CeremonyStage({ entries }: { entries: PodiumEntry[] }) {
+  // 바닥·벽 색은 랜딩 토폴로지와 같은 라이트/다크 팔레트를 쓴다.
+  const palette = useTopologyDark() ? TOPOLOGY_PALETTE.dark : TOPOLOGY_PALETTE.light
   const byRank = useMemo(() => {
     const map = new Map<number, PodiumEntry>()
     for (const entry of entries) map.set(entry.rank, entry)
@@ -240,16 +240,16 @@ function CeremonyStage({ entries }: { entries: PodiumEntry[] }) {
     <>
       <mesh position={[1.1, -0.09, 0.35]}>
         <boxGeometry args={[10.4, 0.14, 6.2]} />
-        <meshStandardMaterial color={FLOOR_BASE} roughness={0.9} />
+        <meshStandardMaterial color={palette.floorBase} roughness={0.9} />
       </mesh>
       <mesh position={[1.1, -0.02, 0.35]}>
         <boxGeometry args={[10, 0.08, 5.8]} />
-        <meshStandardMaterial color={FLOOR_TOP} roughness={0.85} />
+        <meshStandardMaterial color={palette.floorTop} roughness={0.85} />
       </mesh>
 
       <mesh position={[0, 1.15, -2.05]}>
         <boxGeometry args={[6.4, 2.3, 0.08]} />
-        <meshStandardMaterial color={WALL} transparent opacity={0.28} roughness={0.2} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity + 0.04} roughness={0.2} side={THREE.DoubleSide} />
       </mesh>
 
       <mesh position={[0, 0.015, 1.35]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -308,6 +308,8 @@ function CeremonyStage({ entries }: { entries: PodiumEntry[] }) {
 
 export function PodiumScene({ entries }: { entries: PodiumEntry[] }) {
   const visible = useDocumentVisible()
+  const dark = useTopologyDark()
+  const palette = dark ? TOPOLOGY_PALETTE.dark : TOPOLOGY_PALETTE.light
 
   return (
     <Canvas
@@ -316,13 +318,13 @@ export function PodiumScene({ entries }: { entries: PodiumEntry[] }) {
       camera={{ position: CAMERA_POS, zoom: CAMERA_ZOOM, near: 0.1, far: 200, up: [0, 1, 0] }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false }}
-      style={{ width: "100%", height: "100%", display: "block", background: FLOOR_TOP, touchAction: "none" }}
+      style={{ width: "100%", height: "100%", display: "block", background: palette.background, touchAction: "none" }}
       onCreated={({ camera }) => {
         camera.lookAt(...CAMERA_TARGET)
         camera.updateProjectionMatrix()
       }}
     >
-      <color attach="background" args={[FLOOR_TOP]} />
+      <color attach="background" args={[palette.background]} />
       <OrbitControls
         makeDefault
         enableDamping
@@ -335,9 +337,19 @@ export function PodiumScene({ entries }: { entries: PodiumEntry[] }) {
         maxZoom={120}
       />
 
-      <hemisphereLight args={["#fff8ee", "#cbbba4", 1]} />
-      <directionalLight position={[7, 10, 5]} intensity={1.05} />
-      <directionalLight position={[-6, 3, -4]} intensity={0.22} />
+      {dark ? (
+        <>
+          <hemisphereLight args={["#9fb2d8", "#2a231d", 0.75]} />
+          <directionalLight position={[7, 10, 5]} intensity={0.55} color="#b8c6ee" />
+          <directionalLight position={[-6, 3, -4]} intensity={0.14} color="#8fa0d0" />
+        </>
+      ) : (
+        <>
+          <hemisphereLight args={["#fff8ee", "#cbbba4", 1]} />
+          <directionalLight position={[7, 10, 5]} intensity={1.05} />
+          <directionalLight position={[-6, 3, -4]} intensity={0.22} />
+        </>
+      )}
       <spotLight position={[-1.1, 4.2, 1.6]} angle={0.32} penumbra={0.45} intensity={2.1} color="#e8eef6" />
       <spotLight position={[0, 4.6, 1.6]} angle={0.28} penumbra={0.4} intensity={3.1} color="#ffe9a0" />
       <spotLight position={[1.1, 3.9, 1.6]} angle={0.34} penumbra={0.5} intensity={1.7} color="#ffc48a" />

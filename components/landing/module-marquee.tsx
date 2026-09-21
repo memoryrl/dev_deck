@@ -56,7 +56,6 @@ function ModuleCard({
   href,
   title,
   body,
-  index,
   icon: Icon,
   surface,
   iconClass,
@@ -65,23 +64,16 @@ function ModuleCard({
   href: string
   title: string
   body: string
-  index: number
   icon: (typeof CARD_STYLE)[number]["icon"]
   surface: string
   iconClass: string
   className?: string
 }) {
-  const number = String(index + 1).padStart(2, "0")
   return (
     <Link href={href} className={cn("w-[min(22rem,78vw)] shrink-0", className)}>
       <Card className={cn("h-full overflow-hidden transition hover:-translate-y-0.5", surface)}>
         <Icon className={cn("size-5", iconClass)} />
-        <h2 className="mt-4 flex items-baseline gap-2.5 font-display text-2xl font-extrabold">
-          <span className="text-base font-bold tabular-nums tracking-tight text-muted-foreground" aria-hidden>
-            {number}
-          </span>
-          <span>{title}</span>
-        </h2>
+        <h2 className="mt-4 font-display text-2xl font-extrabold">{title}</h2>
         <p className="mt-3 text-sm text-muted-foreground">{body}</p>
       </Card>
     </Link>

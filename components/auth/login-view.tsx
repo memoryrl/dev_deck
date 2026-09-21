@@ -49,14 +49,14 @@ export function LoginView({ error, termsDocs }: { error?: string; termsDocs: Sig
   }
 
   return (
-    <main className="relative flex min-h-[calc(100dvh-3.5rem)] flex-1 flex-col overflow-hidden">
+    <main id="main-content" tabIndex={-1} className="relative flex min-h-[calc(100dvh-3.5rem)] flex-1 flex-col overflow-hidden focus:outline-none">
       <LoginRobotBackdrop />
 
       {/* 모바일: 하단 카피. md+: 좌측 하단 카드, 캐릭터는 우측 */}
       <div className="pointer-events-none relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-end px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 md:px-10 md:pb-20 md:pt-10">
         <div
           data-login-card
-          className="pointer-events-auto w-full max-w-md space-y-5 rounded-2xl bg-[#fff8e8]/[0.06] p-6 shadow-[0_24px_60px_-28px_rgba(26,21,18,0.45)] ring-1 ring-[#6b4f3a]/10 backdrop-blur-md dark:bg-[#241c16]/[0.08] dark:ring-[#c4a574]/15 dark:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] md:space-y-6 md:p-8"
+          className="pointer-events-auto w-full max-w-md space-y-5 rounded-2xl bg-[#fff8e8]/[0.55] p-6 shadow-[0_24px_60px_-28px_rgba(26,21,18,0.45)] ring-1 ring-[#6b4f3a]/10 backdrop-blur-xl dark:bg-[#241c16]/[0.6] dark:ring-[#c4a574]/15 dark:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] md:space-y-6 md:p-8"
         >
           <div
             role="tablist"

@@ -15,7 +15,12 @@ export function OssLicenseTable({
         <span className="h-4 w-0.5 shrink-0 rounded-full bg-[hsl(var(--lux-cognac))]" aria-hidden />
         {title}
       </h2>
-      <div className="overflow-x-auto">
+      <div
+        className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        tabIndex={0}
+        role="region"
+        aria-label={title}
+      >
         <table className="w-full min-w-[22rem] text-left text-sm">
           <thead>
             <tr className="border-y bg-muted/70 text-xs font-semibold text-muted-foreground">

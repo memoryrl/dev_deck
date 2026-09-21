@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useId, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { AuthSegment } from "@/components/layout/auth-segment"
 import { LogoutButton } from "@/components/layout/logout-button"
 import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { UserAvatar } from "@/components/layout/account-menu"
@@ -179,22 +180,7 @@ export function PublicMobileNav({
               {t("common.logout")}
             </LogoutButton>
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="flex-1 rounded-full bg-foreground px-4 py-2.5 text-center text-sm font-medium text-background"
-                onClick={onClose}
-              >
-                {t("common.login")}
-              </Link>
-              <Link
-                href="/login?mode=signup"
-                className="flex-1 rounded-full border border-foreground/25 px-4 py-2.5 text-center text-sm font-medium"
-                onClick={onClose}
-              >
-                {t("common.signup")}
-              </Link>
-            </>
+            <AuthSegment size="block" className="flex-1" onNavigate={onClose} />
           )}
           <ThemeToggle className="rounded-full" />
         </div>

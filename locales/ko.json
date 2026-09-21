@@ -52,7 +52,8 @@
     "postNav": "게시물 이동",
     "years": "{{count}}년",
     "scrollTop": "맨 위로",
-    "signup": "회원가입"
+    "signup": "회원가입",
+    "skipToContent": "본문으로 건너뛰기"
   },
   "role": {
     "visitor": "방문객",
@@ -185,7 +186,7 @@
       "cta": "프롬프트 전체보기",
       "public": "AI 프롬프트 목록",
       "home": "허브 홈",
-      "top": "추천 프롬프트",
+      "top": "등록된 프롬프트 시상식",
       "manage": "프롬프트 관리"
     },
     "career": {
@@ -196,7 +197,7 @@
       "posts": "전체 글",
       "recent": "최근 커리어",
       "skills": "스킬",
-      "skillsTop": "스킬 추천",
+      "skillsTop": "등록된 스킬 시상식",
       "manage": "글·스킬 관리"
     },
     "games": {
@@ -204,7 +205,7 @@
       "body": "보유 게임과 한줄 리뷰를 공개 포트폴리오로 보여 줍니다.",
       "cta": "라이브러리",
       "list": "게임 목록",
-      "featured": "추천 게임",
+      "featured": "플레이한 게임 시상식",
       "manage": "리뷰 관리"
     },
     "community": {
@@ -338,7 +339,6 @@
     "signupTitle": "회원가입",
     "signupLede": "이용약관과 개인정보처리방침에 동의하면 Google 계정으로 바로 가입할 수 있어요.",
     "termsLegend": "약관 동의",
-    "agreeAll": "전체 동의",
     "required": "[필수]",
     "agreeDoc": "{{title}}에 동의합니다",
     "viewDoc": "보기",
@@ -576,20 +576,20 @@
   "work": {
     "title": "커리어",
     "lede": "참여 프로젝트와 스킬 정리",
-    "topTitle": "스킬 추천",
+    "topTitle": "등록된 스킬 시상식",
     "topDescription": "관리자가 정리한 순서 기준 스킬 Top 10. 금·은·동 시상식 토폴로지입니다.",
     "topEmpty": "아직 등록된 스킬이 없습니다."
   },
   "games": {
     "title": "Steam 라이브러리",
     "lede": "보유 게임, 플레이 기록, 한줄 리뷰. 보기는 로그인 없이 가능합니다.",
-    "topTitle": "추천 게임",
+    "topTitle": "플레이한 게임 시상식",
     "topDescription": "플레이타임 기준 Steam Top 10. 금·은·동 시상식 토폴로지입니다.",
     "topEmpty": "아직 순위 데이터가 없습니다.",
     "topLoading": "시상식을 준비하는 중…"
   },
   "prompts": {
-    "topTitle": "추천 프롬프트",
+    "topTitle": "등록된 프롬프트 시상식",
     "topDescription": "최근 등록순 AI 프롬프트 Top 10. 금·은·동 시상식 토폴로지입니다.",
     "topEmpty": "아직 공개된 프롬프트가 없습니다."
   },

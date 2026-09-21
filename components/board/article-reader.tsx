@@ -22,8 +22,12 @@ export function ArticleReader({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const stored = clampPercent(Number(window.localStorage.getItem(STORAGE_KEY)))
-    setPercent(stored)
+    let raw: string | null = null
+    try {
+      raw = window.localStorage.getItem(STORAGE_KEY)
+    } catch {}
+    // 저장된 값이 없으면 기본 크기. (Number(null)은 0이라 그대로 clamp하면 최소값 70%가 된다.)
+    if (raw !== null) setPercent(clampPercent(Number(raw)))
   }, [])
 
   function updatePercent(next: number) {
@@ -67,7 +71,12 @@ function FontSizeDock({
   const atDefault = percent === DEFAULT
 
   return (
-    <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-5 z-40 w-[min(18rem,calc(100vw-6.5rem))]">
+    <div
+      className={cn(
+        "fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-5 z-40 transition-[width] duration-300 ease-out",
+        open ? "w-[min(18rem,calc(100vw-6.5rem))]" : "w-36"
+      )}
+    >
       <div className="overflow-hidden rounded-xl border border-foreground/10 bg-background/70 shadow-[0_14px_32px_-18px_hsl(var(--foreground)/0.45)] ring-1 ring-[hsl(var(--lux-champagne)/0.28)] backdrop-blur-md">
         <button
           type="button"

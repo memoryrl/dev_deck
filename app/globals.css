@@ -86,6 +86,18 @@
   font-size: calc(1em * var(--article-font-scale, 1));
 }
 
+/* 글 상세 본문. 한 줄이 너무 길어지지 않게(한글 기준 40자 안팎) 읽기 폭을 제한하고, 글자는 조금 키워 읽기 편하게 한다.
+   본문 크기 조절 독(--article-font-scale)과 함께 동작한다. */
+.prose-article {
+  max-width: 46rem;
+  font-size: calc(1.0625rem * var(--article-font-scale, 1));
+  line-height: 1.85;
+}
+
+.prose-article :where(p, li) {
+  line-height: 1.85;
+}
+
 .prose-deck :where(h1, h2, h3, h4, h5, h6) {
   @apply font-display font-bold tracking-tight;
   line-height: 1.3;
@@ -225,6 +237,45 @@
 
 .rich-editor {
   --ck-color-base-background: hsl(var(--field));
+}
+
+/* CKEditor 5는 자체 색 변수(--ck-color-*)를 쓰고 기본이 밝은 테마다. 다크에서는 툴바 글자(#333)가 어두운 배경에
+   묻히므로, 사이트 토큰으로 색 변수를 다시 연결한다. */
+.dark .rich-editor {
+  --ck-color-base-foreground: hsl(var(--muted));
+  --ck-color-base-background: hsl(var(--field));
+  --ck-color-base-border: hsl(var(--border));
+  --ck-color-base-text: hsl(var(--foreground));
+  --ck-color-text: hsl(var(--foreground));
+  --ck-color-base-active: hsl(var(--ring));
+  --ck-color-base-active-focus: hsl(var(--ring));
+  --ck-color-focus-border: hsl(var(--ring));
+  --ck-color-focus-outer-shadow: transparent;
+  --ck-color-shadow-drop: hsl(0 0% 0% / 0.5);
+  --ck-color-shadow-drop-active: hsl(0 0% 0% / 0.6);
+  --ck-color-toolbar-background: hsl(var(--muted));
+  --ck-color-toolbar-border: hsl(var(--border));
+  --ck-color-button-default-hover-background: hsl(var(--accent));
+  --ck-color-button-default-active-background: hsl(var(--accent));
+  --ck-color-button-on-background: hsl(var(--accent));
+  --ck-color-button-on-hover-background: hsl(var(--accent));
+  --ck-color-button-on-active-background: hsl(var(--accent));
+  --ck-color-button-on-color: hsl(var(--foreground));
+  --ck-color-dropdown-panel-background: hsl(var(--popover));
+  --ck-color-dropdown-panel-border: hsl(var(--border));
+  --ck-color-panel-background: hsl(var(--popover));
+  --ck-color-panel-border: hsl(var(--border));
+  --ck-color-input-background: hsl(var(--field));
+  --ck-color-input-border: hsl(var(--border));
+  --ck-color-input-text: hsl(var(--foreground));
+  --ck-color-list-background: hsl(var(--popover));
+  --ck-color-list-button-hover-background: hsl(var(--accent));
+  --ck-color-list-button-on-background: hsl(var(--accent));
+  --ck-color-list-button-on-background-focus: hsl(var(--accent));
+  --ck-color-list-button-on-text: hsl(var(--foreground));
+  --ck-color-tooltip-background: hsl(var(--foreground));
+  --ck-color-tooltip-text: hsl(var(--background));
+  --ck-color-engine-placeholder-text: hsl(var(--muted-foreground));
 }
 
 .rich-editor .ck.ck-editor {
@@ -597,5 +648,44 @@
 
   .topology-speech {
     animation: none;
+  }
+}
+
+
+/* 키보드 포커스 표시의 기본값. 컴포넌트가 자기 링(ring)을 이미 가진 경우는 그쪽이 우선한다(:where 는 우선순위 0). */
+:where(a, button, [role="button"], summary, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* 본문 바로가기 링크 — 키보드로 Tab 을 처음 눌렀을 때만 보인다. */
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 0.75rem;
+  z-index: 200;
+  transform: translateY(-200%);
+  border-radius: 9999px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* 움직임 줄이기 설정을 켠 사용자에게는 전환·애니메이션을 사실상 없앤다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

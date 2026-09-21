@@ -54,7 +54,7 @@ export default async function PublicBoardPostPage(
         actions={canShare ? <ShareButton targetType="board_post" targetId={post.id} /> : undefined}
       />
       <div className="mt-8">
-        <RichContent content={post.content} />
+        <RichContent content={post.content} variant="article" />
       </div>
     </>
   )

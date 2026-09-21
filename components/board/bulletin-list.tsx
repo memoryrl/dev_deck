@@ -44,7 +44,10 @@ export async function BulletinList({
 
   return (
     <div className={cn(className)}>
-      <div className={compact ? undefined : "overflow-x-auto"}>
+      <div
+        className={compact ? undefined : "overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+        {...(compact ? {} : { tabIndex: 0, role: "region", "aria-label": t("list.boardCaption") })}
+      >
         <table className={cn("w-full border-collapse text-sm", compact ? null : "min-w-[36rem]")}>
           <caption className="sr-only">{t("list.boardCaption")}</caption>
           <thead>

@@ -68,7 +68,7 @@ async function CareerArticle({ post, canShare = false }: { post: CareerPost; can
         ))}
       </div>
       <div className="mt-8">
-        <RichContent content={post.content} />
+        <RichContent content={post.content} variant="article" />
       </div>
     </>
   )

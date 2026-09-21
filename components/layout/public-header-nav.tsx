@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { AccountMenu } from "@/components/layout/account-menu"
+import { AuthSegment } from "@/components/layout/auth-segment"
 import { BrandMark } from "@/components/layout/brand-mark"
 import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
 import { NotificationCenter } from "@/components/notifications/notification-center"
@@ -153,7 +154,8 @@ function MegaHighlight({
 
 function fallbackNodes(
   edit: Record<string, string>,
-  t: (key: string) => string
+  t: (key: string) => string,
+  owner: boolean
 ): NavNode[] {
   return publicMenus.map((menu) => ({
     id: menu.id,
@@ -161,13 +163,15 @@ function fallbackNodes(
     labelKey: menu.labelKey,
     href: null,
     children: menu.groups.flatMap((group) =>
-      group.links.map((link) => ({
-        id: link.href + link.labelKey,
-        label: t(link.labelKey),
-        labelKey: link.labelKey,
-        href: edit[link.href as keyof typeof edit] ?? link.href,
-        note: link.noteKey ? t(link.noteKey) : undefined,
-      }))
+      group.links
+        .filter((link) => owner || link.noteKey !== "mega.adminOnly")
+        .map((link) => ({
+          id: link.href + link.labelKey,
+          label: t(link.labelKey),
+          labelKey: link.labelKey,
+          href: edit[link.href as keyof typeof edit] ?? link.href,
+          note: link.noteKey ? t(link.noteKey) : undefined,
+        }))
     ),
   }))
 }
@@ -194,7 +198,11 @@ export function PublicHeaderNav({
     __steam__: owner ? "/steam" : "/login",
     __boards__: owner ? "/site/boards" : "/login",
   }
-  const nodes = localizeNavNodes(navNodes.length > 0 ? navNodes : fallbackNodes(edit, t), t, locale)
+  const nodes = localizeNavNodes(
+    navNodes.length > 0 ? navNodes : fallbackNodes(edit, t, owner),
+    t,
+    locale
+  )
   const pathname = usePathname()
   // 헤더의 모든 링크 중 현재 화면과 가장 구체적으로 맞는 하나를 활성으로 삼는다.
   const activeHref = pickActiveHref(
@@ -321,22 +329,7 @@ export function PublicHeaderNav({
                 />
               </div>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
-                  onClick={() => setOpen(null)}
-                >
-                  {t("common.login")}
-                </Link>
-                <Link
-                  href="/login?mode=signup"
-                  className="rounded-full border border-foreground/25 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.06]"
-                  onClick={() => setOpen(null)}
-                >
-                  {t("common.signup")}
-                </Link>
-              </>
+              <AuthSegment size="sm" className="ml-1" onNavigate={() => setOpen(null)} />
             )}
             {account ? <NotificationCenter userKey={account.email} /> : null}
             <ThemeToggle className="rounded-full border-0 bg-transparent shadow-none hover:bg-foreground/[0.06]" />
@@ -355,22 +348,7 @@ export function PublicHeaderNav({
                 }}
               />
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="rounded-full bg-foreground px-3 py-1.5 text-sm font-medium text-background"
-                  onClick={() => setOpen(null)}
-                >
-                  {t("common.login")}
-                </Link>
-                <Link
-                  href="/login?mode=signup"
-                  className="rounded-full border border-foreground/25 px-3 py-1.5 text-sm font-medium text-foreground"
-                  onClick={() => setOpen(null)}
-                >
-                  {t("common.signup")}
-                </Link>
-              </>
+              <AuthSegment size="sm" onNavigate={() => setOpen(null)} />
             )}
             <button
               type="button"
@@ -413,7 +391,13 @@ export function PublicHeaderNav({
                 />
                 <div className="grid gap-1 p-3 sm:grid-cols-2 sm:p-4">
                   {staticMega
-                    ? staticMega.groups.map((group) => (
+                    ? staticMega.groups
+                        .map((group) => ({
+                          ...group,
+                          links: group.links.filter((link) => owner || link.noteKey !== "mega.adminOnly"),
+                        }))
+                        .filter((group) => group.links.length > 0)
+                        .map((group) => (
                         <div key={group.titleKey} className="px-2 py-2">
                           <p className="px-3 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                             {t(group.titleKey)}

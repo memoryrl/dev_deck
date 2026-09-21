@@ -20,7 +20,7 @@ const PodiumScene = dynamic(
 
 export function PodiumPanel({ entries }: { entries: PodiumEntry[] }) {
   return (
-    <div className="relative z-0 h-[min(78vh,720px)] w-full overflow-hidden bg-[#efe6d8]">
+    <div className="relative z-0 h-[min(78vh,720px)] w-full overflow-hidden bg-[#efe6d8] dark:bg-[#1d1a17]">
       <PodiumScene entries={entries} />
     </div>
   )

@@ -66,7 +66,7 @@ export default function DashboardLayout({
         <Suspense fallback={<DashboardHeaderFallback />}>
           <DashboardHeaderSlot />
         </Suspense>
-        <main className="flex-1 px-5 py-8">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 px-5 py-8 focus:outline-none">{children}</main>
       </div>
     </div>
   )

@@ -21,7 +21,7 @@ import { buildLandingTopology, listLandingModules } from "@/lib/landing/topology
 
 export default function HomePage() {
   return (
-    <main className="flex-1">
+    <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
       <section className="relative">
         {/* 데이터가 필요한 스위치+토폴로지는 별도 Suspense로 감싸 히어로 카피는
             즉시 페인트되게 한다. 폴백은 실제 클래식 히어로와 동일한 마크업이라

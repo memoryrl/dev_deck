@@ -17,9 +17,9 @@ export type SignupTermsDoc = {
 }
 
 /**
- * 회원가입 탭의 약관 동의. "전체 동의" + 이용약관·개인정보처리방침 개별 체크(둘 다 필수).
+ * 회원가입 탭의 약관 동의. 이용약관·개인정보처리방침 개별 체크(둘 다 필수).
  * 각 항목의 "보기"로 본문을 그 자리에서 펼쳐 읽을 수 있다.
- * 개별 필수 체크는 본문을 맨 아래까지 내린 뒤에만 켜진다. 전체 동의는 제한하지 않는다.
+ * 필수 체크는 해당 본문을 맨 아래까지 내린 뒤에만 켜진다.
  */
 export function SignupTermsAgreement({
   docs,
@@ -33,16 +33,9 @@ export function SignupTermsAgreement({
   const { t } = useI18n()
   const [open, setOpen] = useState<TermsSlug | null>(null)
   const [read, setRead] = useState<Partial<Record<TermsSlug, boolean>>>({})
-  const all = docs.every((doc) => checked[doc.slug])
 
   function unlock(slug: TermsSlug) {
     setRead((current) => (current[slug] ? current : { ...current, [slug]: true }))
-  }
-
-  function toggleAll() {
-    const next = { ...checked }
-    for (const doc of docs) next[doc.slug] = !all
-    onChange(next)
   }
 
   function toggleDoc(slug: TermsSlug) {
@@ -60,12 +53,6 @@ export function SignupTermsAgreement({
   return (
     <fieldset className="space-y-2.5">
       <legend className="sr-only">{t("auth.termsLegend")}</legend>
-
-      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#6b4f3a]/25 bg-white/70 px-4 py-3 dark:border-[#c4a574]/30 dark:bg-white/[0.04]">
-        <Box checked={all} />
-        <input type="checkbox" className="sr-only" checked={all} onChange={toggleAll} />
-        <span className="text-sm font-bold text-[#1a1614] dark:text-[#f6f1e9]">{t("auth.agreeAll")}</span>
-      </label>
 
       <ul className="space-y-2">
         {docs.map((doc) => {

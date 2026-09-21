@@ -1,6 +1,8 @@
 import { cache } from "react"
 import { headers } from "next/headers"
 import { adminNavLabel, type AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { accessRoleOf } from "@/lib/access"
+import { currentViewer } from "@/lib/boards/access"
 import { getT } from "@/lib/i18n/dictionary"
 import { menuLabel } from "@/lib/menus/label"
 import { listAdminMenus } from "@/lib/menus/admin"
@@ -110,10 +112,12 @@ export async function resolveMenuBreadcrumb(
   currentLabel?: string
 ): Promise<BreadcrumbItem[]> {
   const { t, locale } = await getT()
+  const viewer = await currentViewer()
+  const role = accessRoleOf(viewer.user)
   const [admin, header, footer] = await Promise.all([
     listAdminMenus(),
-    listNavMenus("header"),
-    listNavMenus("footer"),
+    listNavMenus("header", role),
+    listNavMenus("footer", role),
   ])
   const dashboard =
     path.startsWith("/site") ||

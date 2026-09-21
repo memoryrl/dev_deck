@@ -11,7 +11,7 @@ export function PublicContainer({
   children: React.ReactNode
 }) {
   return (
-    <Tag className={cn("mx-auto w-full max-w-6xl flex-1 px-5 py-12", className)}>
+    <Tag id="main-content" tabIndex={-1} className={cn("mx-auto w-full max-w-6xl flex-1 px-5 py-12 focus:outline-none", className)}>
       {children}
     </Tag>
   )

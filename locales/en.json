@@ -52,7 +52,8 @@
     "postNav": "Post navigation",
     "years": "{{count}} yrs",
     "scrollTop": "Back to top",
-    "signup": "Sign up"
+    "signup": "Sign up",
+    "skipToContent": "Skip to main content"
   },
   "role": {
     "visitor": "Visitor",
@@ -185,7 +186,7 @@
       "cta": "View all prompts",
       "public": "AI Prompt list",
       "home": "Hub home",
-      "top": "Featured prompts",
+      "top": "Registered prompt awards",
       "manage": "Manage prompts"
     },
     "career": {
@@ -196,7 +197,7 @@
       "posts": "All posts",
       "recent": "Recent career",
       "skills": "Skills",
-      "skillsTop": "Featured skills",
+      "skillsTop": "Registered skill awards",
       "manage": "Manage posts & skills"
     },
     "games": {
@@ -204,7 +205,7 @@
       "body": "Show owned games and short reviews as a public portfolio.",
       "cta": "Library",
       "list": "Game list",
-      "featured": "Featured games",
+      "featured": "Played game awards",
       "manage": "Manage reviews"
     },
     "community": {
@@ -338,7 +339,6 @@
     "signupTitle": "Sign up",
     "signupLede": "Agree to the Terms of Service and Privacy Policy to sign up instantly with your Google account.",
     "termsLegend": "Agreements",
-    "agreeAll": "Agree to all",
     "required": "[Required]",
     "agreeDoc": "I agree to the {{title}}",
     "viewDoc": "View",
@@ -576,20 +576,20 @@
   "work": {
     "title": "Career",
     "lede": "Projects and skills",
-    "topTitle": "Featured skills",
+    "topTitle": "Registered skill awards",
     "topDescription": "Skills Top 10, ordered the way the admin curated them. An Olympic medal-ceremony topology.",
     "topEmpty": "No skills yet."
   },
   "games": {
     "title": "Steam library",
     "lede": "Owned games, playtime, and short reviews. Reading does not require sign-in.",
-    "topTitle": "Featured games",
+    "topTitle": "Played game awards",
     "topDescription": "Steam Top 10 by playtime. An Olympic medal-ceremony topology.",
     "topEmpty": "No ranking data yet.",
     "topLoading": "Preparing the ceremony…"
   },
   "prompts": {
-    "topTitle": "Featured prompts",
+    "topTitle": "Registered prompt awards",
     "topDescription": "AI Prompt Top 10, most recent first. An Olympic medal-ceremony topology.",
     "topEmpty": "No public prompts yet."
   },

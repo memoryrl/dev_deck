@@ -170,10 +170,17 @@ function NoticePopupLayerDialog({
             router.push(post.href)
           }}
         >
-          <h1 id={titleId} className="mt-1.5 font-display text-lg font-bold leading-snug">
+          {/* 페이지 본문이 이미 h1을 가지므로 팝업 제목은 h2 — 문서에 h1이 두 개가 되지 않게 한다 */}
+          <h2 id={titleId} className="mt-1.5 font-display text-lg font-bold leading-snug">
             {post.title}
-          </h1>
-          <div className="mt-4 min-h-0 flex-1 overflow-y-auto text-sm">
+          </h2>
+          {/* 긴 공지는 이 영역만 스크롤된다 — 키보드로도 스크롤할 수 있도록 포커스를 받게 한다 */}
+          <div
+            tabIndex={0}
+            role="region"
+            aria-labelledby={titleId}
+            className="mt-4 min-h-0 flex-1 overflow-y-auto text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             {post.content ? (
               <RichContent content={post.content} />
             ) : post.excerpt ? (

@@ -26,8 +26,8 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     view_role: "visitor",
     sort_order: 0,
     children: [
-      { label: "공개 프롬프트", labelKey: "footer.publicPrompts", href: "/#prompts", view_role: "visitor", sort_order: 0 },
-      { label: "허브 홈", labelKey: "mega.prompt.home", href: "/", view_role: "visitor", sort_order: 10 },
+      { label: "AI 프롬프트 목록", labelKey: "mega.prompt.public", href: "/b/prompts", view_role: "visitor", sort_order: 0 },
+      { label: "등록된 프롬프트 시상식", labelKey: "mega.prompt.top", href: "/b/prompts/top", view_role: "visitor", sort_order: 10 },
       { label: "프롬프트 관리", labelKey: "mega.prompt.manage", href: "/promptkit", view_role: "owner", sort_order: 20 },
     ],
   },
@@ -39,9 +39,9 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     view_role: "visitor",
     sort_order: 10,
     children: [
-      { label: "전체 글", labelKey: "mega.career.posts", href: "/work", view_role: "visitor", sort_order: 0 },
-      { label: "최근 커리어", labelKey: "mega.career.recent", href: "/#career", view_role: "visitor", sort_order: 10 },
-      { label: "스킬", labelKey: "mega.career.skills", href: "/#skills", view_role: "visitor", sort_order: 20 },
+      { label: "그동안의 업무내용", labelKey: "mega.career.all", href: "/work", view_role: "visitor", sort_order: 0 },
+      { label: "스킬", labelKey: "mega.career.skills", href: "/b/skills", view_role: "visitor", sort_order: 10 },
+      { label: "등록된 스킬 시상식", labelKey: "mega.career.skillsTop", href: "/b/skills/top", view_role: "visitor", sort_order: 20 },
       { label: "글·스킬 관리", labelKey: "mega.career.manage", href: "/career", view_role: "owner", sort_order: 30 },
     ],
   },
@@ -54,7 +54,7 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     sort_order: 20,
     children: [
       { label: "게임 목록", labelKey: "mega.games.list", href: "/games", view_role: "visitor", sort_order: 0 },
-      { label: "추천 게임", labelKey: "mega.games.featured", href: "/games/top", view_role: "visitor", sort_order: 10 },
+      { label: "플레이한 게임 시상식", labelKey: "mega.games.featured", href: "/games/top", view_role: "visitor", sort_order: 10 },
       { label: "리뷰 관리", labelKey: "mega.games.manage", href: "/steam", view_role: "owner", sort_order: 20 },
     ],
   },
@@ -91,8 +91,8 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     view_role: "visitor",
     sort_order: 10,
     children: [
-      { label: "대시보드", labelKey: "footer.dashboard", href: "/login", view_role: "visitor", sort_order: 0 },
-      { label: "공개 프롬프트", labelKey: "footer.publicPrompts", href: "/", view_role: "visitor", sort_order: 10 },
+      { label: "AI 프롬프트 목록", labelKey: "mega.prompt.public", href: "/b/prompts", view_role: "visitor", sort_order: 0 },
+      { label: "등록된 프롬프트 시상식", labelKey: "mega.prompt.top", href: "/b/prompts/top", view_role: "visitor", sort_order: 10 },
       { label: "프롬프트 관리", labelKey: "mega.prompt.manage", href: "/promptkit", view_role: "owner", sort_order: 20 },
     ],
   },
@@ -104,9 +104,10 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     view_role: "visitor",
     sort_order: 20,
     children: [
-      { label: "게시판", labelKey: "footer.board", href: "/work", view_role: "visitor", sort_order: 0 },
-      { label: "스킬", labelKey: "footer.skills", href: "/work", view_role: "visitor", sort_order: 10 },
-      { label: "글·스킬 관리", labelKey: "mega.career.manage", href: "/career", view_role: "owner", sort_order: 20 },
+      { label: "그동안의 업무내용", labelKey: "mega.career.all", href: "/work", view_role: "visitor", sort_order: 0 },
+      { label: "스킬", labelKey: "mega.career.skills", href: "/b/skills", view_role: "visitor", sort_order: 10 },
+      { label: "등록된 스킬 시상식", labelKey: "mega.career.skillsTop", href: "/b/skills/top", view_role: "visitor", sort_order: 20 },
+      { label: "글·스킬 관리", labelKey: "mega.career.manage", href: "/career", view_role: "owner", sort_order: 30 },
     ],
   },
   {
@@ -117,8 +118,8 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
     view_role: "visitor",
     sort_order: 30,
     children: [
-      { label: "라이브러리", labelKey: "footer.library", href: "/games", view_role: "visitor", sort_order: 0 },
-      { label: "리뷰", labelKey: "footer.reviews", href: "/games", view_role: "visitor", sort_order: 10 },
+      { label: "게임 목록", labelKey: "mega.games.list", href: "/games", view_role: "visitor", sort_order: 0 },
+      { label: "플레이한 게임 시상식", labelKey: "mega.games.featured", href: "/games/top", view_role: "visitor", sort_order: 10 },
       { label: "리뷰 관리", labelKey: "mega.games.manage", href: "/steam", view_role: "owner", sort_order: 20 },
     ],
   },

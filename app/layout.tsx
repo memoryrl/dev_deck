@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { locale, dictionary } = await getT()
+  const { t, locale, dictionary } = await getT()
   const settings = await getSiteSettings()
   const headerList = await headers()
   const nonce = headerList.get("x-nonce") ?? undefined
@@ -55,6 +55,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>
         <ThemeProvider nonce={nonce}>
           <I18nProvider locale={locale} dictionary={dictionary}>
+            <a href="#main-content" className="skip-link">
+              {t("common.skipToContent")}
+            </a>
             <Suspense fallback={null}>
               <LanguageRouteSync />
             </Suspense>
