@@ -43,7 +43,7 @@ const LOOK_AT_CLOSE = new Vector3(ROBOT_X, 1.25, 0)
 const LOOK_AT_FAR = new Vector3(ROBOT_X, 0.62, 0)
 const CAM_CLOSE = { x: 0.28, y: 1.38, z: 1.75 }
 const CAM_FAR_DESKTOP = { x: 0.2, y: 0.74, z: 4.25 }
-const CAM_FAR_MOBILE = { x: 0.1, y: 0.68, z: 6.4 }
+const CAM_FAR_MOBILE = { x: 0.05, y: 0.72, z: 7.6 }
 const CAMERA_FOV = 35
 
 const ZOOM_MIN = 0.65
@@ -120,9 +120,11 @@ function easeOutCubic(t: number) {
 function LoginRobot({
   pointer,
   skin,
+  scale = MODEL_SCALE,
 }: {
   pointer: MutableRefObject<PointerTarget>
   skin: Skin
+  scale?: number
 }) {
   const { scene } = useGLTF(MODEL_URL)
   const robot = useMemo(() => prepareRobot(scene as Group, skin), [scene, skin])
@@ -175,7 +177,7 @@ function LoginRobot({
 
   return (
     <group ref={groupRef} position={[ROBOT_X, ROBOT_Y, 0]}>
-      <group scale={MODEL_SCALE} rotation={[0, MODEL_FACING_OFFSET, 0]}>
+      <group scale={scale} rotation={[0, MODEL_FACING_OFFSET, 0]}>
         <primitive object={robot} />
       </group>
     </group>
