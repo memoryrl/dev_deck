@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useEffect, useId, useRef, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
-import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { LogoutButton } from "@/components/layout/logout-button"
 import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
@@ -122,16 +122,15 @@ export function AccountMenu({
               {t("common.mypage")}
             </Link>
           </div>
-          <form action={signOut} className="border-t border-foreground/10 p-1.5">
-            <button
-              type="submit"
+          <div className="border-t border-foreground/10 p-1.5">
+            <LogoutButton
               role="menuitem"
               className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground"
             >
               <LogOut className="size-4" />
               {t("common.logout")}
-            </button>
-          </form>
+            </LogoutButton>
+          </div>
         </div>
       ) : null}
     </div>

@@ -5,6 +5,7 @@ import { useState } from "react"
 import { createCareerPost, deleteCareerPost, updateCareerPost } from "./actions"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +32,9 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
   }
 
   async function onDelete() {
-    if (!post || !confirm("이 글을 삭제할까요?")) return
+    if (!post) return
+    const ok = await showConfirm("이 글을 삭제할까요?", { destructive: true })
+    if (!ok) return
     await deleteCareerPost(post.id)
     router.push(deleteTo ?? "/career")
     router.refresh()

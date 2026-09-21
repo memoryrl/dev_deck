@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { createPrompt, deletePrompt, updatePrompt } from "./actions"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -30,7 +31,9 @@ export function PromptForm({ prompt, returnTo, deleteTo }: { prompt?: Prompt; re
   }
 
   async function onDelete() {
-    if (!prompt || !confirm("이 프롬프트를 삭제할까요?")) return
+    if (!prompt) return
+    const ok = await showConfirm("이 프롬프트를 삭제할까요?", { destructive: true })
+    if (!ok) return
     await deletePrompt(prompt.id)
     router.push(deleteTo ?? "/promptkit")
     router.refresh()

@@ -21,7 +21,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
         <PublicHeader />
       </Suspense>
       <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
-        {children}
+        {/* 바디 최소 높이 — 스켈레톤이나 짧은 페이지에서도 푸터가 위로 딸려 올라오지 않게 한다.
+            자식 페이지의 flex-1(main, PublicContainer)이 그대로 늘어나도록 flex 컬럼으로 둔다. */}
+        <div className="flex min-w-0 flex-1 flex-col min-h-[70dvh]">{children}</div>
         <Suspense fallback={null}>
           <PublicFooter />
         </Suspense>

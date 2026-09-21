@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import { formatBoardDate, formatBoardDateTime } from "@/lib/i18n/format"
 import type { PagedResult } from "@/lib/pagination"
 import { cn } from "@/lib/utils"
+import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 function rowNumber(index: number, paged?: PagedResult<unknown>, itemCount = 0) {
   if (paged) return paged.total - ((paged.page - 1) * paged.pageSize + index)
@@ -72,8 +73,10 @@ export function BulletinList({
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={colCount} className="px-4 py-16 text-center text-sm text-muted-foreground">
-                  {emptyText}
+                <td colSpan={colCount}>
+                  <EmptyPlaceholder variant="plain" className="py-16">
+                    {emptyText}
+                  </EmptyPlaceholder>
                 </td>
               </tr>
             ) : (

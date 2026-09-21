@@ -157,7 +157,7 @@ type AiRunResponse = {
 
 ## 2. Server Actions
 
-위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts`, `app/(dashboard)/site/actions.ts`, `app/b/actions.ts`.
+위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts`, `app/(dashboard)/site/actions.ts`, `app/(public)/b/actions.ts`.
 
 공통:
 

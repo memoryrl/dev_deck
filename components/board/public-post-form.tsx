@@ -2,11 +2,12 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { removePublicPost, savePublicPost } from "@/app/b/actions"
+import { removePublicPost, savePublicPost } from "@/app/(public)/b/actions"
 import { boardPath } from "@/lib/access"
 import { NOTICE_BOARD_SLUG } from "@/lib/boards/slugs"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -46,7 +47,9 @@ export function PublicPostForm({
   }
 
   async function onDelete() {
-    if (!post || !confirm("이 글을 삭제할까요?")) return
+    if (!post) return
+    const ok = await showConfirm("이 글을 삭제할까요?", { destructive: true })
+    if (!ok) return
     const result = await removePublicPost(post.id, boardId)
     if (!result.ok) {
       setError(result.error)

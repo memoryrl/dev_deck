@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { setNoticePopup } from "@/app/b/actions"
+import { setNoticePopup } from "@/app/(public)/b/actions"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useI18n } from "@/components/i18n/i18n-provider"

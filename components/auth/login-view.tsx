@@ -2,7 +2,7 @@
 
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { LoginRobotBackdrop } from "@/components/auth/login-robot-backdrop"
-import { LoginButtons } from "@/app/(auth)/login/login-buttons"
+import { LoginButtons } from "@/app/(public)/(auth)/login/login-buttons"
 
 export function LoginView({ error }: { error?: string }) {
   const { t } = useI18n()

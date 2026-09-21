@@ -7,6 +7,7 @@ import { NoticePopupToggle } from "@/components/board/notice-popup-toggle"
 import { NOTICE_BOARD_SLUG } from "@/lib/boards/slugs"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -44,7 +45,9 @@ export function BoardPostAdminForm({
   }
 
   async function onDelete() {
-    if (!post || !confirm("이 글을 삭제할까요?")) return
+    if (!post) return
+    const ok = await showConfirm("이 글을 삭제할까요?", { destructive: true })
+    if (!ok) return
     await deleteBoardPost(post.id, boardId)
     router.push(`/site/boards/${boardId}`)
     router.refresh()

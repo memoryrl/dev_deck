@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { CustomSelect } from "@/components/ui/custom-select"
+import { LayerDialogShowcase } from "@/components/ui/layer-dialog-showcase"
 import { ListPager } from "@/components/layout/list-pager"
 import { requireOwner } from "@/lib/auth/owner"
 
@@ -107,6 +108,24 @@ export default async function DesignSystemCommonPage() {
 
 // 둥근 버튼 (자주 사용하는 패턴)
 <Button className="rounded-full">Rounded</Button>`}</CodeBlock>
+      </ComponentSection>
+
+      <ComponentSection
+        id="layer-dialog"
+        title="Layer Dialog"
+        path="components/ui/layer-dialog.tsx"
+        description="window.alert / window.confirm 대신 쓰는 레이어 팝업입니다. showAlert는 확인만, showConfirm은 확인·취소를 Promise로 반환합니다."
+      >
+        <LayerDialogShowcase />
+        <CodeBlock>{`import { showAlert, showConfirm } from "@/lib/ui/layer-dialog"
+
+await showAlert("안내 메시지입니다.")
+
+const ok = await showConfirm("이 작업을 계속할까요?", {
+  title: "확인",
+  destructive: true,
+})
+if (!ok) return`}</CodeBlock>
       </ComponentSection>
 
       {/* Input */}

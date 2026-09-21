@@ -12,6 +12,7 @@ import { formatLastPlayed } from "@/lib/i18n/format"
 import { listQueryHref, paginateItems } from "@/lib/pagination"
 import { cn, formatPlaytime } from "@/lib/utils"
 import type { GameReview, SteamGame, SteamGamesResponse, SteamProfile } from "@/types/steam"
+import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export function SteamLibrary({
   reviews,
@@ -46,7 +47,7 @@ export function SteamLibrary({
     return <p className="text-sm text-muted-foreground">{t("steam.loadFailed")}</p>
   }
   if (games.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("steam.emptyLibrary")}</p>
+    return <EmptyPlaceholder>{t("steam.emptyLibrary")}</EmptyPlaceholder>
   }
 
   return (

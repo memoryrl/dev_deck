@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import { steamCoverSources } from "@/lib/steam/images"
 import { getTopSteamGames, type PodiumEntry } from "@/lib/steam/top"
 import { cn } from "@/lib/utils"
+import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 const MEDAL_TONE = ["border-[#d4af37] bg-[#fff6d8]", "border-[#9aa3b0] bg-[#eef1f5]", "border-[#b87333] bg-[#f4e3d1]"]
 
@@ -19,7 +20,7 @@ export default async function GamesTopPage() {
       <PageTitleBanner title={t("games.topTitle")} description={t("games.topDescription")} />
 
       {entries.length === 0 ? (
-        <p className="mt-10 text-sm text-muted-foreground">{t("games.topEmpty")}</p>
+        <EmptyPlaceholder className="mt-6">{t("games.topEmpty")}</EmptyPlaceholder>
       ) : (
         <>
           <div className="mt-6 overflow-hidden rounded-3xl border border-foreground/10 shadow-[0_24px_60px_-36px_hsl(24_20%_10%/0.55)]">

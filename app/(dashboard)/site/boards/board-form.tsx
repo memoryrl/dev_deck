@@ -6,6 +6,7 @@ import { deleteBoard, upsertBoard } from "@/app/(dashboard)/site/actions"
 import { ACCESS_ROLES, roleLabel } from "@/lib/access"
 import { isSystemBoard, kindLabel } from "@/lib/boards/kind"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,7 +34,9 @@ export function BoardForm({ board }: { board?: Board }) {
   }
 
   async function onDelete() {
-    if (!board || !confirm("게시판과 글을 모두 삭제할까요?")) return
+    if (!board) return
+    const ok = await showConfirm("게시판과 글을 모두 삭제할까요?", { destructive: true })
+    if (!ok) return
     await deleteBoard(board.id)
     router.push("/site/boards")
     router.refresh()

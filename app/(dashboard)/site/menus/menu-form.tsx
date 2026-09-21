@@ -5,6 +5,7 @@ import { useState } from "react"
 import { deleteMenu, upsertMenu } from "@/app/(dashboard)/site/actions"
 import { ACCESS_ROLES, roleLabel, type AccessRole } from "@/lib/access"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -68,7 +69,9 @@ export function MenuForm({
   }
 
   async function onDelete() {
-    if (!menu || !confirm("이 메뉴를 삭제할까요? 하위 메뉴도 함께 삭제됩니다.")) return
+    if (!menu) return
+    const ok = await showConfirm("이 메뉴를 삭제할까요? 하위 메뉴도 함께 삭제됩니다.", { destructive: true })
+    if (!ok) return
     await deleteMenu(menu.id)
     router.refresh()
     onDeleted?.()

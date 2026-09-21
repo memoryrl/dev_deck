@@ -7,8 +7,8 @@ import { Home, LogOut, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useI18n } from "@/components/i18n/i18n-provider"
-import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { LogoutButton } from "@/components/layout/logout-button"
 import { AdminSidebarNav } from "@/components/layout/admin-sidebar-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
@@ -112,15 +112,10 @@ export function DashboardHeader({ account, menus = [] }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2 border-t px-5 py-4">
-            <form action={signOut} className="flex-1">
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium"
-              >
-                <LogOut className="size-4" />
-                {t("common.logout")}
-              </button>
-            </form>
+            <LogoutButton className="flex flex-1 items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium">
+              <LogOut className="size-4" />
+              {t("common.logout")}
+            </LogoutButton>
             <ThemeToggle className="rounded-full" />
           </div>
         </aside>

@@ -1,16 +1,18 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useEffect, useId, useState } from "react"
 import { ChevronDown, LogOut } from "lucide-react"
-import { signOut } from "@/app/(dashboard)/promptkit/actions"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
+import { LogoutButton } from "@/components/layout/logout-button"
 import { AdminMenuGroups } from "@/components/layout/admin-menu-groups"
 import { UserAvatar } from "@/components/layout/account-menu"
 import { MENU_ICON, megaIdFromLabelKey, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { lockDocumentScroll } from "@/lib/dom/lock-scroll"
+import { isActiveHref, pickActiveHref } from "@/lib/menus/active"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
@@ -31,6 +33,11 @@ export function PublicMobileNav({
   const [section, setSection] = useState<string | null>(null)
   const titleId = useId()
   const { t } = useI18n()
+  const pathname = usePathname()
+  const activeHref = pickActiveHref(
+    pathname,
+    navNodes.flatMap((menu) => [menu.href, ...menu.children.map((child) => child.href)])
+  )
 
   useEffect(() => {
     if (!open) setSection(null)
@@ -88,12 +95,18 @@ export function PublicMobileNav({
             const megaId = (menu.id as MegaId) in MENU_ICON ? (menu.id as MegaId) : megaIdFromLabelKey(menu.labelKey)
             const Icon = megaId ? MENU_ICON[megaId] : undefined
             const expanded = section === menu.id
+            const current =
+              isActiveHref(activeHref, menu.href) || menu.children.some((child) => isActiveHref(activeHref, child.href))
             if (menu.href && menu.children.length === 0) {
               return (
                 <Link
                   key={menu.id}
                   href={menu.href}
-                  className="flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]"
+                  className={cn(
+                    "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]",
+                    current && "bg-foreground/[0.06] font-extrabold"
+                  )}
+                  aria-current={current ? "page" : undefined}
                   onClick={onClose}
                 >
                   {menu.label}
@@ -106,7 +119,8 @@ export function PublicMobileNav({
                   type="button"
                   className={cn(
                     "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-foreground/[0.05]",
-                    expanded && "bg-foreground/[0.06]"
+                    expanded && "bg-foreground/[0.06]",
+                    current && "font-extrabold"
                   )}
                   aria-expanded={expanded}
                   onClick={() => setSection(expanded ? null : menu.id)}
@@ -117,19 +131,23 @@ export function PublicMobileNav({
                 </button>
                 {expanded ? (
                   <div className="mb-2 ml-2 mt-1 space-y-1 border-l border-foreground/10 pl-3">
-                    {menu.children.map((link) => (
+                    {menu.children.map((link) => {
+                      const linkCurrent = isActiveHref(activeHref, link.href)
+                      return (
                       <Link
                         key={link.id}
                         href={link.href}
                         className="block rounded-xl px-3 py-2 hover:bg-foreground/[0.05]"
+                        aria-current={linkCurrent ? "page" : undefined}
                         onClick={onClose}
                       >
-                        <span className="text-sm font-medium">{link.label}</span>
+                        <span className={cn("text-sm font-medium", linkCurrent && "font-extrabold")}>{link.label}</span>
                         {link.note ? (
                           <span className="mt-0.5 block text-xs text-muted-foreground">{link.note}</span>
                         ) : null}
                       </Link>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : null}
               </div>
@@ -156,15 +174,10 @@ export function PublicMobileNav({
 
         <div className="flex items-center gap-2 border-t px-5 py-4">
           {account ? (
-            <form action={signOut} className="flex-1">
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium"
-              >
-                <LogOut className="size-4" />
-                {t("common.logout")}
-              </button>
-            </form>
+            <LogoutButton className="flex flex-1 items-center justify-center gap-2 rounded-full border border-input px-4 py-2.5 text-sm font-medium">
+              <LogOut className="size-4" />
+              {t("common.logout")}
+            </LogoutButton>
           ) : (
             <Link
               href="/login"

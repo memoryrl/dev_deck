@@ -1,6 +1,7 @@
-import { ArrowUpRight, Github, Mail, Phone } from "lucide-react"
+import { Github, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import { BrandMark } from "@/components/layout/brand-mark"
+import { FooterNav } from "@/components/layout/footer-nav"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { Badge } from "@/components/ui/badge"
 import { getT } from "@/lib/i18n/dictionary"
@@ -80,29 +81,7 @@ export async function PublicFooter() {
             <LanguageSwitcher menuPlacement="up" />
           </div>
 
-          <nav className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fill,minmax(7.5rem,max-content))] justify-items-start gap-x-10 gap-y-8">
-            {footerColumns.map((column) => (
-              <div key={column.title}>
-                <p className="text-sm font-semibold">{column.title}</p>
-                <ul className="mt-3 space-y-2">
-                  {column.links.map((link) => (
-                    <li key={`${column.title}-${link.label}`}>
-                      <Link
-                        href={link.href}
-                        className="group inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        <ArrowUpRight
-                          className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                          aria-hidden
-                        />
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+          <FooterNav columns={footerColumns} />
 
           <div className="shrink-0 lg:w-56">
             <p className="text-sm font-semibold">{t("footer.contact")}</p>

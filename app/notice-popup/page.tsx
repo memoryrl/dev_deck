@@ -3,6 +3,7 @@ import { NoticePopupWindowChrome } from "@/components/layout/notice-popup-window
 import { RichContent } from "@/components/editor/rich-content"
 import { getNoticePopupPost } from "@/lib/boards/community"
 import { getT } from "@/lib/i18n/dictionary"
+import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = getT()
@@ -20,7 +21,7 @@ export default async function NoticePopupPage() {
   if (!post) {
     return (
       <main className="flex min-h-0 flex-1 flex-col p-5">
-        <p className="text-sm text-muted-foreground">{t("landing.emptyCommunity")}</p>
+        <EmptyPlaceholder className="flex-1">{t("landing.emptyCommunity")}</EmptyPlaceholder>
       </main>
     )
   }

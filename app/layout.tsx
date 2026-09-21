@@ -7,6 +7,7 @@ import { HashScrollFix } from "@/components/layout/hash-scroll-fix"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { VisitTracker } from "@/components/layout/visit-tracker"
+import { LayerDialogHost } from "@/components/ui/layer-dialog"
 import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ScrollToTop />
             <VisitTracker />
             <HashScrollFix />
+            <LayerDialogHost />
           </I18nProvider>
         </ThemeProvider>
       </body>

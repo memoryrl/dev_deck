@@ -76,7 +76,7 @@ components/landing/hero-topology/
   topology-robot.tsx          # 블록형 로우폴리 로봇 (box geometry만 사용, 유휴 bob 애니메이션)
   topology-side-list.tsx       # v1에서 쓰던 좌우 리스트 — v2에서는 더 이상 렌더링하지 않음(미사용, 삭제하지 않고 보존)
 
-app/(home)/page.tsx          # HomeHero를 클래식/토폴로지 스위처로 감싸도록 수정
+app/(public)/(home)/page.tsx        # HomeHero를 클래식/토폴로지 스위처로 감싸도록 수정
 lib/landing/topology.ts       # getHomeLandingData() 결과 → 모듈/아이템 데이터로 변환하는 순수 함수 (v1과 동일)
 ```
 
@@ -112,7 +112,7 @@ lib/landing/topology.ts       # getHomeLandingData() 결과 → 모듈/아이템
 1. `docs/08-landing-topology.md` v2 확정 (이 문서)
 2. `package.json`에 `three` + `@react-three/fiber` + `@react-three/drei` 추가 — 완료
 3. `lib/landing/topology.ts` — `HomeLandingData` → 모듈/아이템 변환 함수 — 완료 (v1과 동일)
-4. `app/(home)/page.tsx` — 히어로 전용 Suspense + 스위처 컴포넌트 — 완료
+4. `app/(public)/(home)/page.tsx` — 히어로 전용 Suspense + 스위처 컴포넌트 — 완료
 5. `components/landing/hero-topology/hero-view-switch.tsx` — 스위치 + localStorage — 완료
 6. `components/landing/hero-topology/topology-scene.tsx` — 고정 아이소메트릭 카메라 리그 — 완료
 7. `components/landing/hero-topology/topology-desk.tsx` / `topology-robot.tsx` — 책상·로봇 조립 — 완료

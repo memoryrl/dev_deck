@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { deleteComment, hideComment, removeProfanityWord } from "@/app/(dashboard)/site/comments/actions"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 
 export function CommentAdminActions({ id, hidden }: { id: string; hidden: boolean }) {
   const router = useRouter()
@@ -25,7 +26,8 @@ export function CommentAdminActions({ id, hidden }: { id: string; hidden: boolea
         size="sm"
         variant="destructive"
         onClick={async () => {
-          if (!confirm("이 댓글과 하위 답글을 삭제할까요?")) return
+          const ok = await showConfirm("이 댓글과 하위 답글을 삭제할까요?", { destructive: true })
+          if (!ok) return
           await deleteComment(id)
           router.refresh()
         }}

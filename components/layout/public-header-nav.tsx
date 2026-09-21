@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { AccountMenu } from "@/components/layout/account-menu"
@@ -9,6 +10,7 @@ import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
 import { MENU_ICON, megaIdFromLabelKey, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { isActiveHref, pickActiveHref } from "@/lib/menus/active"
 import { localizeNavNodes } from "@/lib/menus/label"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
@@ -192,6 +194,12 @@ export function PublicHeaderNav({
     __boards__: owner ? "/site/boards" : "/login",
   }
   const nodes = localizeNavNodes(navNodes.length > 0 ? navNodes : fallbackNodes(edit, t), t, locale)
+  const pathname = usePathname()
+  // 헤더의 모든 링크 중 현재 화면과 가장 구체적으로 맞는 하나를 활성으로 삼는다.
+  const activeHref = pickActiveHref(
+    pathname,
+    nodes.flatMap((menu) => [menu.href, ...menu.children.map((child) => child.href)])
+  )
   const activeNode = nodes.find((menu) => menu.id === open)
   // DB 메뉴 id는 UUID라 MegaId(prompt/career/games)와 다르다.
   // label_key(또는 한글 라벨에서 추론한 키)로 static mega 카피(부연설명·아이콘·씬)를 맞춘다.
@@ -262,12 +270,18 @@ export function PublicHeaderNav({
               const expanded = open === menu.id
               const megaId = (menu.id as MegaId) in MENU_ICON ? (menu.id as MegaId) : megaIdFromLabelKey(menu.labelKey)
               const Icon = megaId ? MENU_ICON[megaId] : undefined
+              const current =
+                isActiveHref(activeHref, menu.href) || menu.children.some((child) => isActiveHref(activeHref, child.href))
               if (menu.href && menu.children.length === 0) {
                 return (
                   <Link
                     key={menu.id}
                     href={menu.href}
-                    className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-foreground/75 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                    className={cn(
+                      "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-foreground/75 transition-colors hover:bg-foreground/[0.06] hover:text-foreground",
+                      current && "font-bold text-foreground"
+                    )}
+                    aria-current={current ? "page" : undefined}
                     onClick={() => setOpen(null)}
                   >
                     {menu.label}
@@ -280,7 +294,8 @@ export function PublicHeaderNav({
                   type="button"
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-foreground/75 transition-colors hover:bg-foreground/[0.06] hover:text-foreground",
-                    expanded && "bg-foreground/[0.08] text-foreground"
+                    expanded && "bg-foreground/[0.08] text-foreground",
+                    current && "font-bold text-foreground"
                   )}
                   aria-expanded={expanded}
                   aria-controls={`${labelId}-panel`}
@@ -383,20 +398,25 @@ export function PublicHeaderNav({
                             {t(group.titleKey)}
                           </p>
                           <ul className="mt-2 space-y-0.5">
-                            {group.links.map((link) => (
+                            {group.links.map((link) => {
+                              const linkHref = edit[link.href as keyof typeof edit] ?? link.href
+                              const linkCurrent = isActiveHref(activeHref, linkHref)
+                              return (
                               <li key={link.href + link.labelKey}>
                                 <Link
-                                  href={edit[link.href as keyof typeof edit] ?? link.href}
+                                  href={linkHref}
                                   className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
+                                  aria-current={linkCurrent ? "page" : undefined}
                                   onClick={() => setOpen(null)}
                                 >
-                                  <span className="text-sm font-medium">{t(link.labelKey)}</span>
+                                  <span className={cn("text-sm font-medium", linkCurrent && "font-bold")}>{t(link.labelKey)}</span>
                                   {link.noteKey ? (
                                     <span className="mt-0.5 block text-xs text-muted-foreground">{t(link.noteKey)}</span>
                                   ) : null}
                                 </Link>
                               </li>
-                            ))}
+                              )
+                            })}
                           </ul>
                         </div>
                       ))
@@ -406,17 +426,21 @@ export function PublicHeaderNav({
                             {t("common.shortcut")}
                           </p>
                           <ul className="mt-2 space-y-0.5">
-                            {activeNode.children.map((link) => (
-                              <li key={link.id}>
-                                <Link
-                                  href={link.href}
-                                  className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
-                                  onClick={() => setOpen(null)}
-                                >
-                                  <span className="text-sm font-medium">{link.label}</span>
-                                </Link>
-                              </li>
-                            ))}
+                            {activeNode.children.map((link) => {
+                              const linkCurrent = isActiveHref(activeHref, link.href)
+                              return (
+                                <li key={link.id}>
+                                  <Link
+                                    href={link.href}
+                                    className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
+                                    aria-current={linkCurrent ? "page" : undefined}
+                                    onClick={() => setOpen(null)}
+                                  >
+                                    <span className={cn("text-sm font-medium", linkCurrent && "font-bold")}>{link.label}</span>
+                                  </Link>
+                                </li>
+                              )
+                            })}
                           </ul>
                         </div>
                       )}

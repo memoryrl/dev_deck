@@ -9,6 +9,7 @@ import { listQueryHref, type PagedResult } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import { cn } from "@/lib/utils"
+import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export type { PostListRow }
 
@@ -95,9 +96,9 @@ export function PostList({
 
       {layout === "feed" ? (
         rows.length === 0 ? (
-          <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
+          <EmptyPlaceholder className={displayCount ? "mt-8" : "mt-5"}>
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}
-          </p>
+          </EmptyPlaceholder>
         ) : (
           <div
             className={cn(
@@ -168,9 +169,9 @@ export function PostList({
         )
       ) : layout === "cards" ? (
         rows.length === 0 ? (
-          <p className={cn("text-sm text-muted-foreground", displayCount ? "mt-8" : "mt-5")}>
+          <EmptyPlaceholder className={displayCount ? "mt-8" : "mt-5"}>
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}
-          </p>
+          </EmptyPlaceholder>
         ) : (
           <ul
             className={cn(

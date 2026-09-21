@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { withdrawAccount } from "@/app/account/actions"
+import { withdrawAccount } from "@/app/(public)/account/actions"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { Button } from "@/components/ui/button"
+import { showConfirm } from "@/lib/ui/layer-dialog"
 
 export function WithdrawButton() {
   const { t } = useI18n()
@@ -11,7 +12,8 @@ export function WithdrawButton() {
   const [error, setError] = useState<string | null>(null)
 
   async function onWithdraw() {
-    if (!confirm(t("account.withdrawConfirm"))) return
+    const ok = await showConfirm(t("account.withdrawConfirm"), { destructive: true, title: t("account.withdraw") })
+    if (!ok) return
     setPending(true)
     setError(null)
     const result = await withdrawAccount()
