@@ -4,8 +4,10 @@ import { postLoginPath } from "@/lib/auth/roles"
 import { VISIT_ID_COOKIE, VISIT_LOG_COOKIE, visitLogCookieOptions } from "@/lib/auth/visit-window"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient, upsertProfile } from "@/lib/supabase/server"
-import { termsGatePath } from "@/lib/terms/consent"
-import { headers } from "next/headers"
+import { isOwnerUser } from "@/lib/auth/roles"
+import { recordTermsConsent, termsGatePath } from "@/lib/terms/consent"
+import { parseSignupConsent, SIGNUP_CONSENT_COOKIE } from "@/lib/terms/signup-consent"
+import { cookies, headers } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
@@ -32,6 +34,23 @@ export async function GET(request: Request) {
       } catch {
         // 무시
       }
+      // 로그인 화면의 "회원가입" 탭에서 약관 두 개에 이미 체크하고 왔다면 그 동의를 여기서 바로 기록한다.
+      // 그러면 아래 약관 게이트를 건너뛰고 곧장 가입이 끝난다. 로그인 탭으로 처음 들어온 사람은 쿠키가
+      // 없으므로 기존처럼 약관 확인 화면을 거친다.
+      const preConsent = cookies().get(SIGNUP_CONSENT_COOKIE)?.value
+      const preVersions = parseSignupConsent(preConsent)
+      if (preVersions && !isOwnerUser(sessionUser)) {
+        try {
+          await recordTermsConsent({
+            userId: sessionUser.id,
+            versions: preVersions,
+            ipAddress: clientIpFromHeaders(),
+            userAgent: headers().get("user-agent"),
+          })
+        } catch {
+          // 기록에 실패하면 아래 게이트가 약관 확인 화면으로 보내 다시 받는다
+        }
+      }
       // 첫 로그인(=회원가입)이면 이용약관·개인정보처리방침을 확인하는 화면을 먼저 거친다.
       // 두 약관을 모두 확인하기 전까지는 마이페이지도 그 화면으로 되돌린다.
       destination = await termsGatePath(sessionUser)
@@ -56,6 +75,8 @@ export async function GET(request: Request) {
   }
   const response = NextResponse.redirect(`${origin}${destination ?? postLoginPath(user)}`)
   // 방금 로그인을 남겼으면 이어지는 랜딩 접속 기록은 같은 세션으로 본다.
+  // 한 번 쓴 가입 동의 쿠키는 남기지 않는다.
+  response.cookies.delete(SIGNUP_CONSENT_COOKIE)
   if (user) {
     response.cookies.set(VISIT_LOG_COOKIE, "1", visitLogCookieOptions())
     if (visitId) response.cookies.set(VISIT_ID_COOKIE, visitId, visitLogCookieOptions())

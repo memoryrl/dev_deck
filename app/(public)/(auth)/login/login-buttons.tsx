@@ -13,7 +13,17 @@ function oauthMessage(message: string, t: (key: string) => string) {
   return message
 }
 
-export function LoginButtons() {
+export function LoginButtons({
+  label,
+  disabled = false,
+  beforeSignIn,
+}: {
+  /** 버튼 문구. 기본은 "Google로 계속" */
+  label?: string
+  disabled?: boolean
+  /** OAuth 로 넘어가기 직전에 호출한다(예: 회원가입 약관 동의 쿠키 저장) */
+  beforeSignIn?: () => void
+}) {
   const [error, setError] = useState<string | null>(null)
   const { t } = useI18n()
 
@@ -22,6 +32,8 @@ export function LoginButtons() {
       setError(t("auth.missingEnv"))
       return
     }
+    setError(null)
+    beforeSignIn?.()
     const supabase = createClient()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -41,10 +53,11 @@ export function LoginButtons() {
         className="w-full border-[#dadce0] bg-white text-[#1f1f1f] hover:bg-[#f7f8f8] hover:text-[#1f1f1f] dark:border-[#dadce0] dark:bg-white dark:text-[#1f1f1f] dark:hover:bg-[#f7f8f8] dark:hover:text-[#1f1f1f] [&_svg]:size-5"
         type="button"
         variant="outline"
+        disabled={disabled}
         onClick={signIn}
       >
         <GoogleMark />
-        {t("common.continueGoogle")}
+        {label ?? t("common.continueGoogle")}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

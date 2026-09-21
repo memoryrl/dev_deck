@@ -51,7 +51,8 @@
     "backToList": "목록으로",
     "postNav": "게시물 이동",
     "years": "{{count}}년",
-    "scrollTop": "맨 위로"
+    "scrollTop": "맨 위로",
+    "signup": "회원가입"
   },
   "role": {
     "visitor": "방문객",
@@ -329,7 +330,25 @@
     "watchTitle": "로그인",
     "lede": "로그인은 글·리뷰를 편집할 때만 필요합니다. 게임 목록은 로그인 없이 볼 수 있습니다.",
     "missingEnv": "Supabase 환경변수가 없습니다.",
-    "googleDisabled": "Supabase에서 Google 로그인이 꺼져 있습니다. Authentication → Providers → Google을 Enable 하고 Client ID/Secret을 넣으세요."
+    "googleDisabled": "Supabase에서 Google 로그인이 꺼져 있습니다. Authentication → Providers → Google을 Enable 하고 Client ID/Secret을 넣으세요.",
+    "tabsAria": "로그인 또는 회원가입",
+    "tabLogin": "로그인",
+    "tabSignup": "회원가입",
+    "signupTitle": "회원가입",
+    "signupLede": "이용약관과 개인정보처리방침에 동의하면 Google 계정으로 바로 가입할 수 있어요.",
+    "termsLegend": "약관 동의",
+    "agreeAll": "전체 동의",
+    "required": "[필수]",
+    "agreeDoc": "{{title}}에 동의합니다",
+    "viewDoc": "보기",
+    "hideDoc": "접기",
+    "scrollToAgree": "본문을 끝까지 내려야 체크할 수 있어요.",
+    "loginWithGoogle": "Google로 로그인",
+    "signupWithGoogle": "Google로 회원가입",
+    "signupNeedAgree": "이용약관과 개인정보처리방침에 모두 동의해야 가입할 수 있어요.",
+    "firstTimeNote": "처음이라면 로그인 후 약관 동의 절차가 이어집니다.",
+    "haveAccount": "이미 회원이신가요?",
+    "noAccount": "처음이신가요?"
   },
   "terms": {
     "doc": {

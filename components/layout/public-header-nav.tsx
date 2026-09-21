@@ -321,13 +321,22 @@ export function PublicHeaderNav({
                 />
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
-                onClick={() => setOpen(null)}
-              >
-                {t("common.login")}
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="ml-1 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background transition hover:opacity-90"
+                  onClick={() => setOpen(null)}
+                >
+                  {t("common.login")}
+                </Link>
+                <Link
+                  href="/login?mode=signup"
+                  className="rounded-full border border-foreground/25 px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.06]"
+                  onClick={() => setOpen(null)}
+                >
+                  {t("common.signup")}
+                </Link>
+              </>
             )}
             {account ? <NotificationCenter userKey={account.email} /> : null}
             <ThemeToggle className="rounded-full border-0 bg-transparent shadow-none hover:bg-foreground/[0.06]" />
@@ -346,13 +355,22 @@ export function PublicHeaderNav({
                 }}
               />
             ) : (
-              <Link
-                href="/login"
-                className="rounded-full bg-foreground px-3 py-1.5 text-sm font-medium text-background"
-                onClick={() => setOpen(null)}
-              >
-                {t("common.login")}
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full bg-foreground px-3 py-1.5 text-sm font-medium text-background"
+                  onClick={() => setOpen(null)}
+                >
+                  {t("common.login")}
+                </Link>
+                <Link
+                  href="/login?mode=signup"
+                  className="rounded-full border border-foreground/25 px-3 py-1.5 text-sm font-medium text-foreground"
+                  onClick={() => setOpen(null)}
+                >
+                  {t("common.signup")}
+                </Link>
+              </>
             )}
             <button
               type="button"
