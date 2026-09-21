@@ -26,7 +26,7 @@ function writeSeen(userKey: string, value: string) {
 
 /**
  * 1분마다 미읽음 개수를 확인한다.
- * - 탭이 가려져 있으면 건너뛰고, 다시 보이는 순간 바로 한 번 확인한다.
+ * - 탭이 가려지면 타이머를 멈추고, 다시 보이는 순간 바로 한 번 확인한 뒤 타이머를 다시 시작한다.
  * - 새 알림이 기준선보다 나중이면 onNew로 알린다(토스트용). 처음 접속한 시점의 기존 알림은 알리지 않는다.
  * - changeTick은 개수가 바뀔 때마다 늘어서, 열려 있는 알림 패널이 목록을 다시 불러오는 신호가 된다.
  */
@@ -71,16 +71,33 @@ export function useNotificationPolling(
     }
   }, [userKey])
 
+  // 탭이 보이는 동안에만 타이머를 돌린다. 가려지면(다른 탭·최소화) 타이머 자체를 멈추고,
+  // 다시 보이는 순간 바로 한 번 확인한 뒤 타이머를 새로 시작한다.
   useEffect(() => {
-    void poll()
-    const timer = window.setInterval(() => void poll(), NOTIFICATION_POLL_INTERVAL_MS)
-    const onVisible = () => {
-      if (!document.hidden) void poll()
+    let timer: number | null = null
+    const start = () => {
+      if (timer === null) timer = window.setInterval(() => void poll(), NOTIFICATION_POLL_INTERVAL_MS)
     }
-    document.addEventListener("visibilitychange", onVisible)
+    const stop = () => {
+      if (timer !== null) {
+        window.clearInterval(timer)
+        timer = null
+      }
+    }
+    const sync = () => {
+      if (document.hidden) {
+        stop()
+      } else {
+        void poll()
+        start()
+      }
+    }
+
+    sync()
+    document.addEventListener("visibilitychange", sync)
     return () => {
-      window.clearInterval(timer)
-      document.removeEventListener("visibilitychange", onVisible)
+      stop()
+      document.removeEventListener("visibilitychange", sync)
     }
   }, [poll])
 
