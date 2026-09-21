@@ -279,7 +279,7 @@
     "toggle": "공지 팝업",
     "read": "자세히 보기",
     "dontShow": "다시 보지 않기",
-    "dontShowHint": "체크한 다음 창을 닫으면 이 공지를 다시 열지 않습니다.",
+    "dontShowHint": "체크한 다음 닫으면 이 공지를 다시 열지 않습니다.",
     "close": "팝업 닫기"
   },
   "rating": {
@@ -408,6 +408,12 @@
       "googleAnalyticsId": "Google Analytics ID",
       "googleAnalyticsIdHint": "analytics.google.com에서 GA4 속성을 만들면 G- 로 시작하는 측정 ID가 나옵니다. 저장하면 배포된 사이트 방문이 집계됩니다. localhost는 보내지 않습니다.",
       "advanced": "고급 설정",
+      "noticePopupMode": "공지 팝업 방식",
+      "noticePopupModeHint": "방문자가 보는 공지 팝업을 레이어로 띄울지, 브라우저 새 창으로 띄울지 정합니다. 어떤 글을 띄울지는 공지 글의 팝업 스위치로 고릅니다.",
+      "noticePopupMode_layer": "레이어 팝업",
+      "noticePopupMode_layerHint": "같은 페이지 위에 띄웁니다. 팝업 차단의 영향을 받지 않습니다.",
+      "noticePopupMode_window": "새 창",
+      "noticePopupMode_windowHint": "브라우저 팝업 창(window.open)으로 띄웁니다. 차단되면 클릭 후에 열립니다.",
       "maintenanceMode": "유지보수 모드",
       "maintenanceModeHint": "활성화하면 관리자 외 접속이 차단됩니다.",
       "saveSettings": "설정 저장",

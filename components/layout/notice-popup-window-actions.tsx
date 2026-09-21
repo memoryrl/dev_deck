@@ -3,19 +3,21 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { useI18n } from "@/components/i18n/i18n-provider"
-import { NOTICE_POPUP_DISMISSED_KEY } from "@/lib/boards/notice-popup-window"
+import { persistNoticePopupDismissed } from "@/lib/boards/notice-popup-window"
 import { cn } from "@/lib/utils"
 
-export function NoticePopupWindowChrome({
+export function NoticePopupChrome({
   postId,
-  href,
   label,
   children,
+  onClose,
+  onReadMore,
 }: {
   postId: string
-  href: string
   label: string
   children: ReactNode
+  onClose: () => void
+  onReadMore: () => void
 }) {
   const { t } = useI18n()
   const skipId = useId()
@@ -29,11 +31,7 @@ export function NoticePopupWindowChrome({
   useEffect(() => {
     function persistIfNeeded() {
       if (!skipRef.current) return
-      try {
-        window.localStorage.setItem(NOTICE_POPUP_DISMISSED_KEY, postId)
-      } catch {
-        // ignore
-      }
+      persistNoticePopupDismissed(postId)
     }
     window.addEventListener("pagehide", persistIfNeeded)
     return () => window.removeEventListener("pagehide", persistIfNeeded)
@@ -41,31 +39,17 @@ export function NoticePopupWindowChrome({
 
   function persistIfSkipped() {
     if (!skipRef.current) return
-    try {
-      window.localStorage.setItem(NOTICE_POPUP_DISMISSED_KEY, postId)
-    } catch {
-      // ignore
-    }
+    persistNoticePopupDismissed(postId)
   }
 
-  function closeWindow() {
+  function close() {
     persistIfSkipped()
-    window.close()
+    onClose()
   }
 
   function readMore() {
     persistIfSkipped()
-    try {
-      if (window.opener && !window.opener.closed) {
-        window.opener.location.href = href
-        window.opener.focus()
-        window.close()
-        return
-      }
-    } catch {
-      // opener가 다른 origin이면 이 창에서 연다
-    }
-    window.location.href = href
+    onReadMore()
   }
 
   return (
@@ -95,10 +79,46 @@ export function NoticePopupWindowChrome({
             <span className="mt-0.5 block">{t("noticePopup.dontShowHint")}</span>
           </span>
         </label>
-        <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={closeWindow}>
+        <Button type="button" size="sm" variant="outline" className="shrink-0" onClick={close}>
           {t("noticePopup.close")}
         </Button>
       </div>
     </div>
+  )
+}
+
+export function NoticePopupWindowChrome({
+  postId,
+  href,
+  label,
+  children,
+}: {
+  postId: string
+  href: string
+  label: string
+  children: ReactNode
+}) {
+  function closeWindow() {
+    window.close()
+  }
+
+  function readMore() {
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.location.href = href
+        window.opener.focus()
+        window.close()
+        return
+      }
+    } catch {
+      // opener가 다른 origin이면 이 창에서 연다
+    }
+    window.location.href = href
+  }
+
+  return (
+    <NoticePopupChrome postId={postId} label={label} onClose={closeWindow} onReadMore={readMore}>
+      {children}
+    </NoticePopupChrome>
   )
 }

@@ -3,7 +3,10 @@ import { Suspense } from "react"
 import { PublicFooter } from "@/components/layout/public-footer"
 import { PublicHeader } from "@/components/layout/public-header"
 import { NoticePopupLauncher } from "@/components/layout/notice-popup"
+import { parseNoticePopupMode } from "@/lib/boards/notice-popup-window"
 import { getNoticePopupPost } from "@/lib/boards/community"
+import { getT } from "@/lib/i18n/dictionary"
+import { getSiteSettings } from "@/lib/site/settings"
 
 function HeaderFallback() {
   return (
@@ -36,7 +39,14 @@ export function PublicShell({ children }: { children: ReactNode }) {
 }
 
 async function NoticePopupSlot() {
-  const post = await getNoticePopupPost()
+  const [post, settings] = await Promise.all([getNoticePopupPost(), getSiteSettings()])
   if (!post) return null
-  return <NoticePopupLauncher postId={post.id} />
+  const { t } = getT()
+  return (
+    <NoticePopupLauncher
+      post={post}
+      mode={parseNoticePopupMode(settings.noticePopupMode)}
+      label={t("mega.community.notice")}
+    />
+  )
 }

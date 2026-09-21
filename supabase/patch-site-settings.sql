@@ -33,5 +33,6 @@ INSERT INTO devdeck.site_settings (key, value) VALUES
   ('footerText', '© 2024 DevDeck. All rights reserved.'),
   ('socialImage', ''),
   ('googleAnalyticsId', ''),
+  ('noticePopupMode', 'layer'),
   ('maintenanceMode', 'false')
 ON CONFLICT (key) DO NOTHING;

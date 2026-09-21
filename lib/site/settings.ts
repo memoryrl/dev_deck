@@ -1,4 +1,9 @@
 import { cache } from "react"
+import {
+  DEFAULT_NOTICE_POPUP_MODE,
+  parseNoticePopupMode,
+  type NoticePopupMode,
+} from "@/lib/boards/notice-popup-window"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
@@ -9,6 +14,7 @@ export type SiteSettings = {
   footerText: string
   socialImage: string
   googleAnalyticsId: string
+  noticePopupMode: NoticePopupMode
   maintenanceMode: boolean
 }
 
@@ -19,6 +25,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   footerText: "© 2024 DevDeck. All rights reserved.",
   socialImage: "",
   googleAnalyticsId: "",
+  noticePopupMode: DEFAULT_NOTICE_POPUP_MODE,
   maintenanceMode: false,
 }
 
@@ -61,6 +68,7 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
     }
   }
 
+  settings.noticePopupMode = parseNoticePopupMode(settings.noticePopupMode)
   return settings
 })
 

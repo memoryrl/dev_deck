@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { requireOwner } from "@/lib/auth/owner"
+import { parseNoticePopupMode } from "@/lib/boards/notice-popup-window"
 import { isGaMeasurementIdInputValid, parseGaMeasurementId } from "@/lib/site/analytics"
 import { updateSiteSettings, type SiteSettings } from "@/lib/site/settings"
 
@@ -20,6 +21,7 @@ export async function saveSiteSettings(formData: FormData) {
     footerText: String(formData.get("footerText") ?? ""),
     socialImage: String(formData.get("socialImage") ?? ""),
     googleAnalyticsId: parseGaMeasurementId(googleAnalyticsIdRaw) ?? "",
+    noticePopupMode: parseNoticePopupMode(String(formData.get("noticePopupMode") ?? "")),
     maintenanceMode: formData.get("maintenanceMode") === "on",
   }
 

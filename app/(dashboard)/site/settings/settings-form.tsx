@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { parseNoticePopupMode, type NoticePopupMode } from "@/lib/boards/notice-popup-window"
 import { showAlert } from "@/lib/ui/layer-dialog"
+import { cn } from "@/lib/utils"
 import type { SiteSettings } from "@/lib/site/settings"
 
 export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
@@ -18,6 +20,9 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode)
+  const [noticePopupMode, setNoticePopupMode] = useState<NoticePopupMode>(
+    parseNoticePopupMode(settings.noticePopupMode)
+  )
 
   async function onSubmit(formData: FormData) {
     if (maintenanceMode) formData.set("maintenanceMode", "on")
@@ -120,7 +125,43 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
 
       <section className="rounded-xl border bg-white p-6 dark:bg-card">
         <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.advanced")}</h2>
-        <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div>
+              <Label>{t("admin.settings.noticePopupMode")}</Label>
+              <p className="text-sm text-muted-foreground">{t("admin.settings.noticePopupModeHint")}</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(["layer", "window"] as const).map((mode) => (
+                <label
+                  key={mode}
+                  className={cn(
+                    "flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors",
+                    noticePopupMode === mode
+                      ? "border-foreground/30 bg-foreground/[0.03]"
+                      : "border-foreground/10 hover:border-foreground/20"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="noticePopupMode"
+                    value={mode}
+                    checked={noticePopupMode === mode}
+                    onChange={() => setNoticePopupMode(mode)}
+                    className="mt-1 size-4 accent-foreground"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">
+                      {t(`admin.settings.noticePopupMode_${mode}`)}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {t(`admin.settings.noticePopupMode_${mode}Hint`)}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="maintenanceMode">{t("admin.settings.maintenanceMode")}</Label>

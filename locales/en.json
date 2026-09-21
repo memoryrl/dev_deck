@@ -279,7 +279,7 @@
     "toggle": "Notice popup",
     "read": "Read more",
     "dontShow": "Don't show again",
-    "dontShowHint": "Check this, then close the window to hide this notice.",
+    "dontShowHint": "Check this, then close to hide this notice.",
     "close": "Close popup"
   },
   "rating": {
@@ -408,6 +408,12 @@
       "googleAnalyticsId": "Google Analytics ID",
       "googleAnalyticsIdHint": "Create a GA4 property at analytics.google.com to get a G- measurement ID. After saving, visits on the deployed site are counted. localhost is not sent.",
       "advanced": "Advanced",
+      "noticePopupMode": "Notice popup style",
+      "noticePopupModeHint": "Choose whether visitors see the notice as an on-page layer or a browser popup window. Which post appears is still set with the notice popup switch on the post.",
+      "noticePopupMode_layer": "Layer popup",
+      "noticePopupMode_layerHint": "Shows over the same page. Not affected by popup blockers.",
+      "noticePopupMode_window": "New window",
+      "noticePopupMode_windowHint": "Opens with window.open. If blocked, it opens after a click.",
       "maintenanceMode": "Maintenance mode",
       "maintenanceModeHint": "When enabled, only admins can access the site.",
       "saveSettings": "Save settings",

@@ -1,10 +1,13 @@
 import { boardPath } from "@/lib/access"
+import type { NoticePopupView } from "@/lib/boards/notice-popup-window"
 import { NOTICE_BOARD_SLUG, COMMUNITY_LATEST_LIMIT } from "@/lib/boards/slugs"
 import { plainTextFromContent } from "@/lib/content"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export { NOTICE_BOARD_SLUG, COMMUNITY_LATEST_LIMIT } from "@/lib/boards/slugs"
+
+export type NoticePopupPost = NoticePopupView
 
 export type CommunityLatestPost = {
   id: string
@@ -13,14 +16,6 @@ export type CommunityLatestPost = {
   createdAt: string
   boardSlug: string
   boardName: string
-}
-
-export type NoticePopupPost = {
-  id: string
-  title: string
-  excerpt: string
-  content: string
-  href: string
 }
 
 function excerptOf(excerpt: string | null | undefined, content: string, max = 160) {
