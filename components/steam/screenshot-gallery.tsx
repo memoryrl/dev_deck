@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { lockDocumentScroll } from "@/lib/dom/lock-scroll"
 import { cn } from "@/lib/utils"
 
 export function ScreenshotGallery({
@@ -20,8 +21,7 @@ export function ScreenshotGallery({
 
   useEffect(() => {
     if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const unlock = lockDocumentScroll()
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setIndex(null)
       if (event.key === "ArrowRight") setIndex((value) => nextIndex(value, items.length, 1))
@@ -29,7 +29,7 @@ export function ScreenshotGallery({
     }
     document.addEventListener("keydown", onKey)
     return () => {
-      document.body.style.overflow = prev
+      unlock()
       document.removeEventListener("keydown", onKey)
     }
   }, [open, items.length])

@@ -13,6 +13,7 @@ import { AdminSidebarNav } from "@/components/layout/admin-sidebar-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import type { SessionUserView } from "@/lib/auth/session-user"
+import { lockDocumentScroll } from "@/lib/dom/lock-scroll"
 import { cn } from "@/lib/utils"
 
 type Props = {
@@ -32,14 +33,13 @@ export function DashboardHeader({ account, menus = [] }: Props) {
 
   useEffect(() => {
     if (!drawer) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const unlock = lockDocumentScroll()
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setDrawer(false)
     }
     document.addEventListener("keydown", onKey)
     return () => {
-      document.body.style.overflow = prev
+      unlock()
       document.removeEventListener("keydown", onKey)
     }
   }, [drawer])

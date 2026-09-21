@@ -10,6 +10,7 @@ import { UserAvatar } from "@/components/layout/account-menu"
 import { MENU_ICON, megaIdFromLabelKey, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { lockDocumentScroll } from "@/lib/dom/lock-scroll"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
 import type { NavNode } from "@/types/menu"
@@ -37,14 +38,13 @@ export function PublicMobileNav({
 
   useEffect(() => {
     if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const unlock = lockDocumentScroll()
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose()
     }
     document.addEventListener("keydown", onKey)
     return () => {
-      document.body.style.overflow = prev
+      unlock()
       document.removeEventListener("keydown", onKey)
     }
   }, [open, onClose])

@@ -13,8 +13,11 @@ export async function PublicHeader() {
   ])
 
   return (
-    <header className="sticky top-0 z-50 overflow-visible">
-      <PublicHeaderNav account={account} navNodes={navNodes} adminMenus={adminMenus} />
-    </header>
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 overflow-visible">
+        <PublicHeaderNav account={account} navNodes={navNodes} adminMenus={adminMenus} />
+      </header>
+      <div className="h-14 shrink-0" aria-hidden />
+    </>
   )
 }
