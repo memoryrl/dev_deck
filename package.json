@@ -2,11 +2,15 @@
   "name": "devdeck",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-oss-packages.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/generate-oss-packages.mjs",
     "build": "bash scripts/clean-appledouble.sh && next build",
     "start": "next start",
     "lint": "next lint",
-    "clean:apple": "bash scripts/clean-appledouble.sh"
+    "clean:apple": "bash scripts/clean-appledouble.sh",
+    "oss:generate": "node scripts/generate-oss-packages.mjs",
+    "postinstall": "node scripts/generate-oss-packages.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

@@ -107,7 +107,8 @@
     "backend": "Backend",
     "package": "패키지명",
     "version": "버전",
-    "license": "라이선스"
+    "license": "라이선스",
+    "asOf": "package.json 기준으로 자동 생성된 목록입니다 · 마지막 갱신 {{date}}"
   },
   "errors": {
     "home": "홈으로",

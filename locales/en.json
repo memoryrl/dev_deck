@@ -107,7 +107,8 @@
     "backend": "Backend",
     "package": "Package",
     "version": "Version",
-    "license": "License"
+    "license": "License",
+    "asOf": "This list is generated automatically from package.json · Last updated {{date}}"
   },
   "errors": {
     "home": "Home",

@@ -3,7 +3,7 @@ import { OssBackButton } from "@/components/oss/back-button"
 import { OssLicenseTable } from "@/components/oss/license-table"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { PublicContainer } from "@/components/layout/public-container"
-import { BACKEND_PACKAGES, FRONTEND_PACKAGES } from "@/lib/oss/packages"
+import { BACKEND_PACKAGES, FRONTEND_PACKAGES, OSS_GENERATED_AT } from "@/lib/oss/packages"
 import { getT } from "@/lib/i18n/dictionary"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +34,8 @@ export default async function OpenSourcePage() {
         <OssLicenseTable title={t("oss.frontend")} packages={FRONTEND_PACKAGES} labels={labels} />
         <OssLicenseTable title={t("oss.backend")} packages={BACKEND_PACKAGES} labels={labels} />
       </div>
+
+      <p className="mt-4 text-xs text-muted-foreground">{t("oss.asOf", { date: OSS_GENERATED_AT })}</p>
 
       <div className="mt-8">
         <OssBackButton label={t("oss.goBack")} />
