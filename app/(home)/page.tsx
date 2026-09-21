@@ -3,6 +3,7 @@ import Link from "next/link"
 import { FeaturedWorkCard } from "@/components/landing/featured-work"
 import { HeroVisual } from "@/components/landing/hero-visual"
 import { HeroSection } from "@/components/landing/hero-topology/hero-section"
+import { CommunityLatest } from "@/components/landing/community-latest"
 import { ContactCta } from "@/components/landing/contact-cta"
 import { LatestColumns } from "@/components/landing/latest-columns"
 import { ModuleMarquee } from "@/components/landing/module-marquee"
@@ -105,6 +106,9 @@ async function HomeLanding() {
       </ScrollReveal>
       <ScrollReveal variant="scale">
         <FeaturedWorkCard work={data.featured} />
+      </ScrollReveal>
+      <ScrollReveal variant="up">
+        <CommunityLatest posts={data.communityPosts} />
       </ScrollReveal>
       <ScrollReveal variant="up">
         <LatestColumns prompts={prompts} posts={posts} />

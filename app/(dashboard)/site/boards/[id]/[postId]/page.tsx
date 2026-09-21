@@ -73,5 +73,5 @@ async function BoardPostTitleSection({ boardId }: { boardId: string }) {
 async function BoardPostFormSection({ boardId, postId }: { boardId: string; postId: string }) {
   const [, board, post] = await Promise.all([ensureProfile(), getBoardById(boardId), getBoardPost(postId)])
   if (!board || !post || post.board_id !== board.id) notFound()
-  return <BoardPostAdminForm boardId={board.id} post={post} />
+  return <BoardPostAdminForm boardId={board.id} boardSlug={board.slug} post={post} />
 }

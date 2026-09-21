@@ -1,22 +1,31 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { ChevronUp } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { NOTICE_POPUP_PATH } from "@/lib/boards/notice-popup-window"
 import { cn } from "@/lib/utils"
 
 const SHOW_AFTER = 320
 
 export function ScrollToTop() {
+  const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const { t } = useI18n()
 
   useEffect(() => {
+    if (pathname.startsWith(NOTICE_POPUP_PATH)) {
+      setVisible(false)
+      return
+    }
     const sync = () => setVisible(window.scrollY > SHOW_AFTER)
     sync()
     window.addEventListener("scroll", sync, { passive: true })
     return () => window.removeEventListener("scroll", sync)
-  }, [])
+  }, [pathname])
+
+  if (pathname.startsWith(NOTICE_POPUP_PATH)) return null
 
   return (
     <button

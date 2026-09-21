@@ -26,6 +26,7 @@ export type BoardPost = {
   excerpt: string | null
   content: string
   is_published: boolean
+  is_popup?: boolean
   created_at: string
   updated_at: string
 }

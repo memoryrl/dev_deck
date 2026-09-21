@@ -339,6 +339,7 @@ CREATE TABLE IF NOT EXISTS devdeck.board_posts (
   excerpt TEXT,
   content TEXT NOT NULL,
   is_published BOOLEAN NOT NULL DEFAULT false,
+  is_popup BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -365,6 +366,7 @@ CREATE TABLE IF NOT EXISTS devdeck.menus (
 CREATE INDEX IF NOT EXISTS boards_active_idx ON devdeck.boards (is_active, sort_order);
 CREATE INDEX IF NOT EXISTS board_posts_board_idx ON devdeck.board_posts (board_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS board_posts_published_idx ON devdeck.board_posts (board_id) WHERE is_published = true;
+CREATE UNIQUE INDEX IF NOT EXISTS board_posts_popup_uidx ON devdeck.board_posts ((true)) WHERE is_popup = true;
 CREATE INDEX IF NOT EXISTS menus_location_idx ON devdeck.menus (location, parent_id, sort_order);
 CREATE INDEX IF NOT EXISTS menus_board_idx ON devdeck.menus (board_id);
 

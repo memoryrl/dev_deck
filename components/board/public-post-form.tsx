@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { removePublicPost, savePublicPost } from "@/app/b/actions"
 import { boardPath } from "@/lib/access"
+import { NOTICE_BOARD_SLUG } from "@/lib/boards/slugs"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,13 +25,17 @@ export function PublicPostForm({
 }) {
   const router = useRouter()
   const [published, setPublished] = useState(post?.is_published ?? true)
+  const [popup, setPopup] = useState(Boolean(post?.is_popup))
   const [error, setError] = useState<string | null>(null)
+  const allowPopup = slug === NOTICE_BOARD_SLUG
 
   async function onSubmit(formData: FormData) {
     formData.set("board_id", boardId)
     if (post) formData.set("id", post.id)
     if (published) formData.set("is_published", "on")
     else formData.delete("is_published")
+    if (!post && allowPopup && popup) formData.set("is_popup", "on")
+    else formData.delete("is_popup")
     const result = await savePublicPost(formData)
     if (!result.ok) {
       setError(result.error)
@@ -71,6 +76,12 @@ export function PublicPostForm({
         <Switch checked={published} onCheckedChange={setPublished} />
         <Label>공개</Label>
       </div>
+      {allowPopup && !post ? (
+        <div className="flex items-center gap-2">
+          <Switch checked={popup} onCheckedChange={setPopup} />
+          <Label>공지 팝업</Label>
+        </div>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div className="flex gap-2">
         <Button type="submit">{post ? "저장" : "글쓰기"}</Button>

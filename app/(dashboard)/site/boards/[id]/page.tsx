@@ -69,7 +69,7 @@ async function BoardHeaderAndSettings({ id }: { id: string }) {
             <WriteToggle />
           </div>
           <WriteForm>
-            <BoardPostAdminForm boardId={board.id} />
+            <BoardPostAdminForm boardId={board.id} boardSlug={board.slug} />
           </WriteForm>
         </WritePanel>
       ) : null}
@@ -120,7 +120,7 @@ async function BoardEntries({ id, page, q }: { id: string; page: number; q: stri
         href: `/site/boards/${board.id}/${post.id}`,
         title: post.title,
         createdAt: post.created_at,
-        meta: post.is_published ? "공개" : "비공개",
+        meta: [post.is_published ? "공개" : "비공개", post.is_popup ? "팝업" : null].filter(Boolean).join(" · "),
       }))}
     />
   )

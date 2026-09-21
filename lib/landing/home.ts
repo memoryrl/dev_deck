@@ -13,6 +13,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import type { CareerPost, CareerSkill } from "@/types/career"
 import type { Prompt } from "@/types/prompt"
 import type { FeaturedGame } from "@/components/landing/steam-featured"
+import { listLatestCommunityPosts, type CommunityLatestPost } from "@/lib/boards/community"
 import type { GameReview, SteamProfile } from "@/types/steam"
 
 export type HomeActivityKind = "prompt" | "career" | "review"
@@ -49,6 +50,7 @@ export type FeaturedWork =
 export type HomeLandingData = {
   prompts: Prompt[]
   posts: CareerPost[]
+  communityPosts: CommunityLatestPost[]
   skills: CareerSkill[]
   featured: FeaturedWork | null
   stats: {
@@ -216,13 +218,14 @@ function pickUmpc(
 }
 
 export async function getHomeLandingData(): Promise<HomeLandingData> {
-  const [promptCount, careerCount, reviewCount, prompts, posts, featuredPost, skills, latestReviews, umpcReview, steam] =
+  const [promptCount, careerCount, reviewCount, prompts, posts, communityPosts, featuredPost, skills, latestReviews, umpcReview, steam] =
     await Promise.all([
       countPublicPrompts(),
       countPublicCareerPosts(),
       countPublicGameReviews(),
       listPublicPrompts(6),
       listPublicCareerPosts(6),
+      listLatestCommunityPosts(),
       getFeaturedPublicCareer(),
       listPublicCareerSkills(8),
       listLatestPublicGameReviews(6),
@@ -274,6 +277,7 @@ export async function getHomeLandingData(): Promise<HomeLandingData> {
   return {
     prompts,
     posts,
+    communityPosts,
     skills,
     featured,
     stats: {

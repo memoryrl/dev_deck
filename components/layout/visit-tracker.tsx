@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { VISIT_WINDOW_MS } from "@/lib/auth/visit-window"
+import { NOTICE_POPUP_PATH } from "@/lib/boards/notice-popup-window"
 
 const STORAGE_KEY = "dd_visit_logged"
 let sessionStarting = false
@@ -44,6 +45,7 @@ export function VisitTracker() {
   const lastPath = useRef<string | null>(null)
 
   useEffect(() => {
+    if (pathname.startsWith(NOTICE_POPUP_PATH)) return
     if (lastPath.current === pathname) return
     const isFirst = lastPath.current === null
     lastPath.current = pathname

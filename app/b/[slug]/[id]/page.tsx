@@ -5,6 +5,8 @@ import { ArticleEditPanel } from "@/components/board/article-edit-panel"
 import { ArticleReader } from "@/components/board/article-reader"
 import { PostPager } from "@/components/board/post-pager"
 import { PublicPostForm } from "@/components/board/public-post-form"
+import { NoticePopupToggle } from "@/components/board/notice-popup-toggle"
+import { NOTICE_BOARD_SLUG } from "@/lib/boards/community"
 import { ArticleComments } from "@/components/comments/article-comments"
 import { CommentSectionSkeleton, PagerSkeleton } from "@/components/layout/skeletons"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
@@ -55,6 +57,11 @@ export default async function PublicBoardPostPage({
         <Suspense fallback={<PagerSkeleton />}>
           <NeighborsPager board={board} post={post} listHref={listHref} />
         </Suspense>
+        {isOwner && board.slug === NOTICE_BOARD_SLUG ? (
+          <div className="mt-4 flex justify-end">
+            <NoticePopupToggle postId={post.id} enabled={Boolean(post.is_popup)} />
+          </div>
+        ) : null}
         {canWrite ? (
           <ArticleEditPanel
             form={

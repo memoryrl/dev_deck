@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import { Suspense } from "react"
 import { PublicFooter } from "@/components/layout/public-footer"
 import { PublicHeader } from "@/components/layout/public-header"
+import { NoticePopupLauncher } from "@/components/layout/notice-popup"
+import { getNoticePopupPost } from "@/lib/boards/community"
 
 function HeaderFallback() {
   return (
@@ -24,6 +26,15 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <PublicFooter />
         </Suspense>
       </div>
+      <Suspense fallback={null}>
+        <NoticePopupSlot />
+      </Suspense>
     </div>
   )
+}
+
+async function NoticePopupSlot() {
+  const post = await getNoticePopupPost()
+  if (!post) return null
+  return <NoticePopupLauncher postId={post.id} />
 }

@@ -164,7 +164,9 @@
     "badgeSkill": "스킬",
     "badgeNote": "노트",
     "badgePrompt": "프롬프트",
-    "umpcFallback": "Steam Deck에서 플레이한 기록이 있습니다. 상세에서 세팅과 리뷰를 확인하세요."
+    "umpcFallback": "Steam Deck에서 플레이한 기록이 있습니다. 상세에서 세팅과 리뷰를 확인하세요.",
+    "communityLatest": "최근 게시글",
+    "emptyCommunity": "아직 공개된 커뮤니티 글이 없습니다."
   },
   "mega": {
     "browse": "둘러보기",
@@ -269,6 +271,13 @@
     "fontSizeAria": "본문 글자 크기",
     "original": "원본",
     "reset": "원래대로"
+  },
+  "noticePopup": {
+    "toggle": "공지 팝업",
+    "read": "자세히 보기",
+    "dontShow": "다시 보지 않기",
+    "dontShowHint": "체크한 다음 창을 닫으면 이 공지를 다시 열지 않습니다.",
+    "close": "팝업 닫기"
   },
   "rating": {
     "aria": "평점",

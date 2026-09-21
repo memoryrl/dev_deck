@@ -5,6 +5,7 @@ import { accessRoleOf, boardPath, roleAtLeast } from "@/lib/access"
 import { getBoardById } from "@/lib/boards/public"
 import { isSystemBoard } from "@/lib/boards/system"
 import { isBlankContent } from "@/lib/content"
+import { NOTICE_BOARD_SLUG, setExclusiveNoticePopup } from "@/lib/boards/community"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
 
 async function canWriteBoard(boardId: string) {
@@ -41,6 +42,7 @@ export async function savePublicPost(formData: FormData) {
   }
 
   let error
+  let savedId = id
   if (id) {
     let query = supabase.from("board_posts").update(fields).eq("id", id)
     if (accessRoleOf(allowed.user) !== "owner") {
@@ -48,9 +50,21 @@ export async function savePublicPost(formData: FormData) {
     }
     ;({ error } = await query)
   } else {
-    ;({ error } = await supabase.from("board_posts").insert({ ...fields, user_id: allowed.user.id }))
+    const inserted = await supabase.from("board_posts").insert({ ...fields, user_id: allowed.user.id }).select("id").maybeSingle()
+    error = inserted.error
+    savedId = inserted.data?.id ?? ""
   }
   if (error) return { ok: false as const, error: error.message }
+
+  if (
+    savedId &&
+    allowed.board.slug === NOTICE_BOARD_SLUG &&
+    accessRoleOf(allowed.user) === "owner" &&
+    formData.get("is_popup") === "on"
+  ) {
+    const popup = await setExclusiveNoticePopup(savedId, true)
+    if (!popup.ok) return { ok: false as const, error: popup.error }
+  }
 
   revalidatePath(boardPath(allowed.board.slug))
   revalidatePath("/")
@@ -68,5 +82,20 @@ export async function removePublicPost(id: string, boardId: string) {
   const { error } = await query
   if (error) return { ok: false as const, error: error.message }
   revalidatePath(boardPath(allowed.board.slug))
+  revalidatePath("/")
   return { ok: true as const }
 }
+
+export async function setNoticePopup(postId: string, enabled: boolean) {
+  const user = await ensureProfile()
+  if (!user || accessRoleOf(user) !== "owner") {
+    return { ok: false as const, error: "관리자만 공지 팝업을 지정할 수 있습니다." }
+  }
+  const result = await setExclusiveNoticePopup(postId, enabled)
+  if (!result.ok) return result
+  revalidatePath("/")
+  revalidatePath(boardPath(NOTICE_BOARD_SLUG))
+  revalidatePath(`${boardPath(NOTICE_BOARD_SLUG)}/${postId}`)
+  return { ok: true as const }
+}
+

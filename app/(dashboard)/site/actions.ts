@@ -5,6 +5,7 @@ import { forgetMemoryCache } from "@/lib/cache/memory"
 import { requireOwner } from "@/lib/auth/owner"
 import { ACCESS_ROLES, type AccessRole } from "@/lib/access"
 import { isSystemBoard, isSystemBoardKind, RESERVED_BOARD_SLUGS } from "@/lib/boards/kind"
+import { NOTICE_BOARD_SLUG, setExclusiveNoticePopup } from "@/lib/boards/community"
 import { isBlankContent } from "@/lib/content"
 import { createClient } from "@/lib/supabase/server"
 import type { Board } from "@/types/board"
@@ -190,7 +191,7 @@ export async function upsertBoardPost(formData: FormData) {
   if (!boardId) return { ok: false as const, error: "게시판이 필요합니다." }
   if (!title || isBlankContent(content)) return { ok: false as const, error: "제목과 본문은 필수입니다." }
 
-  const { data: board } = await supabase.from("boards").select("kind").eq("id", boardId).maybeSingle()
+  const { data: board } = await supabase.from("boards").select("kind, slug").eq("id", boardId).maybeSingle()
   if (board && isSystemBoardKind(board.kind)) {
     return { ok: false as const, error: "시스템 게시판 글은 전용 대시보드에서 작성합니다." }
   }
@@ -202,12 +203,25 @@ export async function upsertBoardPost(formData: FormData) {
     is_published: formData.get("is_published") === "on",
   }
 
-  const query = id
-    ? supabase.from("board_posts").update(fields).eq("id", id)
-    : supabase.from("board_posts").insert({ ...fields, board_id: boardId, user_id: user.id })
+  let savedId = id
+  if (id) {
+    const { error } = await supabase.from("board_posts").update(fields).eq("id", id)
+    if (error) return { ok: false as const, error: error.message }
+  } else {
+    const inserted = await supabase
+      .from("board_posts")
+      .insert({ ...fields, board_id: boardId, user_id: user.id })
+      .select("id")
+      .maybeSingle()
+    if (inserted.error) return { ok: false as const, error: inserted.error.message }
+    savedId = inserted.data?.id ?? ""
+  }
 
-  const { error } = await query
-  if (error) return { ok: false as const, error: error.message }
+  if (savedId && board?.slug === NOTICE_BOARD_SLUG && formData.get("is_popup") === "on") {
+    const popup = await setExclusiveNoticePopup(savedId, true)
+    if (!popup.ok) return { ok: false as const, error: popup.error }
+  }
+
   refreshSite()
   revalidatePath(`/site/boards/${boardId}`)
   return { ok: true as const }

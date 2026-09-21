@@ -164,7 +164,9 @@
     "badgeSkill": "Skill",
     "badgeNote": "Note",
     "badgePrompt": "Prompt",
-    "umpcFallback": "Played on Steam Deck. Open the detail page for settings and the review."
+    "umpcFallback": "Played on Steam Deck. Open the detail page for settings and the review.",
+    "communityLatest": "Latest community posts",
+    "emptyCommunity": "No public community posts yet."
   },
   "mega": {
     "browse": "Explore",
@@ -269,6 +271,13 @@
     "fontSizeAria": "Article font size",
     "original": "Original",
     "reset": "Reset"
+  },
+  "noticePopup": {
+    "toggle": "Notice popup",
+    "read": "Read more",
+    "dontShow": "Don't show again",
+    "dontShowHint": "Check this, then close the window to hide this notice.",
+    "close": "Close popup"
   },
   "rating": {
     "aria": "Rating",
