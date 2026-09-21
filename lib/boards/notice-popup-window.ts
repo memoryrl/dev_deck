@@ -6,11 +6,9 @@ export const NOTICE_POPUP_SESSION_KEY = "devdeck:notice-popup-closed"
 export function noticePopupFeatures() {
   const width = 420
   const height = 560
-  const availLeft = window.screen.availLeft ?? 0
-  const availTop = window.screen.availTop ?? 0
   const availWidth = window.screen.availWidth || window.screen.width
-  const left = Math.max(availLeft + 24, availLeft + availWidth - width - 36)
-  const top = availTop + 72
+  const left = Math.max(24, availWidth - width - 36)
+  const top = 72
   return [
     "popup=yes",
     `width=${width}`,
