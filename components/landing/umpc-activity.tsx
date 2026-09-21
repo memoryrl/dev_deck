@@ -28,7 +28,7 @@ export function UmpcActivity({
   if (!umpc && rows.length === 0) return null
 
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-10">
+    <section className="mx-auto max-w-6xl px-5 pb-16">
       <div className={cn("grid gap-4", umpc && rows.length > 0 && "md:grid-cols-2")}>
         {umpc ? (
           <ScrollReveal variant="left" duration={600}>

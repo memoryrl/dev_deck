@@ -15,7 +15,7 @@ export function LatestColumns({
 }) {
   const { t } = getT()
   return (
-    <section className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-16 pt-8">
+    <section className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-16 pt-12">
       <div className="grid gap-10 md:grid-cols-2">
         <ScrollReveal variant="left" duration={600}>
           <div id="prompts">

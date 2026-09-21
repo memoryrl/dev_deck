@@ -19,9 +19,9 @@ export default async function SkillsTopPage() {
       />
 
       {entries.length === 0 ? (
-        <EmptyPlaceholder className="mt-6">{t("work.topEmpty")}</EmptyPlaceholder>
+        <EmptyPlaceholder className="mt-8">{t("work.topEmpty")}</EmptyPlaceholder>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-3xl border border-foreground/10 shadow-[0_24px_60px_-36px_hsl(24_20%_10%/0.55)]">
+        <div className="mt-8 overflow-hidden rounded-3xl border border-foreground/10 shadow-[0_24px_60px_-36px_hsl(24_20%_10%/0.55)]">
           <PodiumPanel entries={entries} />
         </div>
       )}

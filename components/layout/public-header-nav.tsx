@@ -7,6 +7,7 @@ import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { AccountMenu } from "@/components/layout/account-menu"
 import { BrandMark } from "@/components/layout/brand-mark"
 import { PublicMobileNav } from "@/components/layout/public-mobile-nav"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import { MENU_ICON, megaIdFromLabelKey, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
@@ -328,9 +329,11 @@ export function PublicHeaderNav({
                 {t("common.login")}
               </Link>
             )}
+            {account ? <NotificationCenter userKey={account.email} /> : null}
             <ThemeToggle className="rounded-full border-0 bg-transparent shadow-none hover:bg-foreground/[0.06]" />
           </nav>
           <div className="flex items-center gap-1 lg:hidden">
+            {account ? <NotificationCenter userKey={account.email} /> : null}
             {account ? (
               <AccountMenu
                 user={account}

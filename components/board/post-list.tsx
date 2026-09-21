@@ -96,7 +96,7 @@ export function PostList({
 
       {layout === "feed" ? (
         rows.length === 0 ? (
-          <EmptyPlaceholder className={displayCount ? "mt-8" : "mt-5"}>
+          <EmptyPlaceholder className="mt-4">
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}
           </EmptyPlaceholder>
         ) : (
@@ -169,7 +169,7 @@ export function PostList({
         )
       ) : layout === "cards" ? (
         rows.length === 0 ? (
-          <EmptyPlaceholder className={displayCount ? "mt-8" : "mt-5"}>
+          <EmptyPlaceholder className="mt-4">
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}
           </EmptyPlaceholder>
         ) : (

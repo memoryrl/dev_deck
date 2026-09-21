@@ -23,7 +23,7 @@ export function EmptyPlaceholder({
       className={cn(
         "flex flex-col items-center justify-center gap-3 px-5 text-center",
         variant === "card"
-          ? "min-h-64 rounded-2xl border border-dashed border-foreground/20 bg-gradient-to-br from-[hsl(var(--lux-champagne)/0.12)] via-transparent to-[hsl(var(--lux-cognac)/0.07)] py-10"
+          ? "min-h-48 rounded-2xl border border-dashed border-foreground/20 bg-gradient-to-br from-[hsl(var(--lux-champagne)/0.12)] via-transparent to-[hsl(var(--lux-cognac)/0.07)] py-10"
           : "py-10",
         className
       )}

@@ -480,6 +480,53 @@
     "topDescription": "AI Prompt Top 10, most recent first. An Olympic medal-ceremony topology.",
     "topEmpty": "No public prompts yet."
   },
+  "notifications": {
+    "title": "Notifications",
+    "bellAria": "Notifications",
+    "bellAriaUnread": "Notifications, {{count}} unread",
+    "panelAria": "Notification list",
+    "unreadCount": "{{count}} unread",
+    "allRead": "You're all caught up",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "markAllRead": "Mark all read",
+    "refresh": "Refresh",
+    "close": "Close",
+    "loading": "Loading notifications…",
+    "loadFailed": "Could not load notifications.",
+    "empty": "No notifications yet.",
+    "emptyUnread": "No unread notifications.",
+    "toastDefault": "You have a new notification",
+    "toastCount": "You have {{count}} new notifications",
+    "toastClose": "Dismiss notification",
+    "timeNow": "Just now",
+    "timeMinutes": "{{count}}m ago",
+    "timeHours": "{{count}}h ago",
+    "timeDays": "{{count}}d ago",
+    "type": {
+      "member_signup": {
+        "title": "New member",
+        "body": "{{actor}} signed up."
+      },
+      "member_withdraw": {
+        "title": "Member left",
+        "body": "{{actor}} deleted their account."
+      },
+      "post_created_admin": {
+        "title": "New post",
+        "body": "{{actor}} posted \"{{subject}}\"."
+      },
+      "post_created_author": {
+        "title": "Your post is published",
+        "body": "\"{{subject}}\" has been posted."
+      },
+      "post_reply": {
+        "title": "New reply",
+        "body": "{{actor}} replied to \"{{subject}}\"."
+      }
+    },
+    "someone": "Someone"
+  },
   "date": {
     "present": "Present"
   },

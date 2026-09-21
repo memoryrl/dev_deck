@@ -480,6 +480,53 @@
     "topDescription": "최근 등록순 AI 프롬프트 Top 10. 금·은·동 시상식 토폴로지입니다.",
     "topEmpty": "아직 공개된 프롬프트가 없습니다."
   },
+  "notifications": {
+    "title": "알림",
+    "bellAria": "알림",
+    "bellAriaUnread": "알림, 읽지 않은 알림 {{count}}건",
+    "panelAria": "알림 목록",
+    "unreadCount": "읽지 않은 알림 {{count}}건",
+    "allRead": "모두 읽었어요",
+    "filterAll": "전체",
+    "filterUnread": "읽지 않음",
+    "markAllRead": "모두 읽음",
+    "refresh": "새로고침",
+    "close": "닫기",
+    "loading": "알림을 불러오는 중…",
+    "loadFailed": "알림을 불러오지 못했습니다.",
+    "empty": "아직 도착한 알림이 없어요.",
+    "emptyUnread": "읽지 않은 알림이 없어요.",
+    "toastDefault": "새 알림이 도착했어요",
+    "toastCount": "새 알림 {{count}}건이 도착했어요",
+    "toastClose": "알림 닫기",
+    "timeNow": "방금 전",
+    "timeMinutes": "{{count}}분 전",
+    "timeHours": "{{count}}시간 전",
+    "timeDays": "{{count}}일 전",
+    "type": {
+      "member_signup": {
+        "title": "새 회원 가입",
+        "body": "{{actor}}님이 가입했습니다."
+      },
+      "member_withdraw": {
+        "title": "회원 탈퇴",
+        "body": "{{actor}}님이 탈퇴했습니다."
+      },
+      "post_created_admin": {
+        "title": "새 글 등록",
+        "body": "{{actor}}님이 「{{subject}}」을(를) 등록했습니다."
+      },
+      "post_created_author": {
+        "title": "글이 등록되었습니다",
+        "body": "「{{subject}}」이(가) 등록되었습니다."
+      },
+      "post_reply": {
+        "title": "새 답글",
+        "body": "{{actor}}님이 「{{subject}}」에 답글을 남겼습니다."
+      }
+    },
+    "someone": "회원"
+  },
   "date": {
     "present": "현재"
   },

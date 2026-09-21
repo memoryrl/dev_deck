@@ -23,9 +23,12 @@ function Screen({
 
 export function TitleSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("space-y-3", className)}>
-      <Skeleton className="h-10 w-48 max-w-full" />
-      <Skeleton className="h-4 w-80 max-w-full" />
+    // 실제 PageTitleBanner와 같은 패딩·구성으로 그려서, 로딩이 끝나 배너로 바뀔 때 아래 내용이 밀리지 않게 한다.
+    <div className={cn("rounded-3xl border bg-muted/30 px-6 py-8 md:px-10 md:py-10", className)}>
+      <Skeleton className="h-4 w-40 max-w-full" />
+      <Skeleton className="mt-3 h-10 w-56 max-w-full" />
+      <Skeleton className="mt-4 h-1 w-10 rounded-full" />
+      <Skeleton className="mt-4 h-5 w-80 max-w-full" />
     </div>
   )
 }

@@ -10,6 +10,7 @@ import { useI18n } from "@/components/i18n/i18n-provider"
 import type { AdminSidebarGroup } from "@/components/layout/admin-nav"
 import { LogoutButton } from "@/components/layout/logout-button"
 import { AdminSidebarNav } from "@/components/layout/admin-sidebar-nav"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import { UserMenu } from "@/components/layout/user-menu"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import type { SessionUserView } from "@/lib/auth/session-user"
@@ -56,6 +57,7 @@ export function DashboardHeader({ account, menus = [] }: Props) {
               <Home className="size-5" />
             </Link>
           </Button>
+          <NotificationCenter userKey={account.email} />
           <ThemeToggle className="hidden md:inline-flex" />
           <div className="md:hidden">
             <UserMenu user={account} compact />
