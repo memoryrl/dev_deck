@@ -22,7 +22,7 @@ export function LoginView({ error }: { error?: string }) {
               DevDeck
             </p>
             <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-[#1a1614] dark:text-[#f6f1e9] md:text-5xl">
-              {t("auth.watchTitle")}
+              {t("auth.title")}
             </h1>
             <p className="max-w-sm text-sm leading-relaxed text-[#5c4a3a] dark:text-[#d7c4a6]">
               {t("auth.lede")}

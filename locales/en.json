@@ -313,7 +313,7 @@
   },
   "auth": {
     "title": "Sign in",
-    "watchTitle": "I've got my eye on you",
+    "watchTitle": "Sign in",
     "lede": "Sign in only when you need to edit posts or reviews. The game list is public.",
     "missingEnv": "Supabase environment variables are missing.",
     "googleDisabled": "Google sign-in is disabled in Supabase. Enable Authentication → Providers → Google and add a Client ID/Secret."
