@@ -46,12 +46,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { locale, dictionary } = await getT()
   const settings = await getSiteSettings()
+  const headerList = await headers()
+  const nonce = headerList.get("x-nonce") ?? undefined
   const gaId = parseGaMeasurementId(settings.googleAnalyticsId)
-  const loadGa = Boolean(gaId) && !isAnalyticsLocalHost((await headers()).get("host"))
+  const loadGa = Boolean(gaId) && !isAnalyticsLocalHost(headerList.get("host"))
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>
-        <ThemeProvider>
+        <ThemeProvider nonce={nonce}>
           <I18nProvider locale={locale} dictionary={dictionary}>
             <Suspense fallback={null}>
               <LanguageRouteSync />
@@ -61,7 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <VisitTracker />
             <HashScrollFix />
             <LayerDialogHost />
-            {loadGa && gaId ? <GoogleAnalytics measurementId={gaId} /> : null}
+            {loadGa && gaId ? <GoogleAnalytics measurementId={gaId} nonce={nonce} /> : null}
           </I18nProvider>
         </ThemeProvider>
       </body>

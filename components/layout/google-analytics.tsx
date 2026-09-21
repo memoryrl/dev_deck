@@ -24,7 +24,13 @@ function sendPageView(measurementId: string, path: string) {
   })
 }
 
-export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
+export function GoogleAnalytics({
+  measurementId,
+  nonce,
+}: {
+  measurementId: string
+  nonce?: string
+}) {
   const pathname = usePathname()
   const first = useRef(true)
 
@@ -41,8 +47,9 @@ export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
+        nonce={nonce}
       />
-      <Script id="ga4-init" strategy="afterInteractive">
+      <Script id="ga4-init" strategy="afterInteractive" nonce={nonce}>
         {`window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 window.gtag=gtag;
