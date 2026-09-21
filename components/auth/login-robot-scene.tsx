@@ -367,7 +367,7 @@ export function LoginRobotScene() {
           <pointLight position={[ROBOT_X, 1.2, 1.6]} intensity={dark ? 0.7 : 0.45} color="#c4a574" distance={7} />
           <CameraRig zoomRef={zoomRef} farCam={farCam} />
           <Suspense fallback={null}>
-            <LoginRobot pointer={pointer} skin={skin} />
+            <LoginRobot pointer={pointer} skin={skin} scale={isMobile ? 0.56 : MODEL_SCALE} />
           </Suspense>
         </Canvas>
       </div>
