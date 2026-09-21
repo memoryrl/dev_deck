@@ -81,7 +81,8 @@
       "design": "Design System",
       "other": "Other"
     },
-    "shareLinks": "Share links"
+    "shareLinks": "Share links",
+    "terms": "Terms"
   },
   "footer": {
     "blurb": "A personal portfolio hub for prompts, career notes, and a Steam library.",
@@ -330,6 +331,38 @@
     "missingEnv": "Supabase environment variables are missing.",
     "googleDisabled": "Google sign-in is disabled in Supabase. Enable Authentication → Providers → Google and add a Client ID/Secret."
   },
+  "terms": {
+    "doc": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    },
+    "consent": {
+      "title": "Agree to the terms",
+      "description": "To finish signing up, read the Terms of Service and the Privacy Policy and press the confirm button under each. Both must be confirmed.",
+      "progress": "Sign-up steps",
+      "step": "STEP {{index}}",
+      "finishStep": "Finish sign-up",
+      "signingUpAs": "Signing up as {{email}}.",
+      "confirmed": "Confirmed",
+      "pending": "Needs confirmation",
+      "readHint": "Read to the end, then press the confirm button.",
+      "confirmButton": "I have read this",
+      "confirmedButton": "Confirmed (press again to undo)",
+      "accept": "Agree and finish sign-up",
+      "remaining": "{{done}} of {{total}} confirmed",
+      "decline": "Do not agree (sign out)",
+      "declineFresh": "Do not agree (cancel sign-up)",
+      "declineConfirm": "Without agreeing you cannot use member features. Sign out?",
+      "declineConfirmFresh": "Without agreeing, sign-up is cancelled and the account you just created is deleted. Cancel sign-up?",
+      "doneTitle": "Sign-up complete",
+      "done": "Your agreement has been saved. Welcome to DevDeck.",
+      "error": {
+        "notConfirmed": "Please confirm both the Terms of Service and the Privacy Policy.",
+        "failed": "Could not save your agreement. Please try again.",
+        "declineFailed": "Could not complete the request. Please try again."
+      }
+    }
+  },
   "dashboard": {
     "adminMenu": "Admin menu",
     "homeAria": "Homepage"
@@ -450,6 +483,44 @@
       "screens": "Screens",
       "description": "Component guide for the DevDeck project.",
       "agentRef": "Agent reference"
+    },
+    "terms": {
+      "title": "Terms",
+      "description": "Edit the Terms of Service and Privacy Policy shown during sign-up. Every save creates a new version and is recorded in the revision history.",
+      "docTabs": "Document",
+      "history": "Revision history",
+      "historyTitle": "Terms revision history",
+      "historyDescription": "Every saved version of the terms. Open a version to read the exact wording at that time.",
+      "historyEmpty": "No revisions yet.",
+      "backToEditor": "Back to editor",
+      "filterAll": "All",
+      "currentVersion": "Current v{{version}} · last edited {{date}}",
+      "notRegistered": "No content yet. Saving will create v1.",
+      "body": "Body",
+      "bodyPlaceholder": "Write the terms here",
+      "bodyHint": "Use headings (h2/h3) and lists to split articles so the sign-up screen is easy to read.",
+      "note": "Change note",
+      "notePlaceholder": "e.g. Clarified article 5 on user content",
+      "noteHint": "A short note on what changed and why makes the history easier to scan. Optional.",
+      "save": "Save (new version)",
+      "saved": "Saved. The current version is v{{version}}.",
+      "col": {
+        "document": "Document",
+        "version": "Version",
+        "note": "Change note",
+        "editor": "Edited by",
+        "editedAt": "Edited at",
+        "actions": "Actions"
+      },
+      "current": "Current",
+      "past": "Previous",
+      "systemEditor": "System (initial)",
+      "view": "View",
+      "noNote": "No change note",
+      "editCurrent": "Edit current version",
+      "versionNav": "Version navigation",
+      "prevVersion": "Previous v{{version}}",
+      "nextVersion": "Next v{{version}}"
     }
   },
   "account": {

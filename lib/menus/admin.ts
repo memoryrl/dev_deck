@@ -53,6 +53,7 @@ export const DEFAULT_ADMIN_MENU_TREE: AdminMenuSeed[] = [
       { label: "회원", labelKey: "nav.members", href: "/site/members", icon: "Users", sortOrder: 0 },
       { label: "접속 이력", labelKey: "nav.loginHistory", href: "/site/login-history", icon: "History", sortOrder: 10 },
       { label: "공유 링크", labelKey: "nav.shareLinks", href: "/site/shares", icon: "Share2", sortOrder: 15 },
+      { label: "약관", labelKey: "nav.terms", href: "/site/terms", icon: "FileText", sortOrder: 17 },
       { label: "설정", labelKey: "nav.settings", href: "/site/settings", icon: "Settings", sortOrder: 20 },
       { label: "시스템", labelKey: "nav.system", href: "/site/system", icon: "Monitor", sortOrder: 30 },
     ],

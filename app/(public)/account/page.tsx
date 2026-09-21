@@ -12,6 +12,7 @@ import { sessionUserView, usernameFromAuth } from "@/lib/auth/session-user"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import { getT } from "@/lib/i18n/dictionary"
 import { createClient, getAuthUser } from "@/lib/supabase/server"
+import { termsGatePath } from "@/lib/terms/consent"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,6 +28,10 @@ export default async function AccountPage() {
 
   const user = await getAuthUser()
   if (!user) redirect("/login")
+
+  // 약관을 아직 확인하지 않은 회원은 마이페이지 대신 약관 확인 화면으로 보낸다.
+  const gate = await termsGatePath(user)
+  if (gate) redirect(gate)
 
   const { t, locale } = getT()
   const account = sessionUserView(user)

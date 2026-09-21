@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  FileText,
   Gamepad2,
   History,
   LayoutDashboard,
@@ -29,6 +30,7 @@ export const ADMIN_NAV: { href: string; labelKey: string; label: string; icon: L
   { href: "/site/uploads", labelKey: "nav.uploads", label: "업로드", icon: Upload },
   { href: "/site/members", labelKey: "nav.members", label: "회원", icon: Users },
   { href: "/site/login-history", labelKey: "nav.loginHistory", label: "접속 이력", icon: History },
+  { href: "/site/terms", labelKey: "nav.terms", label: "약관", icon: FileText },
   { href: "/site/settings", labelKey: "nav.settings", label: "설정", icon: Settings },
   { href: "/site/system", labelKey: "nav.system", label: "시스템", icon: Monitor },
   { href: "/site/design-system/common", labelKey: "nav.designSystemCommon", label: "공통영역", icon: Palette },

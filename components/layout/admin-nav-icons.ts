@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  FileText,
   Gamepad2,
   History,
   Layers,
@@ -32,6 +33,7 @@ export const ADMIN_NAV_ICON_MAP: Record<string, LucideIcon> = {
   History,
   Settings,
   Share2,
+  FileText,
   Monitor,
   Palette,
   Layers,
