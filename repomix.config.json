@@ -1,0 +1,32 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "output": {
+    "filePath": ".repomix/devdeck.xml",
+    "style": "xml",
+    "compress": true,
+    "removeComments": false,
+    "removeEmptyLines": true,
+    "showLineNumbers": false,
+    "fileSummary": true,
+    "directoryStructure": true
+  },
+  "include": ["app/**", "components/**", "lib/**", "types/**", "locales/**", "middleware.ts", "supabase/**/*.sql", "docs/**", "README.md"],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      ".next/**",
+      "node_modules/**",
+      "**/._*",
+      "package-lock.json",
+      "**/*.tsbuildinfo",
+      "supabase/.temp/**",
+      "public/**",
+      "**/*.glb",
+      "**/*.png",
+      "**/*.jpg",
+      "**/*.svg"
+    ]
+  },
+  "security": { "enableSecurityCheck": true }
+}

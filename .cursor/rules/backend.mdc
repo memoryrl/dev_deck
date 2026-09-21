@@ -1,0 +1,39 @@
+---
+description: 서버 액션·API 라우트·DB(Supabase) 코드를 쓸 때 지키는 안전 규칙
+globs: "app/api/**/*.ts,app/**/actions.ts,lib/**/*.ts,supabase/**/*.sql,middleware.ts"
+alwaysApply: false
+---
+
+# 백엔드 안전 규칙 (Next.js 서버 액션·라우트 + Supabase)
+
+## 1. 입력은 경계에서 검증한다
+- 서버 액션 인자, `formData`, 라우트의 `request.json()`·쿼리·경로 파라미터는 **믿지 않는다.** 타입·길이·범위·열거값을 서버에서 다시 검증한다(예: `lib/share/service.ts`의 `cleanInvite`, `parseExpiry`).
+- 검증 실패는 조용히 무시하지 말고 호출자가 화면 문구로 바꿀 수 있는 **코드**(`"expiryPast"` 등)로 돌려준다.
+- `zod`는 아직 쓰지 않는다. 입력 스키마가 늘어나면 도입을 제안하되, 임의로 의존성을 추가하지 않는다.
+
+## 2. 권한은 서버에서, 데이터를 만지기 전에 확인한다
+- 서버 액션은 화면에서 버튼을 숨겼다는 이유로 안전하지 않다. **누가·무엇을** 하는지(로그인 여부, 관리자 여부, 작성자 여부)를 액션 안에서 매번 확인한다(`isOwnerUser`, `getAuthUser`).
+- `createServiceClient()`(service_role)는 RLS를 우회한다. 쓰는 곳에서는 **권한 확인이 먼저**이고, 결과를 화면에 내릴 때 필요한 필드만 고른다. 클라이언트 컴포넌트에서 import 하지 않는다.
+- 새 테이블은 `ENABLE ROW LEVEL SECURITY`와 정책(또는 서버 전용이면 `REVOKE ... FROM anon, authenticated`)을 **같은 SQL 패치에** 넣는다. RLS 없는 테이블을 만들지 않는다.
+
+## 3. 응답 형식
+- 라우트 핸들러: 성공은 200/201/204, 실패는 4xx/5xx와 `{ error: string }`. `200`에 `{ success: false }`를 싣지 않는다. 캐시되면 안 되는 응답은 `Cache-Control: no-store`.
+- 서버 액션: 이 프로젝트의 관례인 `{ ok: true, ... } | { ok: false, error }` 를 따른다. 예외를 그대로 던져 화면을 깨지 않는다.
+
+## 4. DB 성능
+- 반복문·`map` 안에서 쿼리하지 않는다(N+1). `.in("id", ids)`나 조인(`select("*, other(*)")`)으로 한 번에 가져온다.
+- 목록은 `limit`/페이지네이션을 둔다(`lib/pagination.ts`). 정렬·필터에 쓰는 컬럼에는 인덱스가 있는지 확인하고, 없으면 SQL 패치에 추가한다.
+- 동시성이 중요한 증가·차감(방문 수, 카운터 등)은 앱에서 "읽고 +1 해서 쓰기"를 하지 말고 DB 함수(RPC)로 원자적으로 처리한다(`share_record_visit` 참고).
+
+## 5. 인젝션
+- Supabase 쿼리 빌더는 값을 파라미터로 보내므로 안전하지만, **`.or("col.ilike." + 사용자입력)` 같은 문자열 필터는 예외**다. 이런 곳에는 사용자 입력을 그대로 넣지 말고 `ilikeContains` 같은 이스케이프 헬퍼를 거친다.
+- 사용자가 만든 HTML은 저장·표시 전에 `sanitizeRichHtml`을 거친다(XSS).
+- 원시 SQL(`rpc` 함수 본문 포함)에서 문자열을 이어 붙여 쿼리를 만들지 않는다. 동적 식별자는 `format('%I')`를 쓴다.
+
+## 6. 비밀값
+- API 키·service_role 키·서명 시크릿은 코드에 넣지 말고 `process.env`에서 읽는다. 브라우저에 노출되어야 하는 값만 `NEXT_PUBLIC_` 접두사를 쓴다.
+- 비밀번호는 해시(scrypt 등)로만 저장하고 로그·응답에 싣지 않는다. 시도 횟수 제한이 필요한 공개 엔드포인트에는 `checkRateLimit`을 쓴다.
+
+## 7. 오류 처리
+- 비동기 핸들러의 오류는 잡아서 안전한 메시지로 바꾼다. 내부 오류 문구·스택을 사용자에게 그대로 내보내지 않는다.
+- 알림·통계 같은 **부가 기능**의 실패가 핵심 동작(글 등록, 가입 등)을 막으면 안 된다. DB 트리거는 `EXCEPTION WHEN OTHERS`로 감싼다(`patch-notifications.sql` 참고).

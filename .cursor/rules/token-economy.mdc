@@ -1,0 +1,26 @@
+---
+description: 생성물·벤더·바이너리를 읽지 않아 토큰을 아끼고, 필요한 코드만 연다
+alwaysApply: true
+---
+
+# Token economy
+
+컨텍스트에 넣지 않는다. Grep/Glob으로 위치를 좁힌 뒤, 필요한 구간만 읽는다.
+
+## 읽지 말 것
+
+- 생성물: `.next/`, `out/`, `dist/`, `build/`, `.repomix/`, `*.tsbuildinfo`, `next-env.d.ts`
+- 벤더: `node_modules/`
+- 락파일: `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`
+- Git·임시: `.git/`, `supabase/.temp/`, `._*`, `.DS_Store`
+- 무거운 바이너리: `*.glb`, `*.woff2`, `*.mp4`, 앱 에셋 이미지(`public/` 등)
+
+## 읽어도 되는 이미지
+
+UI 검증용 스크린샷, 사용자가 첨부한 화면 캡처는 읽는다. 장식용 에셋·3D·폰트·영상은 그 파일이 과제일 때만 연다.
+
+## 도구
+
+- 전체 파일 덤프 대신 `Grep`/`Glob`/부분 `Read`(offset·limit)
+- `git diff`는 관련 파일만. 락파일 diff는 보지 않는다
+- 셸에서 `cat`으로 위 목록을 통째로 출력하지 않는다
