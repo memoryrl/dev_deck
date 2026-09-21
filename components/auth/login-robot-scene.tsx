@@ -9,10 +9,12 @@ import {
   useState,
   type MutableRefObject,
 } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
 import { SkeletonUtils } from "three-stdlib"
 import {
+  AdditiveBlending,
+  CanvasTexture,
   Color,
   MathUtils,
   MeshStandardMaterial,
@@ -21,6 +23,7 @@ import {
   type Group,
   type Material,
   type Mesh,
+  type WebGLProgramParametersWithUniforms,
   type Object3D,
   type PerspectiveCamera,
   type SkinnedMesh,
@@ -34,16 +37,22 @@ const MODEL_URL = "/models/robot.glb"
 const MODEL_SCALE = 0.72
 const MODEL_FACING_OFFSET = 0
 
-const ROBOT_X = 0.55
+const ROBOT_X_DESKTOP = 0.82
+const ROBOT_X_MOBILE = 0
 const ROBOT_Y = -1.5
 
 // 인트로: 얼굴 클로즈업 → 상반신. 사용자 줌은 이 거리에 곱해진다.
 const INTRO_MS = 2200
-const LOOK_AT_CLOSE = new Vector3(ROBOT_X, 1.25, 0)
-const LOOK_AT_FAR = new Vector3(ROBOT_X, 0.62, 0)
-const CAM_CLOSE = { x: 0.28, y: 1.38, z: 1.75 }
-const CAM_FAR_DESKTOP = { x: 0.2, y: 0.74, z: 4.25 }
-const CAM_FAR_MOBILE = { x: 0.05, y: 0.72, z: 7.6 }
+const LOOK_AT_CLOSE_DESKTOP = new Vector3(ROBOT_X_DESKTOP, 1.25, 0)
+// 시선 중심을 로봇보다 왼쪽에 두면 와이드에서 로봇이 우측에 걸린다.
+const LOOK_AT_FAR_DESKTOP = new Vector3(0.38, 0.58, 0)
+const LOOK_AT_CLOSE_MOBILE = new Vector3(ROBOT_X_MOBILE, 1.25, 0)
+// 시선을 얼굴보다 아래로 두면 로봇이 화면 중상단에 걸린다(하단은 로그인 패널).
+const LOOK_AT_FAR_MOBILE = new Vector3(ROBOT_X_MOBILE, -0.08, 0)
+const CAM_CLOSE_DESKTOP = { x: 0.58, y: 1.38, z: 1.75 }
+const CAM_CLOSE_MOBILE = { x: 0, y: 1.38, z: 1.75 }
+const CAM_FAR_DESKTOP = { x: 0.12, y: 0.74, z: 4.45 }
+const CAM_FAR_MOBILE = { x: 0, y: 0.92, z: 6.6 }
 const CAMERA_FOV = 35
 
 const ZOOM_MIN = 0.65
@@ -82,7 +91,29 @@ const LOOK_PITCH = 0.42
 const LOOK_NECK = 0.48
 const LOOK_SMOOTH = 7
 
-function tintClone(material: Material, skin: Skin): Material {
+// 다크 모드 후광 색 — 피부 색을 밝게 띄워서 로봇마다 자기 색의 빛이 번지게 한다.
+function haloColor(skin: Skin) {
+  return `#${new Color(skin.main).lerp(new Color("#ffffff"), 0.35).getHexString()}`
+}
+
+// 윤곽(림) 발광: 카메라를 비스듬히 보는 면일수록 emissive를 더해 테두리가 빛나 보이게 한다.
+// 면 법선은 flatShading 여부와 상관없이 프래그먼트에서 이미 계산된 `normal`을 쓴다.
+function addRimGlow(material: MeshStandardMaterial, rim: string) {
+  material.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
+    shader.uniforms.rimColor = { value: new Color(rim) }
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 rimColor;")
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+        float rimFactor = pow(1.0 - saturate(dot(normalize(normal), normalize(vViewPosition))), 2.6);
+        totalEmissiveRadiance += rimColor * rimFactor * 1.35;`
+      )
+  }
+  material.customProgramCacheKey = () => "login-robot-rim"
+}
+
+function tintClone(material: Material, skin: Skin, rim: string | null): Material {
   const cloned = material.clone()
   if (!(cloned instanceof MeshStandardMaterial)) return cloned
   if (cloned.name === "Main") cloned.color = new Color(skin.main)
@@ -92,6 +123,7 @@ function tintClone(material: Material, skin: Skin): Material {
     cloned.roughness = 0.12
     cloned.metalness = 0.7
   }
+  if (rim) addRimGlow(cloned, rim)
   return cloned
 }
 
@@ -105,7 +137,83 @@ function findBone(root: Object3D, name: string): Bone | null {
   return found
 }
 
-function prepareRobot(source: Group, skin: Skin): Group {
+function findMesh(root: Object3D, name: string): Mesh | null {
+  let found: Mesh | null = null
+  root.traverse((child) => {
+    if (found) return
+    const mesh = child as Mesh
+    if (mesh.isMesh && mesh.name === name) found = mesh
+  })
+  return found
+}
+
+type EulerPose = { x: number; y: number; z: number }
+
+function capturePose(node: Object3D | null): EulerPose {
+  if (!node) return { x: 0, y: 0, z: 0 }
+  return { x: node.rotation.x, y: node.rotation.y, z: node.rotation.z }
+}
+
+type BodyPart = "head" | "torso" | "armL" | "armR" | "legL" | "legR"
+
+function partFromHit(object: Object3D): BodyPart | null {
+  let node: Object3D | null = object
+  while (node) {
+    switch (node.name) {
+      case "Head":
+      case "Neck":
+        return "head"
+      case "Torso":
+      case "Body":
+      case "Abdomen":
+      case "Hips":
+        return "torso"
+      case "Shoulder.L":
+      case "Arm.L":
+      case "UpperArm.L":
+      case "LowerArm.L":
+        return "armL"
+      case "Shoulder.R":
+      case "Arm.R":
+      case "UpperArm.R":
+      case "LowerArm.R":
+        return "armR"
+      case "Leg.L":
+      case "UpperLeg.L":
+      case "LowerLeg.L":
+      case "Foot.L":
+        return "legL"
+      case "Leg.R":
+      case "UpperLeg.R":
+      case "LowerLeg.R":
+      case "Foot.R":
+        return "legR"
+      default:
+        node = node.parent
+    }
+  }
+  return null
+}
+
+const TICKLE_MS = 780
+const BREATH_HZ = 1.45
+
+type Tickle = { until: number; seed: number }
+
+function tickleWave(tickles: Partial<Record<BodyPart, Tickle>>, part: BodyPart, now: number, freq: number) {
+  const tk = tickles[part]
+  if (!tk) return 0
+  const remaining = tk.until - now
+  if (remaining <= 0) {
+    delete tickles[part]
+    return 0
+  }
+  const u = 1 - remaining / TICKLE_MS
+  const env = Math.exp(-u * 3.4) * (1 - u * 0.35)
+  return env * Math.sin(now * 0.001 * freq + tk.seed)
+}
+
+function prepareRobot(source: Group, skin: Skin, rim: string | null): Group {
   const cloned = SkeletonUtils.clone(source) as Group
   const removeList: Object3D[] = []
   cloned.traverse((child) => {
@@ -122,8 +230,8 @@ function prepareRobot(source: Group, skin: Skin): Group {
     if (!mesh.isMesh) return
     mesh.frustumCulled = false
     mesh.material = Array.isArray(mesh.material)
-      ? mesh.material.map((mat) => tintClone(mat, skin))
-      : tintClone(mesh.material, skin)
+      ? mesh.material.map((mat) => tintClone(mat, skin, rim))
+      : tintClone(mesh.material, skin, rim)
   })
   for (const node of removeList) node.parent?.remove(node)
   return cloned
@@ -136,76 +244,281 @@ function easeOutCubic(t: number) {
 function LoginRobot({
   pointer,
   skin,
+  rim,
+  robotX,
   scale = MODEL_SCALE,
 }: {
   pointer: MutableRefObject<PointerTarget>
   skin: Skin
+  rim: string | null
+  robotX: number
   scale?: number
 }) {
   const { scene } = useGLTF(MODEL_URL)
-  const robot = useMemo(() => prepareRobot(scene as Group, skin), [scene, skin])
+  const robot = useMemo(() => prepareRobot(scene as Group, skin, rim), [scene, skin, rim])
   const groupRef = useRef<Group>(null)
-  const headRef = useRef<Bone | null>(null)
-  const neckRef = useRef<Bone | null>(null)
+  const bones = useRef({
+    head: null as Bone | null,
+    neck: null as Bone | null,
+    body: null as Bone | null,
+    abdomen: null as Bone | null,
+    torso: null as Bone | null,
+    shoulderL: null as Bone | null,
+    shoulderR: null as Bone | null,
+    upperArmL: null as Bone | null,
+    upperArmR: null as Bone | null,
+    lowerArmL: null as Bone | null,
+    lowerArmR: null as Bone | null,
+    upperLegL: null as Bone | null,
+    upperLegR: null as Bone | null,
+    lowerLegL: null as Bone | null,
+    lowerLegR: null as Bone | null,
+  })
+  const torsoMesh = useRef<Mesh | null>(null)
+  const base = useRef({
+    head: { x: 0, y: 0, z: 0 },
+    neck: { x: 0, y: 0, z: 0 },
+    body: { x: 0, y: 0, z: 0 },
+    abdomen: { x: 0, y: 0, z: 0 },
+    torso: { x: 0, y: 0, z: 0 },
+    shoulderL: { x: 0, y: 0, z: 0 },
+    shoulderR: { x: 0, y: 0, z: 0 },
+    upperArmL: { x: 0, y: 0, z: 0 },
+    upperArmR: { x: 0, y: 0, z: 0 },
+    lowerArmL: { x: 0, y: 0, z: 0 },
+    lowerArmR: { x: 0, y: 0, z: 0 },
+    upperLegL: { x: 0, y: 0, z: 0 },
+    upperLegR: { x: 0, y: 0, z: 0 },
+    lowerLegL: { x: 0, y: 0, z: 0 },
+    lowerLegR: { x: 0, y: 0, z: 0 },
+    torsoScale: { x: 1, y: 1, z: 1 },
+  })
   const look = useRef({ yaw: 0, pitch: 0 })
-  const baseHead = useRef({ x: 0, y: 0, z: 0 })
-  const baseNeck = useRef({ x: 0, y: 0, z: 0 })
+  const tickles = useRef<Partial<Record<BodyPart, Tickle>>>({})
 
   useEffect(() => {
-    headRef.current = findBone(robot, "Head")
-    neckRef.current = findBone(robot, "Neck")
-    if (headRef.current) {
-      baseHead.current = {
-        x: headRef.current.rotation.x,
-        y: headRef.current.rotation.y,
-        z: headRef.current.rotation.z,
-      }
-    }
-    if (neckRef.current) {
-      baseNeck.current = {
-        x: neckRef.current.rotation.x,
-        y: neckRef.current.rotation.y,
-        z: neckRef.current.rotation.z,
+    const b = bones.current
+    b.head = findBone(robot, "Head")
+    b.neck = findBone(robot, "Neck")
+    b.body = findBone(robot, "Body")
+    b.abdomen = findBone(robot, "Abdomen")
+    b.torso = findBone(robot, "Torso")
+    b.shoulderL = findBone(robot, "Shoulder.L")
+    b.shoulderR = findBone(robot, "Shoulder.R")
+    b.upperArmL = findBone(robot, "UpperArm.L")
+    b.upperArmR = findBone(robot, "UpperArm.R")
+    b.lowerArmL = findBone(robot, "LowerArm.L")
+    b.lowerArmR = findBone(robot, "LowerArm.R")
+    b.upperLegL = findBone(robot, "UpperLeg.L")
+    b.upperLegR = findBone(robot, "UpperLeg.R")
+    b.lowerLegL = findBone(robot, "LowerLeg.L")
+    b.lowerLegR = findBone(robot, "LowerLeg.R")
+    torsoMesh.current = findMesh(robot, "Torso")
+    const pose = base.current
+    pose.head = capturePose(b.head)
+    pose.neck = capturePose(b.neck)
+    pose.body = capturePose(b.body)
+    pose.abdomen = capturePose(b.abdomen)
+    pose.torso = capturePose(b.torso)
+    pose.shoulderL = capturePose(b.shoulderL)
+    pose.shoulderR = capturePose(b.shoulderR)
+    pose.upperArmL = capturePose(b.upperArmL)
+    pose.upperArmR = capturePose(b.upperArmR)
+    pose.lowerArmL = capturePose(b.lowerArmL)
+    pose.lowerArmR = capturePose(b.lowerArmR)
+    pose.upperLegL = capturePose(b.upperLegL)
+    pose.upperLegR = capturePose(b.upperLegR)
+    pose.lowerLegL = capturePose(b.lowerLegL)
+    pose.lowerLegR = capturePose(b.lowerLegR)
+    if (torsoMesh.current) {
+      pose.torsoScale = {
+        x: torsoMesh.current.scale.x,
+        y: torsoMesh.current.scale.y,
+        z: torsoMesh.current.scale.z,
       }
     }
   }, [robot])
 
+  const { camera, gl } = useThree()
+  const faceNdc = useRef(new Vector3())
+
+  const poke = (event: ThreeEvent<PointerEvent>) => {
+    const part = partFromHit(event.object)
+    if (!part) return
+    event.stopPropagation()
+    const now = performance.now()
+    const existing = tickles.current[part]
+    if (existing && existing.until > now + 180) {
+      existing.until = now + TICKLE_MS
+      return
+    }
+    tickles.current[part] = { until: now + TICKLE_MS, seed: Math.random() * Math.PI * 2 }
+  }
+
   useFrame((state, delta) => {
-    // 터치/포인터 위치와 같은 방향으로 보도록 부호를 맞춘다(대각선 반대 시선 수정).
-    const targetYaw = MathUtils.clamp(-pointer.current.x, -1, 1) * LOOK_YAW
-    const targetPitch = MathUtils.clamp(pointer.current.y, -1, 1) * LOOK_PITCH
+    const t = state.clock.elapsedTime
+    const now = performance.now()
+    const b = bones.current
+    const pose = base.current
+    const tk = tickles.current
+
+    faceNdc.current.set(robotX, 1.25, 0).project(camera)
+    const dx = pointer.current.x - faceNdc.current.x
+    const dy = pointer.current.y + faceNdc.current.y
+    const targetYaw = MathUtils.clamp(dx, -1, 1) * LOOK_YAW
+    const targetPitch = MathUtils.clamp(dy, -1, 1) * LOOK_PITCH
     look.current.yaw = MathUtils.damp(look.current.yaw, targetYaw, LOOK_SMOOTH, delta)
     look.current.pitch = MathUtils.damp(look.current.pitch, targetPitch, LOOK_SMOOTH, delta)
 
+    // 숨: 느린 들숨·날숨 + 아주 작은 좌우 무게이동
+    const breath = Math.sin(t * BREATH_HZ)
+    const inhale = breath * 0.5 + 0.5
+    const sway = Math.sin(t * 0.72) * 0.018
+    const headTkY = tickleWave(tk, "head", now, 46)
+    const headTkX = tickleWave(tk, "head", now, 58)
+    const headTkZ = tickleWave(tk, "head", now, 67)
+    const torsoTk = tickleWave(tk, "torso", now, 40)
+    const armLTk = tickleWave(tk, "armL", now, 44)
+    const armRTk = tickleWave(tk, "armR", now, 47)
+    const legLTk = tickleWave(tk, "legL", now, 41)
+    const legRTk = tickleWave(tk, "legR", now, 43)
+
     if (groupRef.current) {
-      groupRef.current.position.y = ROBOT_Y + Math.sin(state.clock.elapsedTime * 1.4) * 0.03
+      groupRef.current.position.y = ROBOT_Y + breath * 0.038 + Math.sin(t * 0.9) * 0.012
+      groupRef.current.rotation.z = sway
     }
 
-    if (neckRef.current) {
-      neckRef.current.rotation.y = baseNeck.current.y + look.current.yaw * LOOK_NECK
-      neckRef.current.rotation.x = baseNeck.current.x + look.current.pitch * LOOK_NECK
+    if (b.body) {
+      b.body.rotation.x = pose.body.x + inhale * 0.03 + torsoTk * 0.12
+      b.body.rotation.z = pose.body.z + sway * 0.6 + torsoTk * 0.2
     }
-    if (headRef.current) {
-      headRef.current.rotation.y = baseHead.current.y + look.current.yaw
-      headRef.current.rotation.x = baseHead.current.x + look.current.pitch
+    if (b.abdomen) {
+      b.abdomen.rotation.x = pose.abdomen.x + inhale * 0.04 + torsoTk * 0.16
+    }
+    if (b.torso) {
+      b.torso.rotation.x = pose.torso.x + inhale * 0.025 + torsoTk * 0.1
+    }
+    if (torsoMesh.current) {
+      const s = pose.torsoScale
+      const pulse = 1 + inhale * 0.045 + Math.abs(torsoTk) * 0.08
+      torsoMesh.current.scale.set(s.x * (1 + inhale * 0.028), s.y * pulse, s.z * (1 + inhale * 0.032))
+    }
+
+    if (b.shoulderL) {
+      b.shoulderL.rotation.z = pose.shoulderL.z - inhale * 0.05 + armLTk * 0.35
+      b.shoulderL.rotation.x = pose.shoulderL.x + armLTk * 0.18
+    }
+    if (b.shoulderR) {
+      b.shoulderR.rotation.z = pose.shoulderR.z + inhale * 0.05 + armRTk * 0.35
+      b.shoulderR.rotation.x = pose.shoulderR.x + armRTk * 0.18
+    }
+    if (b.upperArmL) {
+      b.upperArmL.rotation.z = pose.upperArmL.z + armLTk * 0.55
+      b.upperArmL.rotation.x = pose.upperArmL.x + Math.sin(t * 0.9) * 0.03 + armLTk * 0.28
+    }
+    if (b.upperArmR) {
+      b.upperArmR.rotation.z = pose.upperArmR.z + armRTk * 0.55
+      b.upperArmR.rotation.x = pose.upperArmR.x + Math.sin(t * 0.9 + 0.4) * 0.03 + armRTk * 0.28
+    }
+    if (b.lowerArmL) b.lowerArmL.rotation.x = pose.lowerArmL.x + armLTk * 0.4
+    if (b.lowerArmR) b.lowerArmR.rotation.x = pose.lowerArmR.x + armRTk * 0.4
+
+    if (b.upperLegL) {
+      b.upperLegL.rotation.x = pose.upperLegL.x + Math.sin(t * 0.9) * 0.02 + legLTk * 0.45
+      b.upperLegL.rotation.z = pose.upperLegL.z + legLTk * 0.22
+    }
+    if (b.upperLegR) {
+      b.upperLegR.rotation.x = pose.upperLegR.x + Math.sin(t * 0.9 + 0.6) * 0.02 + legRTk * 0.45
+      b.upperLegR.rotation.z = pose.upperLegR.z + legRTk * 0.22
+    }
+    if (b.lowerLegL) b.lowerLegL.rotation.x = pose.lowerLegL.x + legLTk * 0.3
+    if (b.lowerLegR) b.lowerLegR.rotation.x = pose.lowerLegR.x + legRTk * 0.3
+
+    if (b.neck) {
+      b.neck.rotation.y = pose.neck.y + look.current.yaw * LOOK_NECK + headTkY * 0.2
+      b.neck.rotation.x = pose.neck.x + look.current.pitch * LOOK_NECK + headTkX * 0.18 + inhale * 0.02
+      b.neck.rotation.z = pose.neck.z + headTkZ * 0.22
+    }
+    if (b.head) {
+      b.head.rotation.y = pose.head.y + look.current.yaw + headTkY * 0.55
+      b.head.rotation.x = pose.head.x + look.current.pitch + headTkX * 0.4
+      b.head.rotation.z = pose.head.z + headTkZ * 0.5 + sway * 0.4
     }
   })
 
   return (
-    <group ref={groupRef} position={[ROBOT_X, ROBOT_Y, 0]}>
-      <group scale={scale} rotation={[0, MODEL_FACING_OFFSET, 0]}>
+    <group ref={groupRef} position={[robotX, ROBOT_Y, 0]}>
+      <group
+        scale={scale}
+        rotation={[0, MODEL_FACING_OFFSET, 0]}
+        onPointerDown={poke}
+        onPointerMove={(event) => {
+          if (event.buttons === 0 && event.pointerType !== "touch") return
+          poke(event)
+        }}
+        onPointerOver={() => {
+          gl.domElement.style.cursor = "pointer"
+        }}
+        onPointerOut={() => {
+          gl.domElement.style.cursor = "default"
+        }}
+      >
         <primitive object={robot} />
       </group>
     </group>
   )
 }
 
+// 로봇 뒤에 깔리는 방사형 후광. 배경이 거의 검정인 다크 모드에서 실루엣이 묻히지 않게 한다.
+function RobotHalo({ color, scale, robotX }: { color: string; scale: number; robotX: number }) {
+  const texture = useMemo(() => {
+    const size = 256
+    const canvas = document.createElement("canvas")
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return null
+    const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+    gradient.addColorStop(0, "rgba(255,255,255,0.9)")
+    gradient.addColorStop(0.35, "rgba(255,255,255,0.4)")
+    gradient.addColorStop(0.7, "rgba(255,255,255,0.1)")
+    gradient.addColorStop(1, "rgba(255,255,255,0)")
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, size, size)
+    return new CanvasTexture(canvas)
+  }, [])
+
+  useEffect(() => () => texture?.dispose(), [texture])
+  if (!texture) return null
+
+  return (
+    <mesh position={[robotX, ROBOT_Y + 1.7 * scale * 1.4, -1.6]} scale={[1, 1, 1]} renderOrder={-1}>
+      <planeGeometry args={[6.2 * scale, 6.2 * scale]} />
+      <meshBasicMaterial
+        map={texture}
+        color={color}
+        transparent
+        opacity={0.55}
+        blending={AdditiveBlending}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  )
+}
+
 function CameraRig({
   zoomRef,
+  closeCam,
   farCam,
+  lookAtClose,
+  lookAtFar,
 }: {
   zoomRef: MutableRefObject<number>
+  closeCam: CamPose
   farCam: CamPose
+  lookAtClose: Vector3
+  lookAtFar: Vector3
 }) {
   const { camera } = useThree()
   const started = useRef<number | null>(null)
@@ -219,13 +532,13 @@ function CameraRig({
     const zoom = MathUtils.clamp(zoomRef.current, ZOOM_MIN, ZOOM_MAX)
 
     // intro 0=얼굴 클로즈업, 1=상반신. 사용자 줌은 카메라 거리에 반영.
-    const baseZ = MathUtils.lerp(CAM_CLOSE.z, farCam.z, intro)
+    const baseZ = MathUtils.lerp(closeCam.z, farCam.z, intro)
     const z = baseZ / zoom
-    const y = MathUtils.lerp(CAM_CLOSE.y, farCam.y, intro)
-    const x = MathUtils.lerp(CAM_CLOSE.x, farCam.x, intro)
+    const y = MathUtils.lerp(closeCam.y, farCam.y, intro)
+    const x = MathUtils.lerp(closeCam.x, farCam.x, intro)
 
     posScratch.current.set(x, y, z)
-    lookScratch.current.lerpVectors(LOOK_AT_CLOSE, LOOK_AT_FAR, intro)
+    lookScratch.current.lerpVectors(lookAtClose, lookAtFar, intro)
 
     camera.position.copy(posScratch.current)
     camera.lookAt(lookScratch.current)
@@ -249,7 +562,7 @@ function ZoomControls({
   onZoomOut: () => void
 }) {
   return (
-    <div className="pointer-events-auto absolute bottom-5 right-4 z-20 flex flex-col gap-2 md:bottom-8 md:right-6">
+    <div className="pointer-events-auto absolute bottom-40 right-4 z-20 flex flex-col gap-2 md:bottom-8 md:right-6">
       <button
         type="button"
         aria-label="Zoom in"
@@ -281,18 +594,35 @@ export function LoginRobotScene() {
   // 마운트(새로고침)마다 한 번만 고른다. 테마와 무관하게 같은 피부로 대비를 유지한다.
   const [skin] = useState(pickRandomSkin)
   const stage = dark ? STAGE_DARK : STAGE_LIGHT
+  const rimColor = useMemo(() => haloColor(skin), [skin])
+  const canvasHost = useRef<HTMLDivElement>(null)
   const pointer = useRef<PointerTarget>({ x: 0, y: 0 })
   const zoomRef = useRef(1)
   const [zoom, setZoom] = useState(1)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+  )
   const pinchStart = useRef<{ dist: number; zoom: number } | null>(null)
 
+  const robotX = isMobile ? ROBOT_X_MOBILE : ROBOT_X_DESKTOP
+  const closeCam = isMobile ? CAM_CLOSE_MOBILE : CAM_CLOSE_DESKTOP
   const farCam = isMobile ? CAM_FAR_MOBILE : CAM_FAR_DESKTOP
+  const lookAtClose = isMobile ? LOOK_AT_CLOSE_MOBILE : LOOK_AT_CLOSE_DESKTOP
+  const lookAtFar = isMobile ? LOOK_AT_FAR_MOBILE : LOOK_AT_FAR_DESKTOP
 
   const applyZoom = useCallback((next: number) => {
     const clamped = MathUtils.clamp(next, ZOOM_MIN, ZOOM_MAX)
     zoomRef.current = clamped
     setZoom(clamped)
+  }, [])
+
+  const setPointerFromClient = useCallback((clientX: number, clientY: number) => {
+    const el = canvasHost.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    pointer.current.x = ((clientX - rect.left) / rect.width) * 2 - 1
+    pointer.current.y = ((clientY - rect.top) / rect.height) * 2 - 1
   }, [])
 
   useEffect(() => {
@@ -305,8 +635,7 @@ export function LoginRobotScene() {
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
-      pointer.current.x = (event.clientX / window.innerWidth) * 2 - 1
-      pointer.current.y = (event.clientY / window.innerHeight) * 2 - 1
+      setPointerFromClient(event.clientX, event.clientY)
     }
     const onWheel = (event: WheelEvent) => {
       // 로그인 카드 위 스크롤은 막고, 배경/캔버스 영역에서만 줌
@@ -322,11 +651,18 @@ export function LoginRobotScene() {
       return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
     }
     const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        setPointerFromClient(event.touches[0].clientX, event.touches[0].clientY)
+      }
       if (event.touches.length === 2) {
         pinchStart.current = { dist: touchDist(event.touches), zoom: zoomRef.current }
       }
     }
     const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        setPointerFromClient(event.touches[0].clientX, event.touches[0].clientY)
+        return
+      }
       if (event.touches.length !== 2 || !pinchStart.current) return
       event.preventDefault()
       const dist = touchDist(event.touches)
@@ -338,6 +674,7 @@ export function LoginRobotScene() {
       pinchStart.current = null
     }
 
+    window.addEventListener("pointerdown", onMove, { passive: true })
     window.addEventListener("pointermove", onMove, { passive: true })
     window.addEventListener("wheel", onWheel, { passive: false })
     window.addEventListener("touchstart", onTouchStart, { passive: true })
@@ -345,6 +682,7 @@ export function LoginRobotScene() {
     window.addEventListener("touchend", onTouchEnd)
     window.addEventListener("touchcancel", onTouchEnd)
     return () => {
+      window.removeEventListener("pointerdown", onMove)
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("wheel", onWheel)
       window.removeEventListener("touchstart", onTouchStart)
@@ -352,14 +690,14 @@ export function LoginRobotScene() {
       window.removeEventListener("touchend", onTouchEnd)
       window.removeEventListener("touchcancel", onTouchEnd)
     }
-  }, [applyZoom])
+  }, [applyZoom, setPointerFromClient])
 
   return (
-    <div className="absolute inset-0">
+    <div ref={canvasHost} className="absolute inset-0">
       <div className="absolute inset-0" aria-hidden>
         <Canvas
           camera={{
-            position: [CAM_CLOSE.x, CAM_CLOSE.y, CAM_CLOSE.z],
+            position: [closeCam.x, closeCam.y, closeCam.z],
             fov: CAMERA_FOV,
             near: 0.1,
             far: 50,
@@ -373,18 +711,38 @@ export function LoginRobotScene() {
           }}
           style={{ width: "100%", height: "100%", display: "block", background: stage, touchAction: "none" }}
           onCreated={({ camera, gl }) => {
-            camera.lookAt(LOOK_AT_CLOSE)
+            camera.lookAt(lookAtClose)
             gl.setClearColor(new Color(stage), 1)
           }}
         >
           <color attach="background" args={[stage]} />
-          <ambientLight intensity={dark ? 0.55 : 0.85} />
+          <ambientLight intensity={dark ? 0.75 : 0.85} />
           <directionalLight position={[2.8, 3.6, 3.2]} intensity={dark ? 1.85 : 2.25} color="#fff7ea" />
           <directionalLight position={[-2.4, 1.8, 1.6]} intensity={0.7} color="#9eb8c8" />
-          <pointLight position={[ROBOT_X, 1.2, 1.6]} intensity={dark ? 0.7 : 0.45} color="#c4a574" distance={7} />
-          <CameraRig zoomRef={zoomRef} farCam={farCam} />
+          <pointLight position={[robotX, 1.2, 1.6]} intensity={dark ? 0.7 : 0.45} color="#c4a574" distance={7} />
+          {/* 다크: 뒤쪽 양옆에서 비추는 림 라이트 + 뒤 후광 + 윤곽 발광 셰이더 */}
+          {dark ? (
+            <>
+              <directionalLight position={[-3.2, 2.4, -2.6]} intensity={2.4} color={rimColor} />
+              <directionalLight position={[3.6, 2.0, -2.4]} intensity={2.0} color={rimColor} />
+              <RobotHalo color={rimColor} scale={isMobile ? 0.56 / MODEL_SCALE : 1} robotX={robotX} />
+            </>
+          ) : null}
+          <CameraRig
+            zoomRef={zoomRef}
+            closeCam={closeCam}
+            farCam={farCam}
+            lookAtClose={lookAtClose}
+            lookAtFar={lookAtFar}
+          />
           <Suspense fallback={null}>
-            <LoginRobot pointer={pointer} skin={skin} scale={isMobile ? 0.56 : MODEL_SCALE} />
+            <LoginRobot
+              pointer={pointer}
+              skin={skin}
+              rim={dark ? rimColor : null}
+              robotX={robotX}
+              scale={isMobile ? 0.56 : MODEL_SCALE}
+            />
           </Suspense>
         </Canvas>
       </div>
