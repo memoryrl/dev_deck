@@ -12,8 +12,11 @@ export function LoginView({ error }: { error?: string }) {
       <LoginRobotBackdrop />
 
       {/* 참고(Chroma형): 좌측 카피·CTA, 우측~중앙에 캐릭터 히어로 */}
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center px-5 py-14 md:py-20">
-        <div className="w-full max-w-md space-y-7 rounded-2xl bg-[#fff8e8]/92 p-7 shadow-[0_24px_60px_-28px_rgba(26,21,18,0.45)] backdrop-blur-sm dark:bg-[#241c16]/88 dark:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] md:p-8">
+      <div className="pointer-events-none relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center px-5 py-14 md:py-20">
+        <div
+          data-login-card
+          className="pointer-events-auto w-full max-w-md space-y-7 rounded-2xl bg-[#fff8e8]/92 p-7 shadow-[0_24px_60px_-28px_rgba(26,21,18,0.45)] backdrop-blur-sm dark:bg-[#241c16]/88 dark:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] md:p-8"
+        >
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b4f3a] dark:text-[#c4a574]">
               DevDeck
