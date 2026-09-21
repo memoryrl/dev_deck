@@ -54,7 +54,16 @@ export function TermsHistoryTable({
                       {current ? <Badge className="px-1.5 py-0 text-[10px]">{t("admin.terms.current")}</Badge> : null}
                     </span>
                   </td>
-                  <td className="max-w-[16rem] truncate px-3 py-3">{row.title}</td>
+                  <td className="max-w-[16rem] px-3 py-3">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate">{row.title}</span>
+                      {row.has_en ? (
+                        <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]" title={row.title_en}>
+                          EN
+                        </Badge>
+                      ) : null}
+                    </span>
+                  </td>
                   <td className="max-w-[18rem] truncate px-3 py-3 text-muted-foreground">{row.note ?? "—"}</td>
                   <td className="px-3 py-3 text-muted-foreground">
                     {row.edited_by_email ?? t("admin.terms.systemEditor")}

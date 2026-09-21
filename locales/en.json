@@ -346,6 +346,7 @@
       "confirmed": "Confirmed",
       "pending": "Needs confirmation",
       "readHint": "Read to the end, then press the confirm button.",
+      "fallbackKo": "An English translation of this document is not available yet, so the Korean original is shown.",
       "confirmButton": "I have read this",
       "confirmedButton": "Confirmed (press again to undo)",
       "accept": "Agree and finish sign-up",
@@ -520,7 +521,19 @@
       "editCurrent": "Edit current version",
       "versionNav": "Version navigation",
       "prevVersion": "Previous v{{version}}",
-      "nextVersion": "Next v{{version}}"
+      "nextVersion": "Next v{{version}}",
+      "lang": {
+        "ko": "Korean",
+        "en": "English",
+        "required": "Required",
+        "optional": "Optional",
+        "titleEn": "English title",
+        "bodyEn": "English body",
+        "bodyEnPlaceholder": "Write the English version here",
+        "enHint": "Leave empty to show the Korean text on the English site as well. Fill in both the title and body, or leave both empty.",
+        "enMissing": "No English text yet — the English site falls back to Korean.",
+        "enMissingRevision": "This version has no English text."
+      }
     }
   },
   "account": {

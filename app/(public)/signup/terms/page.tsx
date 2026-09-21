@@ -8,7 +8,7 @@ import { postLoginPath } from "@/lib/auth/roles"
 import { getT } from "@/lib/i18n/dictionary"
 import { getAuthUser } from "@/lib/supabase/server"
 import { isFreshSignup, termsGatePath } from "@/lib/terms/consent"
-import { getTermsDocuments, TERMS_SLUGS } from "@/lib/terms/documents"
+import { getTermsDocuments, localizeTerms, TERMS_SLUGS } from "@/lib/terms/documents"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,15 +30,20 @@ export default async function SignupTermsPage() {
   const gate = await termsGatePath(user)
   if (!gate) redirect(postLoginPath(user))
 
-  const { t } = getT()
+  const { t, locale } = getT()
   const docs = await getTermsDocuments()
-  const views: ConsentDocumentView[] = TERMS_SLUGS.map((slug) => ({
-    slug,
-    title: docs[slug].title,
-    version: docs[slug].version,
-    updatedAt: docs[slug].updated_at || null,
-    body: <RichContent content={docs[slug].content} className="text-sm" />,
-  }))
+  // 화면 언어(ko/en)에 맞는 본문을 고른다. 영문이 비어 있으면 한국어로 대체하고 그 사실을 표시한다.
+  const views: ConsentDocumentView[] = TERMS_SLUGS.map((slug) => {
+    const localized = localizeTerms(docs[slug], locale)
+    return {
+      slug,
+      title: localized.title,
+      version: docs[slug].version,
+      updatedAt: docs[slug].updated_at || null,
+      fallbackNotice: localized.translated ? null : t("terms.consent.fallbackKo"),
+      body: <RichContent content={localized.content} className="text-sm" />,
+    }
+  })
 
   return (
     <PublicContainer>

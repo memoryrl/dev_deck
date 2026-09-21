@@ -79,7 +79,25 @@ export default async function TermsRevisionPage({ params }: { params: { id: stri
       </section>
 
       <article className="rounded-xl border bg-white p-6 dark:bg-card sm:p-8">
+        <div className="mb-5 flex items-center gap-2 border-b pb-4">
+          <h3 className="font-display text-base font-bold">{t("admin.terms.lang.ko")}</h3>
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">KO</Badge>
+        </div>
         <RichContent content={revision.content} />
+      </article>
+
+      <article className="rounded-xl border bg-white p-6 dark:bg-card sm:p-8">
+        <div className="mb-5 flex flex-wrap items-center gap-2 border-b pb-4">
+          <h3 className="font-display text-base font-bold">
+            {revision.title_en.trim() || t("admin.terms.lang.en")}
+          </h3>
+          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">EN</Badge>
+        </div>
+        {revision.content_en.trim() ? (
+          <RichContent content={revision.content_en} />
+        ) : (
+          <p className="text-sm text-muted-foreground">{t("admin.terms.lang.enMissingRevision")}</p>
+        )}
       </article>
 
       <nav aria-label={t("admin.terms.versionNav")} className="flex items-center justify-between gap-3">

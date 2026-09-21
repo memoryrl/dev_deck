@@ -4,22 +4,27 @@
 -- 재실행해도 안전하다.
 
 -- 1) 현재 본문. slug 는 'terms'(이용약관) · 'privacy'(개인정보처리방침) 두 개만 쓴다.
+--    title/content 는 한국어(기본), title_en/content_en 은 영문. 영문이 비어 있으면 화면은 한국어로 대체한다.
 CREATE TABLE IF NOT EXISTS devdeck.terms_documents (
   slug TEXT PRIMARY KEY CHECK (slug IN ('terms', 'privacy')),
   title TEXT NOT NULL,
   content TEXT NOT NULL DEFAULT '',
+  title_en TEXT NOT NULL DEFAULT '',
+  content_en TEXT NOT NULL DEFAULT '',
   version INT NOT NULL DEFAULT 1,
   updated_by UUID REFERENCES devdeck.profiles(id) ON DELETE SET NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2) 수정 이력. 저장할 때마다 한 행. 본문 스냅샷을 그대로 들고 있어 나중에 그 시점 문구를 다시 볼 수 있다.
+-- 2) 수정 이력. 저장할 때마다 한 행. 본문 스냅샷(한/영)을 그대로 들고 있어 나중에 그 시점 문구를 다시 볼 수 있다.
 CREATE TABLE IF NOT EXISTS devdeck.terms_revisions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   slug TEXT NOT NULL REFERENCES devdeck.terms_documents(slug) ON DELETE CASCADE,
   version INT NOT NULL,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
+  title_en TEXT NOT NULL DEFAULT '',
+  content_en TEXT NOT NULL DEFAULT '',
   note TEXT,
   edited_by UUID REFERENCES devdeck.profiles(id) ON DELETE SET NULL,
   -- profiles 에는 이메일이 없어 표시용으로 저장 시점의 이메일을 함께 남긴다.
@@ -27,6 +32,12 @@ CREATE TABLE IF NOT EXISTS devdeck.terms_revisions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (slug, version)
 );
+
+-- 영문 컬럼이 없는 초기 버전으로 만든 테이블에도 붙인다.
+ALTER TABLE devdeck.terms_documents ADD COLUMN IF NOT EXISTS title_en TEXT NOT NULL DEFAULT '';
+ALTER TABLE devdeck.terms_documents ADD COLUMN IF NOT EXISTS content_en TEXT NOT NULL DEFAULT '';
+ALTER TABLE devdeck.terms_revisions ADD COLUMN IF NOT EXISTS title_en TEXT NOT NULL DEFAULT '';
+ALTER TABLE devdeck.terms_revisions ADD COLUMN IF NOT EXISTS content_en TEXT NOT NULL DEFAULT '';
 
 CREATE INDEX IF NOT EXISTS terms_revisions_created_idx
   ON devdeck.terms_revisions (created_at DESC);
@@ -96,11 +107,16 @@ GRANT ALL ON TABLE devdeck.terms_revisions TO service_role;
 GRANT SELECT, INSERT, UPDATE ON TABLE devdeck.terms_consents TO authenticated;
 GRANT ALL ON TABLE devdeck.terms_consents TO service_role;
 
--- 4) 저장 = 본문 갱신 + 버전 증가 + 이력 스냅샷을 한 트랜잭션으로. 새 버전 번호를 돌려준다.
+-- 4) 저장 = 본문(한/영) 갱신 + 버전 증가 + 이력 스냅샷을 한 트랜잭션으로. 새 버전 번호를 돌려준다.
+--    영문 인자가 없는 초기 서명은 지운다 — PostgREST 는 이름이 같은 함수가 둘이면 호출을 애매하다고 거절한다.
+DROP FUNCTION IF EXISTS devdeck.terms_save(TEXT, TEXT, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION devdeck.terms_save(
   p_slug TEXT,
   p_title TEXT,
   p_content TEXT,
+  p_title_en TEXT,
+  p_content_en TEXT,
   p_note TEXT
 )
 RETURNS INT
@@ -112,6 +128,8 @@ DECLARE
   v_version INT;
   v_editor UUID := auth.uid();
   v_email TEXT := lower(coalesce(auth.jwt() ->> 'email', ''));
+  v_title_en TEXT := coalesce(p_title_en, '');
+  v_content_en TEXT := coalesce(p_content_en, '');
 BEGIN
   IF NOT devdeck.is_owner() THEN
     RAISE EXCEPTION '관리자만 약관을 수정할 수 있습니다.' USING ERRCODE = '42501';
@@ -120,25 +138,30 @@ BEGIN
     RAISE EXCEPTION '알 수 없는 약관 종류: %', p_slug USING ERRCODE = '22023';
   END IF;
 
-  INSERT INTO devdeck.terms_documents (slug, title, content, version, updated_by, updated_at)
-  VALUES (p_slug, p_title, p_content, 1, v_editor, now())
+  INSERT INTO devdeck.terms_documents (slug, title, content, title_en, content_en, version, updated_by, updated_at)
+  VALUES (p_slug, p_title, p_content, v_title_en, v_content_en, 1, v_editor, now())
   ON CONFLICT (slug) DO UPDATE
     SET title = EXCLUDED.title,
         content = EXCLUDED.content,
+        title_en = EXCLUDED.title_en,
+        content_en = EXCLUDED.content_en,
         version = devdeck.terms_documents.version + 1,
         updated_by = v_editor,
         updated_at = now()
   RETURNING version INTO v_version;
 
-  INSERT INTO devdeck.terms_revisions (slug, version, title, content, note, edited_by, edited_by_email)
-  VALUES (p_slug, v_version, p_title, p_content, nullif(btrim(p_note), ''), v_editor, nullif(v_email, ''));
+  INSERT INTO devdeck.terms_revisions
+    (slug, version, title, content, title_en, content_en, note, edited_by, edited_by_email)
+  VALUES
+    (p_slug, v_version, p_title, p_content, v_title_en, v_content_en,
+     nullif(btrim(p_note), ''), v_editor, nullif(v_email, ''));
 
   RETURN v_version;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION devdeck.terms_save(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION devdeck.terms_save(TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION devdeck.terms_save(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION devdeck.terms_save(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
 
 -- 5) 기본 본문. 이미 있으면 건드리지 않는다(관리자가 고친 내용을 덮지 않기 위해).
 INSERT INTO devdeck.terms_documents (slug, title, content, version)
@@ -172,13 +195,45 @@ VALUES (
 )
 ON CONFLICT (slug) DO NOTHING;
 
+-- 영문 기본 본문. 관리자가 아직 영문을 넣지 않은(비어 있는) 문서에만 채운다.
+UPDATE devdeck.terms_documents
+SET title_en = 'Terms of Service',
+    content_en =
+      '<h2>Article 1 (Purpose)</h2><p>These Terms set out the conditions and procedures for using the services provided by DevDeck (the "Site"), and the rights, obligations and responsibilities of the Site and its members.</p>'
+      '<h2>Article 2 (Definitions)</h2><ul><li>"Service" means every feature the Site provides, including prompts, career records, game reviews, boards and comments.</li><li>"Member" means a person who signs in with a Google account and agrees to these Terms.</li></ul>'
+      '<h2>Article 3 (Effect and Changes)</h2><p>These Terms take effect when posted on the Site. The Site may amend them within the bounds of applicable law, and amended Terms apply from the time they are posted.</p>'
+      '<h2>Article 4 (Member Obligations)</h2><ul><li>Members shall not post content that infringes the rights of others or violates public order and morals.</li><li>Members shall not transfer or lend their account to others.</li></ul>'
+      '<h2>Article 5 (User Content)</h2><p>Rights to comments and other content created by a member belong to that member. The Site may remove content that violates these Terms or the law without prior notice.</p>'
+      '<h2>Article 6 (Changes and Suspension of Service)</h2><p>The Site may change or suspend all or part of the Service for operational or technical reasons.</p>'
+      '<h2>Article 7 (Withdrawal)</h2><p>Members may delete their account at any time from My Page. Deleting the account removes the account and profile and cannot be undone.</p>'
+      '<h2>Article 8 (Disclaimer)</h2><p>The Site is a free service operated as a personal portfolio. It is not liable for service interruptions not attributable to the Site, such as natural disasters or failures of external services.</p>'
+WHERE slug = 'terms' AND btrim(content_en) = '';
+
+UPDATE devdeck.terms_documents
+SET title_en = 'Privacy Policy',
+    content_en =
+      '<h2>1. Personal Data We Collect</h2><p>When you sign in with Google, the Site receives the following.</p><ul><li>Email address, name and profile picture URL</li><li>Access time, IP address and browser information generated while using the Service</li></ul>'
+      '<h2>2. Purpose of Use</h2><ul><li>Identifying members and keeping you signed in</li><li>Showing the author of comments and other member content</li><li>Preventing abuse and compiling access statistics</li></ul>'
+      '<h2>3. Retention Period</h2><p>When a member deletes their account, the account and profile data are removed immediately. Statistical records such as sign-up and withdrawal times are kept only in a form that cannot identify an individual.</p>'
+      '<h2>4. Third Parties and Processing</h2><p>The Site does not provide personal data to third parties. Authentication and data storage use Supabase; hosting uses Vercel.</p>'
+      '<h2>5. Cookies</h2><p>Cookies are used to keep the sign-in session and to remember language and theme settings. You may refuse cookies in your browser, but you will not stay signed in.</p>'
+      '<h2>6. Your Rights</h2><p>Members can review their information on My Page and delete their account at any time to request removal of their personal data.</p>'
+      '<h2>7. Contact</h2><p>For privacy inquiries, use the contact details at the bottom of the Site.</p>'
+WHERE slug = 'privacy' AND btrim(content_en) = '';
+
 -- 기본 본문도 이력 1번으로 남겨 두어 "처음 어떤 문구였나"를 볼 수 있게 한다.
-INSERT INTO devdeck.terms_revisions (slug, version, title, content, note)
-SELECT d.slug, d.version, d.title, d.content, '초기 등록'
+INSERT INTO devdeck.terms_revisions (slug, version, title, content, title_en, content_en, note)
+SELECT d.slug, d.version, d.title, d.content, d.title_en, d.content_en, '초기 등록'
 FROM devdeck.terms_documents d
 WHERE NOT EXISTS (
   SELECT 1 FROM devdeck.terms_revisions r WHERE r.slug = d.slug AND r.version = d.version
 );
+
+-- 초기 버전 패치로 만들어진 v1 이력에 영문이 비어 있으면 현재 문서의 영문을 채운다(같은 v1 인 경우만).
+UPDATE devdeck.terms_revisions r
+SET title_en = d.title_en, content_en = d.content_en
+FROM devdeck.terms_documents d
+WHERE r.slug = d.slug AND r.version = d.version AND btrim(r.content_en) = '' AND btrim(d.content_en) <> '';
 
 -- 6) 관리자 사이드바에 "약관" 메뉴를 추가한다("운영" 그룹, 공유 링크와 설정 사이). 이미 있으면 건너뛴다.
 DO $$

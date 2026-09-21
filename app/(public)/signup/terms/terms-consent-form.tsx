@@ -17,6 +17,8 @@ export type ConsentDocumentView = {
   title: string
   version: number
   updatedAt: string | null
+  /** 영문 본문이 없어 한국어로 대체했을 때 보여 줄 안내. 없으면 null */
+  fallbackNotice: string | null
   /** 서버에서 sanitize 해 렌더한 본문. 클라이언트로 sanitize 라이브러리를 내리지 않기 위해 노드로 받는다. */
   body: ReactNode
 }
@@ -146,6 +148,11 @@ export function TermsConsentForm({
               </Badge>
             </header>
 
+            {doc.fallbackNotice ? (
+              <p className="border-b bg-amber-500/10 px-6 py-2 text-xs text-amber-800 dark:text-amber-300">
+                {doc.fallbackNotice}
+              </p>
+            ) : null}
             <div
               id={bodyId}
               tabIndex={0}

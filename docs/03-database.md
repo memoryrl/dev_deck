@@ -269,8 +269,10 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 | 컬럼 | 타입 | 제약 | 설명 |
 | --- | --- | --- | --- |
 | slug | TEXT | PK, `terms` / `privacy` | |
-| title | TEXT | NOT NULL | |
-| content | TEXT | NOT NULL | CKEditor HTML. 서버에서 sanitize 후 저장 |
+| title | TEXT | NOT NULL | 한국어 제목 |
+| content | TEXT | NOT NULL | 한국어 본문. CKEditor HTML. 서버에서 sanitize 후 저장 |
+| title_en | TEXT | NOT NULL, 기본 `''` | 영문 제목. 비어 있으면 화면은 한국어로 대체 |
+| content_en | TEXT | NOT NULL, 기본 `''` | 영문 본문. 제목과 둘 다 있거나 둘 다 비어야 한다(앱 검증) |
 | version | INT | NOT NULL, 기본 1 | 저장마다 +1 |
 | updated_by | UUID | FK profiles, SET NULL | |
 | updated_at | timestamptz | NOT NULL | |
@@ -280,7 +282,7 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 | 컬럼 | 타입 | 설명 |
 | --- | --- | --- |
 | id | UUID | PK |
-| slug / version / title / content | | 저장 시점 스냅샷 |
+| slug / version / title / content / title_en / content_en | | 저장 시점 스냅샷(한/영) |
 | note | TEXT | 변경 메모(선택) |
 | edited_by | UUID | FK profiles, SET NULL |
 | edited_by_email | TEXT | 표시용. `profiles`에 이메일이 없어 JWT에서 받아 저장 |
@@ -288,9 +290,11 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 
 `terms_consents` — 회원별·문서별 한 행(`UNIQUE (user_id, slug)`). 동의한 버전과 IP·UA를 남긴다. `profiles` CASCADE로 탈퇴·가입 취소 시 함께 지워진다.
 
-쓰기는 `devdeck.terms_save(p_slug, p_title, p_content, p_note)` 함수(`SECURITY DEFINER`, `is_owner()` 검사)로만 한다. 본문 갱신 + 버전 증가 + 이력 INSERT를 한 트랜잭션으로 처리하고 새 버전 번호를 돌려준다.
+쓰기는 `devdeck.terms_save(p_slug, p_title, p_content, p_title_en, p_content_en, p_note)` 함수(`SECURITY DEFINER`, `is_owner()` 검사)로만 한다. 본문(한/영) 갱신 + 버전 증가 + 이력 INSERT를 한 트랜잭션으로 처리하고 새 버전 번호를 돌려준다. 영문 인자가 없던 초기 서명(4개 인자)은 패치가 DROP 한다 — PostgREST는 동명 함수가 둘이면 RPC를 거절한다.
 
-기존 DB는 `supabase/patch-terms.sql`을 SQL Editor에서 실행한다. 기본 본문과 관리자 메뉴(`/site/terms`)도 이 패치가 넣는다.
+기존 DB는 `supabase/patch-terms.sql`을 SQL Editor에서 실행한다. 기본 본문(한/영)과 관리자 메뉴(`/site/terms`)도 이 패치가 넣는다. 영문 컬럼이 없는 초기 버전 위에 재실행해도 `ADD COLUMN IF NOT EXISTS`로 붙고, 영문이 비어 있는 문서에만 기본 영문을 채운다.
+
+화면 언어 선택은 `lib/terms/documents.ts`의 `localizeTerms(doc, locale)`이 한다. `en`이면서 `content_en`이 비어 있지 않을 때만 영문을 내고, 그 외에는 한국어. 대체된 경우 가입 화면에 안내 문구가 붙는다.
 
 ## 3. 인덱스
 
