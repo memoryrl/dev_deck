@@ -20,7 +20,14 @@ import { useTopologyDark } from "@/components/landing/hero-topology/topology-the
 // quaternius.itch.io/lowpoly-robot (CC0)
 const MODEL_URL = "/models/robot.glb"
 const MODEL_SCALE = 0.72
-const MODEL_FACING_OFFSET = Math.PI
+// 네이티브가 -Z를 향하므로 π로 카메라(+Z)를 보게 한다 — 상반신 구도에서 재확인함
+const MODEL_FACING_OFFSET = 0
+// 카드가 가리지 않게 우측으로 두고, 카메라는 머리~가슴이 들어오게 맞춤
+const ROBOT_X = 0.55
+const ROBOT_Y = -1.5
+const LOOK_AT_Y = 0.62
+const CAMERA_Z = 4.15
+const CAMERA_FOV = 35
 
 const SKIN_LIGHT = { main: "#2f8f86", grey: "#d7ebe7", black: "#1a3f3b" }
 const SKIN_DARK = { main: "#e08a3c", grey: "#efe0c8", black: "#3d291c" }
@@ -124,7 +131,7 @@ function LoginRobot({
     look.current.pitch = MathUtils.damp(look.current.pitch, targetPitch, LOOK_SMOOTH, delta)
 
     if (groupRef.current) {
-      groupRef.current.position.y = -1.55 + Math.sin(state.clock.elapsedTime * 1.4) * 0.03
+      groupRef.current.position.y = ROBOT_Y + Math.sin(state.clock.elapsedTime * 1.4) * 0.03
     }
 
     if (neckRef.current) {
@@ -138,7 +145,7 @@ function LoginRobot({
   })
 
   return (
-    <group ref={groupRef} position={[0.35, -1.55, 0]}>
+    <group ref={groupRef} position={[ROBOT_X, ROBOT_Y, 0]}>
       <group scale={MODEL_SCALE} rotation={[0, MODEL_FACING_OFFSET, 0]}>
         <primitive object={robot} />
       </group>
@@ -163,7 +170,8 @@ export function LoginRobotScene() {
 
   return (
     <Canvas
-      camera={{ position: [0.2, 1.15, 2.55], fov: 30, near: 0.1, far: 40 }}
+      // 머리만이 아니라 어깨·가슴·팔 상단까지 담도록 카메라를 충분히 뒤로 뺀다.
+      camera={{ position: [0.2, LOOK_AT_Y + 0.12, CAMERA_Z], fov: CAMERA_FOV, near: 0.1, far: 50 }}
       dpr={[1, 1.75]}
       gl={{
         antialias: true,
@@ -173,15 +181,15 @@ export function LoginRobotScene() {
       }}
       style={{ width: "100%", height: "100%", display: "block", background: stage }}
       onCreated={({ camera, gl }) => {
-        camera.lookAt(0.35, 1.2, 0)
+        camera.lookAt(ROBOT_X, LOOK_AT_Y, 0)
         gl.setClearColor(new Color(stage), 1)
       }}
     >
       <color attach="background" args={[stage]} />
       <ambientLight intensity={dark ? 0.55 : 0.85} />
-      <directionalLight position={[2.6, 3.4, 2.8]} intensity={dark ? 1.85 : 2.25} color="#fff7ea" />
-      <directionalLight position={[-2.2, 1.6, 1.4]} intensity={0.7} color="#9eb8c8" />
-      <pointLight position={[0.5, 1.5, 1.4]} intensity={dark ? 0.7 : 0.45} color="#ffd089" distance={6} />
+      <directionalLight position={[2.8, 3.6, 3.2]} intensity={dark ? 1.85 : 2.25} color="#fff7ea" />
+      <directionalLight position={[-2.4, 1.8, 1.6]} intensity={0.7} color="#9eb8c8" />
+      <pointLight position={[ROBOT_X, LOOK_AT_Y + 0.6, 1.6]} intensity={dark ? 0.7 : 0.45} color="#ffd089" distance={7} />
       <Suspense fallback={null}>
         <LoginRobot pointer={pointer} skin={skin} />
       </Suspense>
