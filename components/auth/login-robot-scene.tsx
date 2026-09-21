@@ -54,17 +54,33 @@ const ZOOM_STEP = 0.12
 const STAGE_LIGHT = "#f6f1e9"
 const STAGE_DARK = "#12100e"
 
-const SKIN_LIGHT = { main: "#2f8f86", grey: "#d7ebe7", black: "#1a3f3b" }
-const SKIN_DARK = { main: "#e08a3c", grey: "#efe0c8", black: "#3d291c" }
+type PointerTarget = { x: number; y: number }
+type Skin = { main: string; grey: string; black: string }
+type CamPose = { x: number; y: number; z: number }
+
+// 라이트(parchment)·다크(잉크) 모두에서 묻히지 않는 중채도 팔레트
+// main=몸통(채도 중), grey=패널(중명도), black=관절(어두움) — 테마와 무관
+const ROBOT_SKINS: Skin[] = [
+  { main: "#2f8f86", grey: "#a8c4be", black: "#1a3a36" },
+  { main: "#e07a32", grey: "#c9a888", black: "#4a2a12" },
+  { main: "#3a86c8", grey: "#8eacc8", black: "#1a3c5c" },
+  { main: "#d14b66", grey: "#c898a4", black: "#5a2234" },
+  { main: "#4f9e4a", grey: "#96b88e", black: "#274a24" },
+  { main: "#c44f96", grey: "#c090b0", black: "#5a2848" },
+  { main: "#3f73c7", grey: "#8fa0c8", black: "#243a68" },
+  { main: "#c97a2a", grey: "#c4a878", black: "#543c14" },
+  { main: "#2eada0", grey: "#7eb8ae", black: "#1a524c" },
+  { main: "#7a5a2e", grey: "#b8a078", black: "#3a2c18" },
+]
+
+function pickRandomSkin(): Skin {
+  return ROBOT_SKINS[Math.floor(Math.random() * ROBOT_SKINS.length)]
+}
 
 const LOOK_YAW = 0.75
 const LOOK_PITCH = 0.42
 const LOOK_NECK = 0.48
 const LOOK_SMOOTH = 7
-
-type PointerTarget = { x: number; y: number }
-type Skin = { main: string; grey: string; black: string }
-type CamPose = { x: number; y: number; z: number }
 
 function tintClone(material: Material, skin: Skin): Material {
   const cloned = material.clone()
@@ -262,7 +278,8 @@ function ZoomControls({
 
 export function LoginRobotScene() {
   const dark = useTopologyDark()
-  const skin = dark ? SKIN_DARK : SKIN_LIGHT
+  // 마운트(새로고침)마다 한 번만 고른다. 테마와 무관하게 같은 피부로 대비를 유지한다.
+  const [skin] = useState(pickRandomSkin)
   const stage = dark ? STAGE_DARK : STAGE_LIGHT
   const pointer = useRef<PointerTarget>({ x: 0, y: 0 })
   const zoomRef = useRef(1)
