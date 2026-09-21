@@ -9,7 +9,7 @@ const LoginRobotScene = dynamic(
 
 export function LoginRobotBackdrop() {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#f3ead9] dark:bg-[#1d1a17]">
+    <div className="absolute inset-0 overflow-hidden bg-[#f6f1e9] dark:bg-[#12100e]">
       <LoginRobotScene />
     </div>
   )

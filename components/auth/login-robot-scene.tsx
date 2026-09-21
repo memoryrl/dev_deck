@@ -41,18 +41,18 @@ const ROBOT_Y = -1.5
 const INTRO_MS = 2200
 const LOOK_AT_CLOSE = new Vector3(ROBOT_X, 1.25, 0)
 const LOOK_AT_FAR = new Vector3(ROBOT_X, 0.62, 0)
-const CAM_CLOSE = { x: 0.25, y: 1.32, z: 2.15 }
-const CAM_FAR_DESKTOP = { x: 0.2, y: 0.74, z: 4.15 }
-const CAM_FAR_MOBILE = { x: 0.15, y: 0.7, z: 5.35 }
+const CAM_CLOSE = { x: 0.28, y: 1.38, z: 1.75 }
+const CAM_FAR_DESKTOP = { x: 0.2, y: 0.74, z: 4.25 }
+const CAM_FAR_MOBILE = { x: 0.1, y: 0.68, z: 6.4 }
 const CAMERA_FOV = 35
 
-const ZOOM_MIN = 0.72
-const ZOOM_MAX = 1.65
+const ZOOM_MIN = 0.65
+const ZOOM_MAX = 1.7
 const ZOOM_STEP = 0.12
 
-// 사이트 톤: Parchment / 토폴로지 바닥 · 다크 잉크 (노랑 스테이지 제거)
-const STAGE_LIGHT = "#f3ead9"
-const STAGE_DARK = "#1d1a17"
+// 사이트 배경 토큰에 맞춤 (노란 스테이지 제거)
+const STAGE_LIGHT = "#f6f1e9"
+const STAGE_DARK = "#12100e"
 
 const SKIN_LIGHT = { main: "#2f8f86", grey: "#d7ebe7", black: "#1a3f3b" }
 const SKIN_DARK = { main: "#e08a3c", grey: "#efe0c8", black: "#3d291c" }
