@@ -2,8 +2,8 @@ import { HttpErrorView } from "@/components/errors/http-error-view"
 import { PublicContainer } from "@/components/layout/public-container"
 import { getT } from "@/lib/i18n/dictionary"
 
-export function HttpErrorPage({ status }: { status: number }) {
-  const { t, locale } = getT()
+export async function HttpErrorPage({ status }: { status: number }) {
+  const { t, locale } = await getT()
   return (
     <PublicContainer className="flex flex-col justify-center py-8">
       <HttpErrorView

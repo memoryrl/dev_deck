@@ -9,12 +9,13 @@ import { listPublicGameReviews } from "@/lib/steam/reviews"
 import { parseSteamLibrarySort } from "@/lib/steam/sort"
 import { getT } from "@/lib/i18n/dictionary"
 
-export default function PublicGamesPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; sort?: string }
-}) {
-  const { t } = getT()
+export default async function PublicGamesPage(
+  props: {
+    searchParams?: Promise<{ page?: string; sort?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   return (
     <PublicContainer>
       <PageTitleBanner title={t("games.title")} description={t("games.lede")} />
@@ -38,7 +39,7 @@ async function GamesLibrary({
     listPublicGameReviews(),
     fetchOwnedGames()
       .then((library) => ({ library, error: null as string | null }))
-      .catch(() => ({ library: null, error: getT().t("steam.fetchFailed") })),
+      .catch(async () => ({ library: null, error: (await getT()).t("steam.fetchFailed") })),
   ])
   return (
     <SteamLibrary

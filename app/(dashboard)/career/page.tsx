@@ -11,11 +11,12 @@ import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
-export default function CareerPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; q?: string }
-}) {
+export default async function CareerPage(
+  props: {
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
 

@@ -109,7 +109,7 @@ export async function resolveMenuBreadcrumb(
   extra: BreadcrumbItem[] = [],
   currentLabel?: string
 ): Promise<BreadcrumbItem[]> {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const [admin, header, footer] = await Promise.all([
     listAdminMenus(),
     listNavMenus("header"),
@@ -140,8 +140,8 @@ export async function resolveMenuBreadcrumb(
 }
 
 export const menuBreadcrumbForRequest = cache(async (extra: BreadcrumbItem[] = [], currentLabel?: string) => {
-  const { t } = getT()
-  const path = headers().get("x-pathname")?.trim()
+  const { t } = await getT()
+  const path = (await headers()).get("x-pathname")?.trim()
   if (!path) return fallbackTrail(t, extra, currentLabel)
   return resolveMenuBreadcrumb(path, extra, currentLabel)
 })

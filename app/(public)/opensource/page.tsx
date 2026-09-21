@@ -7,15 +7,15 @@ import { BACKEND_PACKAGES, FRONTEND_PACKAGES } from "@/lib/oss/packages"
 import { getT } from "@/lib/i18n/dictionary"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = getT()
+  const { t } = await getT()
   return {
     title: `${t("oss.title")} · DevDeck`,
     description: t("oss.lede"),
   }
 }
 
-export default function OpenSourcePage() {
-  const { t } = getT()
+export default async function OpenSourcePage() {
+  const { t } = await getT()
   const labels = {
     package: t("oss.package"),
     version: t("oss.version"),

@@ -191,7 +191,7 @@ export async function savePublicLink(
   } else if (input.password === null || input.password === "") {
     passwordHash = null
   } else {
-    if (input.password.length < 4 || input.password.length > 64) throw new ShareInputError("passwordInvalid")
+    if (input.password.length < 8 || input.password.length > 64) throw new ShareInputError("passwordInvalid")
     passwordHash = hashSharePassword(input.password)
   }
 

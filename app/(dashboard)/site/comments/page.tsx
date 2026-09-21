@@ -8,16 +8,18 @@ import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { RichContent } from "@/components/editor/rich-content"
 import { commentTargetHref, commentTargetLabel, listAllComments, listProfanityWords } from "@/lib/comments/public"
+import { requireOwner } from "@/lib/auth/owner"
 import { parseListPage } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { ensureProfile } from "@/lib/supabase/server"
 import { formatBoardDateTime, isSupabaseConfigured } from "@/lib/utils"
 
-export default function SiteCommentsPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; words?: string }
-}) {
+export default async function SiteCommentsPage(
+  props: {
+    searchParams?: Promise<{ page?: string; words?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const commentPage = parseListPage(searchParams?.page)
   const wordPage = parseListPage(searchParams?.words)
 
@@ -73,7 +75,8 @@ async function ProfanityWordsSection({ wordPage, commentPage }: { wordPage: numb
 }
 
 async function CommentsSection({ commentPage, wordPage }: { commentPage: number; wordPage: number }) {
-  await ensureProfile()
+  // 전체 IP·회원 여부까지 서비스 롤로 읽으므로 관리자 확인이 반드시 먼저다.
+  await requireOwner()
   const comments = await listAllComments(commentPage)
   const boardSlugs = await boardSlugMap(
     comments.rows.filter((item) => item.target_type === "board").map((item) => item.target_id)
@@ -155,7 +158,7 @@ async function CommentsSection({ commentPage, wordPage }: { commentPage: number;
 async function boardSlugMap(postIds: string[]) {
   const map = new Map<string, string>()
   if (!isSupabaseConfigured() || postIds.length === 0) return map
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.from("board_posts").select("id, boards(slug)").in("id", postIds)
   for (const row of (data as { id: string; boards: { slug: string } | { slug: string }[] | null }[]) ?? []) {
     const board = Array.isArray(row.boards) ? row.boards[0] : row.boards

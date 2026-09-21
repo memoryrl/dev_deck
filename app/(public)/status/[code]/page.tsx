@@ -10,10 +10,11 @@ export function generateStaticParams() {
   return HTTP_ERROR_CODES.map((code) => ({ code: String(code) }))
 }
 
-export function generateMetadata({ params }: { params: { code: string } }): Metadata {
+export async function generateMetadata(props: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const status = parseHttpErrorCode(params.code)
   if (status == null) return { robots: { index: false, follow: false } }
-  const { locale } = getT()
+  const { locale } = await getT()
   const error = resolveHttpError(status, locale)
   return {
     title: `${status} · ${error.title} · DevDeck`,
@@ -22,7 +23,8 @@ export function generateMetadata({ params }: { params: { code: string } }): Meta
   }
 }
 
-export default function HttpStatusPage({ params }: { params: { code: string } }) {
+export default async function HttpStatusPage(props: { params: Promise<{ code: string }> }) {
+  const params = await props.params;
   const status = parseHttpErrorCode(params.code)
   if (status == null) notFound()
   return <HttpErrorPage status={status} />

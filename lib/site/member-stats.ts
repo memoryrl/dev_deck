@@ -15,11 +15,11 @@ type MemberEventRow = {
   created_at: string
 }
 
-function trustedClient() {
+async function trustedClient() {
   try {
     return createServiceClient()
   } catch {
-    return createClient()
+    return await createClient()
   }
 }
 
@@ -28,7 +28,7 @@ export async function getMemberStats(period: MemberStatsPeriod): Promise<MemberS
 
   const now = new Date()
   const { startDate, dateFormat, points } = periodConfig(period, now)
-  const supabase = trustedClient()
+  const supabase = await trustedClient()
 
   const { data, error } = await supabase
     .from("member_events")

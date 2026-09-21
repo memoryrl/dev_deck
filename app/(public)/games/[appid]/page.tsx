@@ -22,11 +22,12 @@ import { ShareButton } from "@/components/share/share-button"
 // 여부를 다 기다린 "다음에" 페이지 전체를 렌더링해서, Steam API가 느린 순간 화면
 // 전체가 그만큼 늦게 나타났다. 지금은 섹션별 Suspense라 느린 구간만 그 자리에서
 // 로딩 표시가 남고, 나머지는 먼저 보인다.
-export default function PublicGamePage({
-  params,
-}: {
-  params: { appid: string }
-}) {
+export default async function PublicGamePage(
+  props: {
+    params: Promise<{ appid: string }>
+  }
+) {
+  const params = await props.params;
   const appId = Number(params.appid)
 
   return (

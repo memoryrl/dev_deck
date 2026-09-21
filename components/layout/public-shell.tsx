@@ -41,7 +41,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
 async function NoticePopupSlot() {
   const [post, settings] = await Promise.all([getNoticePopupPost(), getSiteSettings()])
   if (!post) return null
-  const { t } = getT()
+  const { t } = await getT()
   return (
     <NoticePopupLauncher
       post={post}

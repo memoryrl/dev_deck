@@ -16,7 +16,7 @@ import { termsGatePath } from "@/lib/terms/consent"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = getT()
+  const { t } = await getT()
   return {
     title: `${t("account.title")} · DevDeck`,
     description: t("account.description"),
@@ -33,10 +33,10 @@ export default async function AccountPage() {
   const gate = await termsGatePath(user)
   if (gate) redirect(gate)
 
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const account = sessionUserView(user)
   const owner = isOwnerUser(user)
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, full_name, steam_id")

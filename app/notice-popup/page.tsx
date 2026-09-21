@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = getT()
+  const { t } = await getT()
   const post = await getNoticePopupPost()
   return {
     title: post?.title ?? t("mega.community.notice"),
@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NoticePopupPage() {
-  const { t } = getT()
+  const { t } = await getT()
   const post = await getNoticePopupPost()
 
   if (!post) {

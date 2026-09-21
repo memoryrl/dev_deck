@@ -1,5 +1,6 @@
 import { emptyPage, fetchPagedRows, ilikeContains, LIST_PAGE_SIZE, type PagedResult } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export type MemberListEntry = {
@@ -22,7 +23,7 @@ export async function listMembers({
 } = {}): Promise<PagedResult<MemberListEntry>> {
   if (!isSupabaseConfigured()) return emptyPage(page, LIST_PAGE_SIZE)
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
   const pattern = needle ? ilikeContains(needle) : ""
 
@@ -55,7 +56,8 @@ export async function listMembers({
     const [emailResult, commentCountResult] = await Promise.all([
       supabase.rpc("get_user_emails", { user_ids: userIds }).select("*"),
       userIds.length > 0
-        ? supabase.from("comments").select("user_id").in("user_id", userIds)
+        ? // comments.user_id는 공개 API에서 막혀 있어 서비스 롤로 센다(이 함수는 관리자 화면에서만 호출한다).
+          createServiceClient().from("comments").select("user_id").in("user_id", userIds)
         : Promise.resolve({ data: [], error: null }),
     ])
 
@@ -82,7 +84,7 @@ export async function listMembers({
 export async function getMemberDetail(userId: string): Promise<MemberListEntry | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("profiles")
@@ -103,7 +105,7 @@ export async function getMemberDetail(userId: string): Promise<MemberListEntry |
 
   const [emailResult, commentCountResult] = await Promise.all([
     supabase.rpc("get_user_emails", { user_ids: [userId] }).select("*"),
-    supabase.from("comments").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    createServiceClient().from("comments").select("id", { count: "exact", head: true }).eq("user_id", userId),
   ])
 
   const email = ((emailResult.data ?? []) as { id: string; email: string }[])[0]?.email ?? null

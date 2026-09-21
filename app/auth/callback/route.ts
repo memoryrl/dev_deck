@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   let visitId: string | null = null
   let destination: string | null = null
   if (code) {
-    const supabase = createClient()
+    const supabase = await createClient()
     await supabase.auth.exchangeCodeForSession(code)
     const {
       data: { user: sessionUser },
@@ -37,15 +37,15 @@ export async function GET(request: Request) {
       // 로그인 화면의 "회원가입" 탭에서 약관 두 개에 이미 체크하고 왔다면 그 동의를 여기서 바로 기록한다.
       // 그러면 아래 약관 게이트를 건너뛰고 곧장 가입이 끝난다. 로그인 탭으로 처음 들어온 사람은 쿠키가
       // 없으므로 기존처럼 약관 확인 화면을 거친다.
-      const preConsent = cookies().get(SIGNUP_CONSENT_COOKIE)?.value
+      const preConsent = (await cookies()).get(SIGNUP_CONSENT_COOKIE)?.value
       const preVersions = parseSignupConsent(preConsent)
       if (preVersions && !isOwnerUser(sessionUser)) {
         try {
           await recordTermsConsent({
             userId: sessionUser.id,
             versions: preVersions,
-            ipAddress: clientIpFromHeaders(),
-            userAgent: headers().get("user-agent"),
+            ipAddress: await clientIpFromHeaders(),
+            userAgent: (await headers()).get("user-agent"),
           })
         } catch {
           // 기록에 실패하면 아래 게이트가 약관 확인 화면으로 보내 다시 받는다
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       destination = await termsGatePath(sessionUser)
       // 로그인 기록은 부가 기능이다 — 실패해도 로그인/리다이렉트 자체는 막지 않는다.
       try {
-        const ip = clientIpFromHeaders()
+        const ip = await clientIpFromHeaders()
         const region = await resolveIpRegion(ip)
         visitId = await recordLoginHistory({
           userId: sessionUser.id,
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
           provider: (sessionUser.app_metadata?.provider as string | undefined) ?? null,
           ipAddress: ip,
           ipRegion: region,
-          userAgent: headers().get("user-agent"),
+          userAgent: (await headers()).get("user-agent"),
         })
         // 이 로그인 행이 곧 세션이다 — 로그인 직후 이동할 페이지를 첫 페이지뷰로 남긴다.
         if (visitId) await recordPageView({ visitId, path: destination ?? postLoginPath(user) })

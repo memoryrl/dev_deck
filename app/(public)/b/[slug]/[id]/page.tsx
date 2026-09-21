@@ -21,11 +21,12 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import type { Board, BoardPost } from "@/types/board"
 import { ShareButton } from "@/components/share/share-button"
 
-export default async function PublicBoardPostPage({
-  params,
-}: {
-  params: { slug: string; id: string }
-}) {
+export default async function PublicBoardPostPage(
+  props: {
+    params: Promise<{ slug: string; id: string }>
+  }
+) {
+  const params = await props.params;
   // board·post·viewer 셋 다 서로 결과를 안 쓰지만, view_role 판정(비공개 게시판 여부)이
   // viewer에 달려있어서 이 셋은 "보여줄지 말지" 자체를 가르는 공통 게이트다 — 그래서
   // 여기서 같이 기다린다. 이웃글 목록만 그 판정과 무관해서 따로 뗄 수 있다.

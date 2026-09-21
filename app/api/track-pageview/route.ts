@@ -15,12 +15,12 @@ export const runtime = "nodejs"
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return NextResponse.json({ ok: false })
 
-  const visitId = cookies().get(VISIT_ID_COOKIE)?.value
+  const visitId = (await cookies()).get(VISIT_ID_COOKIE)?.value
   if (!visitId) return NextResponse.json({ skipped: true })
 
   // 정상적인 탐색이면 페이지 이동마다 한 번이라 넉넉하게 잡아도 충분하다 —
   // 스크립트성 플러딩으로 page_views가 무한정 쌓이는 것만 막는다.
-  const ip = clientIpFromHeaders()
+  const ip = await clientIpFromHeaders()
   if (!checkRateLimit(`track-pageview:${ip}`, 120, 10 * 60 * 1000)) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 })
   }

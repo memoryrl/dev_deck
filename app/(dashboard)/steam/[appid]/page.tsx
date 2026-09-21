@@ -13,11 +13,12 @@ import { ShareButton } from "@/components/share/share-button"
 
 // games/[appid]/page.tsx와 같은 이유로 섹션별 Suspense — 외부 Steam API 호출
 // (fetchGamePageData)이 느려도 이웃글·리뷰 폼은 먼저 보인다.
-export default function SteamDetailPage({
-  params,
-}: {
-  params: { appid: string }
-}) {
+export default async function SteamDetailPage(
+  props: {
+    params: Promise<{ appid: string }>
+  }
+) {
+  const params = await props.params;
   const appId = Number(params.appid)
 
   return (
@@ -57,7 +58,7 @@ async function GameCatalogSection({ appId }: { appId: number }) {
 async function ReviewFormSection({ appId }: { appId: number }) {
   const { data } =
     isSupabaseConfigured() && appId
-      ? await createClient().from("game_reviews").select("*").eq("app_id", appId).maybeSingle()
+      ? await (await createClient()).from("game_reviews").select("*").eq("app_id", appId).maybeSingle()
       : { data: null }
   const review = (data as GameReview | null) ?? null
   // GameCatalogSection과 독립적으로 스트리밍되므로 실제 카탈로그 이름은 아직 모를 수

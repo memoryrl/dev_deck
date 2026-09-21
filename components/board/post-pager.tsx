@@ -5,7 +5,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import type { NeighborLink } from "@/lib/posts/neighbors"
 import { cn } from "@/lib/utils"
 
-export function PostPager({
+export async function PostPager({
   listHref,
   listLabel,
   prev,
@@ -20,7 +20,7 @@ export function PostPager({
   placement?: "top" | "bottom"
   className?: string
 }) {
-  const { t } = getT()
+  const { t } = await getT()
   return (
     <nav
       className={cn(

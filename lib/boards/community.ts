@@ -27,7 +27,7 @@ function excerptOf(excerpt: string | null | undefined, content: string, max = 16
 
 export async function listLatestCommunityPosts(limit = COMMUNITY_LATEST_LIMIT): Promise<CommunityLatestPost[]> {
   if (!isSupabaseConfigured()) return []
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: boards, error: boardError } = await supabase
     .from("boards")
     .select("id, slug, name")
@@ -67,7 +67,7 @@ export async function listLatestCommunityPosts(limit = COMMUNITY_LATEST_LIMIT): 
 
 export async function getNoticePopupPost(): Promise<NoticePopupPost | null> {
   if (!isSupabaseConfigured()) return null
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: board } = await supabase
     .from("boards")
     .select("id, slug")
@@ -98,7 +98,7 @@ export async function setExclusiveNoticePopup(
   postId: string,
   enabled: boolean
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: post, error: postError } = await supabase
     .from("board_posts")
     .select("id, board_id")

@@ -102,7 +102,7 @@ function buildAdminModule(t: (key: string) => string, vacant: boolean): Topology
 // 이 함수 하나를 같이 써서, 메뉴가 추가/변경되면 두 군데 다 자동으로 반영된다.
 export async function listLandingModules(): Promise<TopologyModuleNode[]> {
   const allMenus = await listAllMenus()
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
 
   const headerItems = allMenus.filter((item) => item.location === "header" && isVisible(item))
   const byParent = new Map<string | null, MenuItem[]>()
@@ -142,7 +142,7 @@ export async function listLandingModules(): Promise<TopologyModuleNode[]> {
 
 export async function buildLandingTopology(): Promise<TopologyData> {
   const [memberModules, viewer] = await Promise.all([listLandingModules(), currentViewer()])
-  const { t } = getT()
+  const { t } = await getT()
 
   const isOwner = roleAtLeast(viewer.role, "owner")
   const modules = [buildAdminModule(t, !isOwner), ...memberModules]

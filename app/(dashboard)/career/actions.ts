@@ -21,7 +21,7 @@ const TYPES: CareerPostType[] = ["project", "skill", "note"]
 
 export async function createCareerPost(formData: FormData) {
   const user = await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const title = String(formData.get("title") ?? "").trim()
   const content = String(formData.get("content") ?? "").trim()
   const postType = String(formData.get("post_type") ?? "project") as CareerPostType
@@ -55,7 +55,7 @@ export async function createCareerPost(formData: FormData) {
 
 export async function updateCareerPost(id: string, formData: FormData) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const title = String(formData.get("title") ?? "").trim()
   const content = String(formData.get("content") ?? "").trim()
   const postType = String(formData.get("post_type") ?? "project") as CareerPostType
@@ -87,7 +87,7 @@ export async function updateCareerPost(id: string, formData: FormData) {
 
 export async function deleteCareerPost(id: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("career_posts").delete().eq("id", id)
   if (error) return { ok: false as const, error: error.message }
   refresh()
@@ -96,7 +96,7 @@ export async function deleteCareerPost(id: string) {
 
 export async function upsertCareerSkill(formData: FormData) {
   const user = await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const name = String(formData.get("name") ?? "").trim()
   if (!name) return { ok: false as const, error: "스킬 이름은 필수입니다." }
   const id = String(formData.get("id") ?? "")
@@ -124,7 +124,7 @@ export async function upsertCareerSkill(formData: FormData) {
 
 export async function deleteCareerSkill(id: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("career_skills").delete().eq("id", id)
   if (error) return { ok: false as const, error: error.message }
   refresh()

@@ -40,12 +40,13 @@ function isSearchField(value: string | undefined): value is LoginHistorySearchFi
   return value === "email" || value === "ip" || value === "region"
 }
 
-export default function LoginHistoryPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; type?: string; q?: string; field?: string }
-}) {
-  const { t } = getT()
+export default async function LoginHistoryPage(
+  props: {
+    searchParams?: Promise<{ page?: string; type?: string; q?: string; field?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const activeType = isEventType(searchParams?.type) ? searchParams.type : undefined
@@ -115,7 +116,7 @@ async function LoginHistoryList({
   field: LoginHistorySearchField
 }) {
   await ensureProfile()
-  const { t } = getT()
+  const { t } = await getT()
   const history = await listLoginHistory({ page, eventType: activeType, q, field })
   const pageCounts = await countPageViewsByVisit(history.rows.map((entry) => entry.id))
   const extra = { type: activeType, field: field === "email" ? undefined : field }

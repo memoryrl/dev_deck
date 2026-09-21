@@ -37,7 +37,7 @@ export async function withdrawAccount() {
     return { error: error instanceof Error ? error.message : "withdraw_failed" }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut({ scope: "local" }).catch(() => {})
   revalidatePath("/", "layout")
   revalidatePath("/site/members")

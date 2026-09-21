@@ -35,7 +35,7 @@ function parseRole(value: string, fallback: AccessRole): AccessRole {
 
 export async function upsertBoard(formData: FormData) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const id = String(formData.get("id") ?? "")
   const slug = String(formData.get("slug") ?? "").trim().toLowerCase()
   const name = String(formData.get("name") ?? "").trim()
@@ -93,7 +93,7 @@ export async function upsertBoard(formData: FormData) {
 
 export async function deleteBoard(id: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.from("boards").select("kind").eq("id", id).maybeSingle()
   if (data && isSystemBoardKind(data.kind)) {
     return { ok: false as const, error: "시스템 게시판은 삭제할 수 없습니다." }
@@ -106,7 +106,7 @@ export async function deleteBoard(id: string) {
 
 export async function upsertMenu(formData: FormData) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const id = String(formData.get("id") ?? "")
   const label = String(formData.get("label_ko") ?? formData.get("label") ?? "").trim()
   if (!label) return { ok: false as const, error: "메뉴 이름은 필수입니다." }
@@ -174,7 +174,7 @@ export async function upsertMenu(formData: FormData) {
 
 export async function deleteMenu(id: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("menus").delete().eq("id", id)
   if (error) return { ok: false as const, error: error.message }
   refreshSite()
@@ -183,7 +183,7 @@ export async function deleteMenu(id: string) {
 
 export async function upsertBoardPost(formData: FormData) {
   const user = await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const id = String(formData.get("id") ?? "")
   const boardId = String(formData.get("board_id") ?? "")
   const title = String(formData.get("title") ?? "").trim()
@@ -229,7 +229,7 @@ export async function upsertBoardPost(formData: FormData) {
 
 export async function deleteBoardPost(id: string, boardId: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("board_posts").delete().eq("id", id)
   if (error) return { ok: false as const, error: error.message }
   refreshSite()

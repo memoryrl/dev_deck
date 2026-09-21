@@ -29,7 +29,7 @@ import {
 } from "@/lib/share/service"
 import { loadTarget, type SharedTarget } from "@/lib/share/targets"
 import { ensureProfile } from "@/lib/supabase/server"
-import { checkRateLimit } from "@/lib/uploads/rate-limit"
+import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { ShareAccessEntry, ShareActionResult, ShareTargetType } from "@/types/share"
 import { SHARE_TARGET_TYPES } from "@/types/share"
@@ -132,17 +132,23 @@ export async function verifySharePasswordAction(
   password: string
 ): Promise<{ ok: true } | { ok: false; error: "invalid" | "tooMany" | "unavailable" }> {
   if (!isSupabaseConfigured()) return { ok: false, error: "unavailable" }
-  // 무차별 대입을 막는다 — 같은 IP가 같은 링크에 10분에 8번까지.
-  if (!checkRateLimit(`share-pw:${clientIpFromHeaders()}:${key}`, 8, 10 * 60 * 1000)) {
+  // 무차별 대입을 막는다. DB 에서 세므로 서버리스 인스턴스가 여러 개여도, IP 를 바꿔도 유지된다.
+  //  - 같은 IP 가 같은 링크에 10분에 8번까지
+  //  - IP 와 무관하게 한 링크 전체로 1시간에 40번까지(여러 IP 로 나눠 시도하는 공격 대비)
+  const ip = await clientIpFromHeaders()
+  const perIp = await checkRateLimitPersistent(`share-pw:${ip}:${key}`, 8, 10 * 60 * 1000)
+  const perLink = await checkRateLimitPersistent(`share-pw-link:${key}`, 40, 60 * 60 * 1000)
+  if (!perIp || !perLink) {
     return { ok: false, error: "tooMany" }
   }
 
-  const resolved = await resolveShareKey(key, { alreadyVisited: cookies().has(shareVisitCookieName(key)) })
+  const resolved = await resolveShareKey(key, { alreadyVisited: (await cookies()).has(shareVisitCookieName(key)) })
   if (resolved.status !== "ok" || !resolved.link.password_hash) return { ok: false, error: "unavailable" }
   if (!verifySharePassword(password, resolved.link.password_hash)) return { ok: false, error: "invalid" }
 
   const expiresAt = Date.now() + SHARE_PASSWORD_COOKIE_MS
-  cookies().set(sharePasswordCookieName(key), signPasswordCookie(key, resolved.link.password_hash, expiresAt), {
+  const jar = await cookies()
+  jar.set(sharePasswordCookieName(key), signPasswordCookie(key, resolved.link.password_hash, expiresAt), {
     httpOnly: true,
     sameSite: "lax",
     secure: production,
@@ -158,7 +164,7 @@ export async function verifySharePasswordAction(
  */
 export async function recordShareVisit(key: string): Promise<void> {
   if (!isSupabaseConfigured()) return
-  const jar = cookies()
+  const jar = await cookies()
   const seenName = shareVisitCookieName(key)
   if (jar.has(seenName)) return
 
@@ -169,7 +175,7 @@ export async function recordShareVisit(key: string): Promise<void> {
     return
   }
 
-  const counted = await recordVisit(link, invite, clientIpFromHeaders(), headers().get("user-agent"))
+  const counted = await recordVisit(link, invite, await clientIpFromHeaders(), (await headers()).get("user-agent"))
   if (!counted) return
   jar.set(seenName, "1", {
     httpOnly: true,

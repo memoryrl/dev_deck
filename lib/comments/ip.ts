@@ -37,8 +37,8 @@ function isPrivateIp(ip: string) {
 // x-real-ip는 우리 쪽 엣지/프록시가 직접 세팅하는 단일 값이라 더 신뢰할 수 있고,
 // x-forwarded-for를 써야 한다면 우리 프록시에 가장 가까운(=체인의 마지막) hop이
 // 그나마 신뢰도가 높다 — Vercel 등 단일 리버스 프록시 뒤에 있다는 전제.
-export function clientIpFromHeaders() {
-  const h = headers()
+export async function clientIpFromHeaders() {
+  const h = await headers()
   const realIp = h.get("x-real-ip")?.trim()
   const forwardedChain = h.get("x-forwarded-for")
   const lastForwarded = forwardedChain
@@ -51,7 +51,7 @@ export function clientIpFromHeaders() {
 }
 
 export async function resolveIpRegion(ip: string) {
-  const h = headers()
+  const h = await headers()
   const city = decodeUri(h.get("x-vercel-ip-city"))
   const country = h.get("x-vercel-ip-country")?.trim().toUpperCase() ?? ""
   const vercelRegion = [city, countryName(country)].filter(Boolean).join(" · ")

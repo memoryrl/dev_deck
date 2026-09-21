@@ -12,8 +12,8 @@ function boardTag(post: CommunityLatestPost, t: (key: string) => string) {
   return key ? t(key) : post.boardName
 }
 
-export function CommunityLatest({ posts }: { posts: CommunityLatestPost[] }) {
-  const { t } = getT()
+export async function CommunityLatest({ posts }: { posts: CommunityLatestPost[] }) {
+  const { t } = await getT()
   return (
     <section className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-4 pt-16">
       <div className="flex items-end justify-between gap-3">

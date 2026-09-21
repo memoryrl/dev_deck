@@ -34,8 +34,8 @@ export async function acceptTerms(formData: FormData): Promise<AcceptTermsResult
   const result = await recordTermsConsent({
     userId: user.id,
     versions,
-    ipAddress: clientIpFromHeaders(),
-    userAgent: headers().get("user-agent"),
+    ipAddress: await clientIpFromHeaders(),
+    userAgent: (await headers()).get("user-agent"),
   })
   if (!result.ok) return { ok: false, error: "failed", detail: result.error }
 
@@ -68,7 +68,7 @@ export async function declineTerms(): Promise<DeclineTermsResult> {
     }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut({ scope: "local" }).catch(() => {})
   revalidatePath("/", "layout")
   if (removed) revalidatePath("/site/members")

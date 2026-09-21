@@ -44,7 +44,7 @@ function fallbackColumns(t: (key: string) => string) {
 }
 
 export async function PublicFooter() {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const dbFooter = await listNavMenus("footer")
   const footerColumns =
     dbFooter.length > 0

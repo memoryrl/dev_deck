@@ -12,12 +12,13 @@ import { getTermsDocuments, isTermsSlug, listTermsRevisions, TERMS_SLUGS } from 
 import { cn } from "@/lib/utils"
 import type { TermsSlug } from "@/types/terms"
 
-export default function TermsHistoryPage({
-  searchParams,
-}: {
-  searchParams?: { doc?: string; page?: string }
-}) {
-  const { t } = getT()
+export default async function TermsHistoryPage(
+  props: {
+    searchParams?: Promise<{ doc?: string; page?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   const docParam = searchParams?.doc
   const filter: TermsSlug | null = isTermsSlug(docParam) ? docParam : null
   const page = parseListPage(searchParams?.page)
@@ -47,8 +48,8 @@ export default function TermsHistoryPage({
   )
 }
 
-function FilterTabs({ active }: { active: TermsSlug | null }) {
-  const { t } = getT()
+async function FilterTabs({ active }: { active: TermsSlug | null }) {
+  const { t } = await getT()
   const items: { slug: TermsSlug | null; label: string }[] = [
     { slug: null, label: t("admin.terms.filterAll") },
     ...TERMS_SLUGS.map((slug) => ({ slug, label: t(`terms.doc.${slug}`) })),

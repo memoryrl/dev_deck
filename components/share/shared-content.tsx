@@ -20,7 +20,7 @@ export async function SharedContent({
   expiresAt: string | null
   inviteName: string | null
 }) {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
 
   return (
     <>
@@ -51,7 +51,7 @@ export async function SharedContent({
 }
 
 async function Body({ target }: { target: SharedTarget }) {
-  const { t } = getT()
+  const { t } = await getT()
 
   switch (target.kind) {
     case "board_post":

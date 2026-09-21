@@ -10,11 +10,12 @@ import { isSupabaseConfigured } from "@/lib/utils"
 import type { Prompt } from "@/types/prompt"
 import { ShareButton } from "@/components/share/share-button"
 
-export default function PromptDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function PromptDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   return (
     <div className="w-full">
       <Suspense fallback={<PagerSkeleton />}>
@@ -38,7 +39,7 @@ export default function PromptDetailPage({
 
 async function NeighborsPager({ id, placement }: { id: string; placement?: "bottom" }) {
   if (!isSupabaseConfigured()) return <PostPager listHref="/promptkit" placement={placement} />
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: rows } = await supabase.from("prompts").select("id, title").order("created_at", { ascending: false })
   const neighbors = findNeighbors(
     (rows as { id: string; title: string }[]) ?? [],
@@ -52,7 +53,7 @@ async function NeighborsPager({ id, placement }: { id: string; placement?: "bott
 
 async function PromptFormSection({ id }: { id: string }) {
   if (!isSupabaseConfigured()) notFound()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.from("prompts").select("*").eq("id", id).maybeSingle()
   const prompt = data as Prompt | null
   if (!prompt) notFound()

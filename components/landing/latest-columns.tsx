@@ -6,14 +6,14 @@ import { getT } from "@/lib/i18n/dictionary"
 import type { CareerPost } from "@/types/career"
 import type { Prompt } from "@/types/prompt"
 
-export function LatestColumns({
+export async function LatestColumns({
   prompts,
   posts,
 }: {
   prompts: Prompt[]
   posts: CareerPost[]
 }) {
-  const { t } = getT()
+  const { t } = await getT()
   return (
     <section className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-16 pt-12">
       <div className="grid gap-10 md:grid-cols-2">

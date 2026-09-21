@@ -18,7 +18,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function SharePage({ params }: { params: { key: string } }) {
+export default async function SharePage(props: { params: Promise<{ key: string }> }) {
+  const params = await props.params;
   const { key } = params
 
   return (
@@ -31,7 +32,7 @@ export default async function SharePage({ params }: { params: { key: string } })
 async function ShareBody({ shareKey }: { shareKey: string }) {
   if (!isSupabaseConfigured()) return <ShareError reason="forbidden" />
 
-  const jar = cookies()
+  const jar = await cookies()
   const resolved = await resolveShareKey(shareKey, { alreadyVisited: jar.has(shareVisitCookieName(shareKey)) })
   if (resolved.status !== "ok") return <ShareError reason={resolved.status} />
 

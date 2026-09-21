@@ -17,7 +17,7 @@ function refreshReview(appId: number) {
 
 export async function upsertGameReview(formData: FormData) {
   const user = await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const appId = Number(formData.get("app_id"))
   const gameTitle = String(formData.get("game_title") ?? "").trim()
   const rating = Number(formData.get("rating") ?? 0)
@@ -44,7 +44,7 @@ export async function upsertGameReview(formData: FormData) {
 
 export async function deleteGameReview(appId: number) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("game_reviews").delete().eq("app_id", appId)
   if (error) return { ok: false as const, error: error.message }
   refreshReview(appId)

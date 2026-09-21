@@ -25,3 +25,25 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
   bucket.count += 1
   return true
 }
+
+/**
+ * 서버리스 인스턴스가 바뀌어도 유지되는 레이트리밋. DB 함수(rate_limit_hit)가 원자적으로 세므로
+ * 여러 인스턴스·동시 요청에도 한도를 넘지 않는다. patch-security-hardening.sql 이 필요하다.
+ *
+ * DB 호출이 실패하면(패치 미적용, 일시 장애) 인스턴스 메모리 방식으로 대신한다 — 레이트리밋이
+ * 죽었다고 정상 요청까지 막아 버리지 않기 위해서다.
+ */
+export async function checkRateLimitPersistent(key: string, limit: number, windowMs: number): Promise<boolean> {
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service")
+    const { data, error } = await createServiceClient().rpc("rate_limit_hit", {
+      p_key: key,
+      p_limit: limit,
+      p_window_seconds: Math.max(1, Math.ceil(windowMs / 1000)),
+    })
+    if (error) throw new Error(error.message)
+    return data === true
+  } catch {
+    return checkRateLimit(key, limit, windowMs)
+  }
+}

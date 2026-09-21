@@ -14,7 +14,7 @@ import { cn, formatPlaytime } from "@/lib/utils"
 import type { GameReview, SteamGame, SteamGamesResponse, SteamProfile } from "@/types/steam"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
-export function SteamLibrary({
+export async function SteamLibrary({
   reviews,
   hrefBase = "/steam",
   library,
@@ -29,7 +29,7 @@ export function SteamLibrary({
   page?: number
   sort?: SteamLibrarySort
 }) {
-  const { t } = getT()
+  const { t } = await getT()
   const reviewMap = new Map(reviews.map((review) => [review.app_id, review]))
   const games = [...(library?.games ?? [])].sort((a, b) => compareSteamGames(a, b, sort, reviewMap))
   const paged = paginateItems(games, page)
@@ -78,8 +78,8 @@ export function SteamLibrary({
   )
 }
 
-function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort }) {
-  const { t } = getT()
+async function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort }) {
+  const { t } = await getT()
   return (
     <div role="tablist" aria-label={t("steam.sortAria")} className="relative grid w-full grid-cols-3 rounded-full bg-secondary p-1">
       <span
@@ -115,7 +115,7 @@ function SortTabs({ pathname, sort }: { pathname: string; sort: SteamLibrarySort
   )
 }
 
-function LibraryHeader({
+async function LibraryHeader({
   profile,
   gameCount,
   total,
@@ -130,7 +130,7 @@ function LibraryHeader({
   deck: number
   latest?: SteamGame
 }) {
-  const { t, dictionary } = getT()
+  const { t, dictionary } = await getT()
   const lastPlayed = latest ? formatLastPlayed(latest.last_played_at, dictionary) : null
   return (
     <div className="space-y-4">
@@ -180,7 +180,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function GameItem({
+async function GameItem({
   game,
   review,
   hrefBase,
@@ -189,7 +189,7 @@ function GameItem({
   review?: GameReview
   hrefBase: "/steam" | "/games"
 }) {
-  const { t, dictionary } = getT()
+  const { t, dictionary } = await getT()
   const lastPlayed = formatLastPlayed(game.last_played_at, dictionary)
 
   return (

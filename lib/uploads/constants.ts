@@ -18,7 +18,10 @@ export const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024
 export const ATTACHMENT_MAX_FILES = 5
 
 export const ATTACHMENT_ALLOWED_FILE_TYPES = [
-  "image/*",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
   "application/pdf",
   "application/zip",
   ".doc",

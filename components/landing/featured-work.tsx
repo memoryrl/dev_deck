@@ -5,9 +5,9 @@ import { ScrollReveal } from "@/components/landing/scroll-reveal"
 import { getT } from "@/lib/i18n/dictionary"
 import type { FeaturedWork } from "@/lib/landing/home"
 
-export function FeaturedWorkCard({ work }: { work: FeaturedWork | null }) {
+export async function FeaturedWorkCard({ work }: { work: FeaturedWork | null }) {
   if (!work) return null
-  const { t } = getT()
+  const { t } = await getT()
   const thumb = work.thumbnailUrl?.trim()
 
   return (

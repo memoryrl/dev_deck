@@ -101,7 +101,8 @@ export function NotificationPanel({
       onUnreadChange(Math.max(0, unreadCount - 1))
     }
     onClose()
-    if (item.linkUrl) router.push(item.linkUrl)
+    // 사이트 안의 경로만 연다. DB 값이 바뀌어도 외부 주소(https://…, //…, javascript:)로 이동하지 않게 한다.
+    if (item.linkUrl && item.linkUrl.startsWith("/") && !item.linkUrl.startsWith("//")) router.push(item.linkUrl)
   }
 
   function handleMarkAll() {

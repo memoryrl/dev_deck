@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   if (!isOwnerUser(user)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const limitParam = Number(request.nextUrl.searchParams.get("limit") || "90")

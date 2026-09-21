@@ -21,7 +21,7 @@ export default function SiteUploadsPage() {
 
 async function UploadsPanelBody() {
   const user = await ensureProfile()
-  const supabase = createClient()
+  const supabase = await createClient()
   const initialUploads: UploadRow[] = []
   if (user) {
     const { data } = await supabase

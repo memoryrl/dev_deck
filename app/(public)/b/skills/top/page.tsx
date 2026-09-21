@@ -7,7 +7,7 @@ import type { PodiumEntry } from "@/lib/podium/types"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export default async function SkillsTopPage() {
-  const { t } = getT()
+  const { t } = await getT()
   const entries = await getTopSkills().catch(() => [] as PodiumEntry[])
 
   return (

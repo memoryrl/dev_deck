@@ -12,7 +12,7 @@ import { getTermsDocuments, localizeTerms, TERMS_SLUGS } from "@/lib/terms/docum
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = getT()
+  const { t } = await getT()
   return {
     title: `${t("terms.consent.title")} · DevDeck`,
     description: t("terms.consent.description"),
@@ -30,7 +30,7 @@ export default async function SignupTermsPage() {
   const gate = await termsGatePath(user)
   if (!gate) redirect(postLoginPath(user))
 
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const docs = await getTermsDocuments()
   // 화면 언어(ko/en)에 맞는 본문을 고른다. 영문이 비어 있으면 한국어로 대체하고 그 사실을 표시한다.
   const views: ConsentDocumentView[] = TERMS_SLUGS.map((slug) => {

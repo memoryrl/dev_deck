@@ -17,7 +17,7 @@ function refresh() {
 
 export async function createPrompt(formData: FormData) {
   const user = await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const title = String(formData.get("title") ?? "").trim()
   const content = String(formData.get("content") ?? "").trim()
   const resultHtml = String(formData.get("result_html") ?? "").trim()
@@ -39,7 +39,7 @@ export async function createPrompt(formData: FormData) {
 
 export async function updatePrompt(id: string, formData: FormData) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const title = String(formData.get("title") ?? "").trim()
   const content = String(formData.get("content") ?? "").trim()
   const resultHtml = String(formData.get("result_html") ?? "").trim()
@@ -65,7 +65,7 @@ export async function updatePrompt(id: string, formData: FormData) {
 
 export async function deletePrompt(id: string) {
   await requireOwner()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from("prompts").delete().eq("id", id)
   if (error) return { ok: false as const, error: error.message }
   refresh()
@@ -73,7 +73,7 @@ export async function deletePrompt(id: string) {
 }
 
 export async function signOut() {
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath("/", "layout")
   redirect("/login")

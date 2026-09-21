@@ -31,14 +31,14 @@ async function readPath(request: Request) {
 // 이후 같은 세션의 페이지 이동은 이 라우트를 다시 타지 않고 훨씬 가벼운
 // /api/track-pageview로 간다(dd_visit_id 쿠키가 있을 때) — docs/10-login-history.md.
 export async function POST(request: Request) {
-  const ip = clientIpFromHeaders()
+  const ip = await clientIpFromHeaders()
   // 세션당 한 번만 타는 라우트다(재사용 가능하면 곧장 반환). 쿠키가 없는
   // 반복 호출(스크립트성 플러딩)로부터 외부 지역조회 API·DB insert를 보호한다.
   if (!checkRateLimit(`track-visit:${ip}`, 15, 10 * 60 * 1000)) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 })
   }
 
-  const jar = cookies()
+  const jar = await cookies()
   const path = await readPath(request)
 
   if (jar.get(VISIT_LOG_COOKIE)) {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       provider: (user?.app_metadata?.provider as string | undefined) ?? null,
       ipAddress: ip,
       ipRegion: region,
-      userAgent: headers().get("user-agent"),
+      userAgent: (await headers()).get("user-agent"),
     })
     if (visitId) await recordPageView({ visitId, path })
     return jsonWithVisitCookies({ ok: true }, visitId)

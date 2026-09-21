@@ -18,11 +18,12 @@ import { formatPeriod } from "@/lib/i18n/format"
 import type { CareerPost } from "@/types/career"
 import { ShareButton } from "@/components/share/share-button"
 
-export default async function PublicCareerPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function PublicCareerPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const post = await getPublicCareerPostById(params.id)
   if (!post) notFound()
 
@@ -46,8 +47,8 @@ export default async function PublicCareerPage({
   )
 }
 
-function CareerArticle({ post, canShare = false }: { post: CareerPost; canShare?: boolean }) {
-  const { t } = getT()
+async function CareerArticle({ post, canShare = false }: { post: CareerPost; canShare?: boolean }) {
+  const { t } = await getT()
   return (
     <>
       <PageTitleBanner

@@ -11,7 +11,7 @@ import type { TermsDocument, TermsRevisionSummary, TermsSlug } from "@/types/ter
 
 export const TERMS_HISTORY_PATH = "/site/terms/history"
 
-export function TermsHistoryTable({
+export async function TermsHistoryTable({
   result,
   currentVersions,
   filter,
@@ -20,7 +20,7 @@ export function TermsHistoryTable({
   currentVersions: Partial<Record<TermsSlug, Pick<TermsDocument, "version">>>
   filter: TermsSlug | null
 }) {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
 
   if (result.total === 0) {
     return <EmptyPlaceholder>{t("admin.terms.historyEmpty")}</EmptyPlaceholder>

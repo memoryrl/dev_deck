@@ -21,7 +21,7 @@ async function CareerSkillsBody() {
   let skills: CareerSkill[] = []
   if (isSupabaseConfigured()) {
     await ensureProfile()
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase.from("career_skills").select("*").order("sort_order", { ascending: true })
     skills = (data as CareerSkill[]) ?? []
   }

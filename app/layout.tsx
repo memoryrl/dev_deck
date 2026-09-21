@@ -36,7 +36,7 @@ export const viewport: Viewport = {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = getT()
+  const { t } = await getT()
   return {
     title: "DevDeck",
     description: t("meta.description"),
@@ -44,10 +44,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { locale, dictionary } = getT()
+  const { locale, dictionary } = await getT()
   const settings = await getSiteSettings()
   const gaId = parseGaMeasurementId(settings.googleAnalyticsId)
-  const loadGa = Boolean(gaId) && !isAnalyticsLocalHost(headers().get("host"))
+  const loadGa = Boolean(gaId) && !isAnalyticsLocalHost((await headers()).get("host"))
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>

@@ -5,7 +5,7 @@ import { listQueryHref, pageWindow, type PagedResult } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 
-export function ListPager({
+export async function ListPager({
   pathname,
   param,
   result,
@@ -18,7 +18,7 @@ export function ListPager({
   extraParams?: Record<string, string | number | undefined>
   className?: string
 }) {
-  const { t } = getT()
+  const { t } = await getT()
   if (result.total === 0) return null
 
   const pageParam = param ?? "page"

@@ -7,8 +7,8 @@ import { listShareLinksForAdmin } from "@/lib/share/service"
 import { isSupabaseConfigured } from "@/lib/utils"
 import { SharesTable } from "./shares-table"
 
-export default function SharesPage() {
-  const { t } = getT()
+export default async function SharesPage() {
+  const { t } = await getT()
 
   return (
     <div className="w-full space-y-8">

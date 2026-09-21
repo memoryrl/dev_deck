@@ -4,12 +4,13 @@ import { RichContent } from "@/components/editor/rich-content"
 import { getT } from "@/lib/i18n/dictionary"
 import { getTermsDocuments, localizeTerms, TERMS_SLUGS } from "@/lib/terms/documents"
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { error?: string }
-}) {
-  const { t, locale } = getT()
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ error?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t, locale } = await getT()
 
   // 회원가입 탭에서 체크·열람할 약관 본문. 화면 언어에 맞는 본문을 고르고, 영문이 없으면 한국어로 대체한다.
   const docs = await getTermsDocuments()

@@ -163,8 +163,8 @@ function buildActivity(
   return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
 }
 
-function pickFeatured(posts: CareerPost[], prompts: Prompt[]): FeaturedWork | null {
-  const { t } = getT()
+async function pickFeatured(posts: CareerPost[], prompts: Prompt[]): Promise<FeaturedWork | null> {
+  const { t } = await getT()
   const present = t("date.present")
   const project = posts.find((post) => post.post_type === "project") ?? posts[0]
   if (project) {
@@ -195,7 +195,7 @@ function pickFeatured(posts: CareerPost[], prompts: Prompt[]): FeaturedWork | nu
   }
 }
 
-function pickUmpc(
+async function pickUmpc(
   review: GameReview | null,
   games: { app_id: number; name: string; playtime_deck_minutes: number }[]
 ) {
@@ -211,7 +211,7 @@ function pickUmpc(
     return {
       href: `/games/${deck.app_id}`,
       title: deck.name,
-      body: getT().t("landing.umpcFallback"),
+      body: (await getT()).t("landing.umpcFallback"),
     }
   }
   return null
@@ -265,14 +265,14 @@ export async function getHomeLandingData(): Promise<HomeLandingData> {
   }
 
   const featuredSource = featuredPost ? [featuredPost] : posts
-  const featured = pickFeatured(featuredSource, prompts)
+  const featured = await pickFeatured(featuredSource, prompts)
   if (featured?.kind === "prompt") {
     const prompt = prompts.find((item) => featured.href === `/p/${item.id}`)
     featured.thumbnailUrl = await resolvePromptThumbnail(prompt?.result_html)
   }
   const reviewsWithText = latestReviews.filter((review) => review.review_text?.trim())
   const reviewCards = reviewsWithText.length > 0 ? reviewsWithText : latestReviews
-  const { t } = getT()
+  const { t } = await getT()
 
   return {
     prompts,
@@ -288,7 +288,7 @@ export async function getHomeLandingData(): Promise<HomeLandingData> {
       reviewCount,
     },
     activity: buildActivity(prompts, posts, latestReviews, t),
-    umpc: pickUmpc(umpcReview, games),
+    umpc: await pickUmpc(umpcReview, games),
     steam: {
       rankedGames: [...games]
         .sort((a, b) => b.playtime_forever_minutes - a.playtime_forever_minutes)

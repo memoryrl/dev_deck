@@ -11,8 +11,9 @@ import { getTermsDocuments, parseTermsSlug, TERMS_SLUGS } from "@/lib/terms/docu
 import { cn } from "@/lib/utils"
 import type { TermsSlug } from "@/types/terms"
 
-export default function SiteTermsPage({ searchParams }: { searchParams?: { doc?: string } }) {
-  const { t } = getT()
+export default async function SiteTermsPage(props: { searchParams?: Promise<{ doc?: string }> }) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   const slug = parseTermsSlug(searchParams?.doc)
 
   return (
@@ -39,8 +40,8 @@ export default function SiteTermsPage({ searchParams }: { searchParams?: { doc?:
   )
 }
 
-function DocTabs({ active }: { active: TermsSlug }) {
-  const { t } = getT()
+async function DocTabs({ active }: { active: TermsSlug }) {
+  const { t } = await getT()
   return (
     <nav aria-label={t("admin.terms.docTabs")} className="inline-flex rounded-full bg-muted p-0.5 text-sm font-semibold">
       {TERMS_SLUGS.map((slug) => (

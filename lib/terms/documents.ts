@@ -97,7 +97,7 @@ export const getTermsDocuments = cache(async (): Promise<Record<TermsSlug, Terms
   const docs: Record<TermsSlug, TermsDocument> = { ...FALLBACK_DOCUMENTS }
   if (!isSupabaseConfigured()) return docs
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.from("terms_documents").select(DOCUMENT_SELECT)
 
   if (error || !data) return docs
@@ -122,7 +122,7 @@ export async function saveTermsDocument(input: {
 }): Promise<{ ok: true; version: number } | { ok: false; error: string }> {
   if (!isSupabaseConfigured()) return { ok: false, error: "Supabase not configured" }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.rpc("terms_save", {
     p_slug: input.slug,
     p_title: input.title,
@@ -155,7 +155,7 @@ export async function listTermsRevisions({
 }): Promise<PagedResult<TermsRevisionSummary>> {
   if (!isSupabaseConfigured()) return emptyPage(page, LIST_PAGE_SIZE)
 
-  const supabase = createClient()
+  const supabase = await createClient()
   return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
     let query = supabase.from("terms_revisions").select(REVISION_SUMMARY_SELECT, { count: "exact" })
     if (slug) query = query.eq("slug", slug)
@@ -173,7 +173,7 @@ export async function listTermsRevisions({
 export async function getTermsRevision(id: string): Promise<TermsRevision | null> {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("terms_revisions")
     .select(REVISION_SELECT)
@@ -192,7 +192,7 @@ export async function getAdjacentTermsRevisions(
 ): Promise<{ prev: TermsRevisionSummary | null; next: TermsRevisionSummary | null }> {
   if (!isSupabaseConfigured()) return { prev: null, next: null }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const [prevResult, nextResult] = await Promise.all([
     supabase
       .from("terms_revisions")

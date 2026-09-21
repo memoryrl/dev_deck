@@ -10,11 +10,12 @@ import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerPost } from "@/types/career"
 import { ShareButton } from "@/components/share/share-button"
 
-export default function CareerDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function CareerDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   return (
     <div className="w-full">
       <Suspense fallback={<PagerSkeleton />}>
@@ -38,7 +39,7 @@ export default function CareerDetailPage({
 
 async function NeighborsPager({ id, placement }: { id: string; placement?: "bottom" }) {
   if (!isSupabaseConfigured()) return <PostPager listHref="/career" placement={placement} />
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: rows } = await supabase.from("career_posts").select("id, title").order("created_at", { ascending: false })
   const neighbors = findNeighbors(
     (rows as { id: string; title: string }[]) ?? [],
@@ -52,7 +53,7 @@ async function NeighborsPager({ id, placement }: { id: string; placement?: "bott
 
 async function CareerFormSection({ id }: { id: string }) {
   if (!isSupabaseConfigured()) notFound()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.from("career_posts").select("*").eq("id", id).maybeSingle()
   const post = data as CareerPost | null
   if (!post) notFound()

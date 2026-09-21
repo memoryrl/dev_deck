@@ -32,7 +32,7 @@ async function refreshSystemStatus() {
 
 export default async function SystemStatusPage() {
   await requireOwner()
-  const { t } = getT()
+  const { t } = await getT()
 
   return (
     <div className="w-full space-y-8">
@@ -57,7 +57,7 @@ export default async function SystemStatusPage() {
 }
 
 async function SystemStatusContent() {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const [healthCheck, latestLog] = await Promise.all([
     runSupabaseHealthCheck(),
     getLatestHealthLog(),
@@ -131,8 +131,8 @@ async function SystemStatusContent() {
   )
 }
 
-function HealthLogSection({ latestLog, isStale }: { latestLog: HealthLogRow; isStale: boolean }) {
-  const { t, locale } = getT()
+async function HealthLogSection({ latestLog, isStale }: { latestLog: HealthLogRow; isStale: boolean }) {
+  const { t, locale } = await getT()
 
   return (
     <div className="rounded-xl border bg-white p-6 dark:bg-card">
@@ -168,8 +168,8 @@ function HealthLogSection({ latestLog, isStale }: { latestLog: HealthLogRow; isS
   )
 }
 
-function EnvironmentInfo() {
-  const { t } = getT()
+async function EnvironmentInfo() {
+  const { t } = await getT()
 
   return (
     <div className="rounded-xl border bg-white p-6 dark:bg-card">
@@ -203,8 +203,8 @@ function EnvironmentInfo() {
   )
 }
 
-function ErrorDetail({ error }: { error: string }) {
-  const { t } = getT()
+async function ErrorDetail({ error }: { error: string }) {
+  const { t } = await getT()
 
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-900/20">
@@ -226,7 +226,7 @@ function StatusCard({
   details,
 }: {
   title: string
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   status: "ok" | "error" | "warning"
   details: { label: string; value: string }[]
 }) {

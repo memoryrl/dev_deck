@@ -11,11 +11,11 @@ export type LoginHistorySearchField = "email" | "ip" | "region"
 // SELECT RLS는 관리자만 허용한다 — 익명 방문자가 넣은 자기 행을 스스로 못 읽어서
 // RETURNING이 비어버린다(insert 자체는 성공해도 dd_visit_id를 못 돌려받는 버그였다).
 // 서버 전용 트러스티드 코드이므로 서비스 롤로 우회한다.
-function trustedClient() {
+async function trustedClient() {
   try {
     return createServiceClient()
   } catch {
-    return createClient()
+    return await createClient()
   }
 }
 
@@ -36,7 +36,7 @@ type RecordEntryInput = {
 // 세션 식별자라 호출부가 dd_visit_id 쿠키에 담아 page_views와 잇는다.
 async function recordEntry(entry: RecordEntryInput): Promise<string | null> {
   if (!isSupabaseConfigured()) return null
-  const supabase = trustedClient()
+  const supabase = await trustedClient()
   const { data, error } = await supabase
     .from("login_history")
     .insert({
@@ -66,7 +66,7 @@ export function recordVisitHistory(entry: Omit<RecordEntryInput, "eventType">) {
 // (docs/10-login-history.md 3.1절 — 성능 근거).
 export async function recordPageView(entry: { visitId: string; path: string }) {
   if (!isSupabaseConfigured()) return
-  const supabase = trustedClient()
+  const supabase = await trustedClient()
   await supabase.from("page_views").insert({ visit_id: entry.visitId, path: entry.path.slice(0, 500) })
 }
 
@@ -83,7 +83,7 @@ export async function findRecentSessionId({
   ipAddress: string
 }): Promise<string | null> {
   if (!isSupabaseConfigured()) return null
-  const supabase = trustedClient()
+  const supabase = await trustedClient()
   const since = new Date(Date.now() - VISIT_WINDOW_MS).toISOString()
   let query = supabase
     .from("login_history")
@@ -110,7 +110,7 @@ export async function listLoginHistory({
   field?: LoginHistorySearchField
 } = {}): Promise<PagedResult<LoginHistoryEntry>> {
   if (!isSupabaseConfigured()) return emptyPage(page, LIST_PAGE_SIZE)
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
   const pattern = needle ? ilikeContains(needle) : ""
 
@@ -140,7 +140,7 @@ export async function listLoginHistory({
 // 가져온다(행마다 따로 COUNT 하는 N+1 쿼리를 피한다).
 export async function countPageViewsByVisit(visitIds: string[]): Promise<Record<string, number>> {
   if (!isSupabaseConfigured() || visitIds.length === 0) return {}
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.from("page_views").select("visit_id").in("visit_id", visitIds)
   if (error) return {}
   const counts: Record<string, number> = {}
@@ -154,7 +154,7 @@ export async function countPageViewsByVisit(visitIds: string[]): Promise<Record<
 // Server Action) — 목록을 그릴 때 모든 세션의 상세를 미리 가져오지 않는다.
 export async function listPageViews(visitId: string): Promise<PageViewEntry[]> {
   if (!isSupabaseConfigured()) return []
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("page_views")
     .select("*")
@@ -173,7 +173,7 @@ export type VisitStatsEntry = {
 
 export async function getVisitStats(period: VisitStatsPeriod): Promise<VisitStatsEntry[]> {
   if (!isSupabaseConfigured()) return []
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const now = new Date()
   let startDate: Date

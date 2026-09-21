@@ -22,11 +22,12 @@ import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
 import type { Prompt } from "@/types/prompt"
 import { ShareButton } from "@/components/share/share-button"
 
-export default async function PublicPromptPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function PublicPromptPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const prompt = await getPublicPromptById(params.id)
   if (!prompt) notFound()
 

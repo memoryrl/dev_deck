@@ -5,8 +5,8 @@ import { cache } from "react"
 import { usernameFromAuth } from "@/lib/auth/session-user"
 import { isConsumedRefreshError, isInvalidRefreshError } from "@/lib/supabase/auth-error"
 
-export function createClient() {
-  const cookieStore = cookies()
+export const createClient = cache(async () => {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,10 +31,10 @@ export function createClient() {
       },
     }
   )
-}
+})
 
 export const getAuthUser = cache(async () => {
-  const supabase = createClient()
+  const supabase = await createClient()
   try {
     const { data, error } = await supabase.auth.getUser()
     if (isConsumedRefreshError(error)) {
@@ -64,7 +64,7 @@ export const getAuthUser = cache(async () => {
 // 다시 실행해서, 페이지 이동 한 번에 getUser() 왕복 2번(미들웨어+페이지) + 쓰기 1번이
 // 겹겹이 쌓였다. 읽기보다 쓰기가 느리므로 이게 체감 지연의 큰 부분이었다.
 export async function upsertProfile(user: User) {
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.from("profiles").upsert(
     {
       id: user.id,

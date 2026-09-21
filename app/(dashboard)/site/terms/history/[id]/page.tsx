@@ -12,14 +12,15 @@ import { getAdjacentTermsRevisions, getTermsDocuments, getTermsRevision } from "
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export default async function TermsRevisionPage({ params }: { params: { id: string } }) {
+export default async function TermsRevisionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   await requireOwner()
   if (!UUID_RE.test(params.id)) notFound()
 
   const revision = await getTermsRevision(params.id)
   if (!revision) notFound()
 
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const [docs, adjacent] = await Promise.all([
     getTermsDocuments(),
     getAdjacentTermsRevisions(revision.slug, revision.version),

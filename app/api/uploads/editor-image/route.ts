@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { clientIpFromHeaders } from "@/lib/comments/ip"
 import { createServiceClient } from "@/lib/supabase/service"
 import { EDITOR_IMAGE_BUCKET, EDITOR_IMAGE_MAX_BYTES } from "@/lib/uploads/constants"
-import { checkRateLimit } from "@/lib/uploads/rate-limit"
+import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
 import { extensionForMime, sniffImageMime } from "@/lib/uploads/validate"
 
 export const runtime = "nodejs"
@@ -11,8 +11,8 @@ export const runtime = "nodejs"
 // 07-uploads.md 4.2 참고. 비회원도 댓글/공개 게시판에 글을 쓸 수 있으므로 세션
 // 인증으로는 막지 않는다 — 대신 매직바이트 검증 + 용량 캡 + IP 레이트리밋으로 방어한다.
 export async function POST(request: NextRequest) {
-  const ip = clientIpFromHeaders()
-  if (!checkRateLimit(`editor-image:${ip}`, 20, 10 * 60 * 1000)) {
+  const ip = await clientIpFromHeaders()
+  if (!(await checkRateLimitPersistent(`editor-image:${ip}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "이미지 업로드가 너무 잦습니다. 잠시 후 다시 시도해주세요." }, { status: 429 })
   }
 

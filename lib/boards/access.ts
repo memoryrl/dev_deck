@@ -25,7 +25,7 @@ export async function currentAccessRole(): Promise<AccessRole> {
 const listSystemBoards = cache(async (): Promise<Partial<Record<SystemBoardKind, Board>>> => {
   if (!isSupabaseConfigured()) return {}
   return withMemoryCache(memoryKey.boardAll, MEMORY_TTL.board, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("boards")
       .select(BOARD_SELECT)

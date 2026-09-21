@@ -15,14 +15,14 @@ const ACTIVITY_ICON: Record<
   review: { icon: Star, className: "text-[hsl(28_55%_48%)]" },
 }
 
-export function UmpcActivity({
+export async function UmpcActivity({
   umpc,
   activity,
 }: {
   umpc: { href: string; title: string; body: string } | null
   activity: HomeActivityItem[]
 }) {
-  const { t, dictionary } = getT()
+  const { t, dictionary } = await getT()
   const rows = activity
 
   if (!umpc && rows.length === 0) return null

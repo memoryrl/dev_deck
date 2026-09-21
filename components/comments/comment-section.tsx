@@ -7,7 +7,6 @@ import { RichContent } from "@/components/editor/rich-content"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import type { AccessRole } from "@/lib/access"
 import { formatBoardDateTime } from "@/lib/i18n/format"
-import { maskIp } from "@/lib/comments/mask"
 import { countComments } from "@/lib/comments/tree"
 import type { CommentNode, CommentTargetType } from "@/types/comment"
 import { cn } from "@/lib/utils"
@@ -119,7 +118,7 @@ function CommentItem({
           <span>
             {t("comments.author")} <span className="text-sm font-semibold text-foreground">{node.author_name}</span>
           </span>
-          <span className="tabular-nums">{maskIp(node.ip_address)}</span>
+          <span className="tabular-nums">{node.ip_masked || "-"}</span>
           {node.ip_region ? <span>{node.ip_region}</span> : null}
           <span>{formatBoardDateTime(node.created_at, locale)}</span>
           {canComment ? (

@@ -7,7 +7,7 @@ import { SiteSettingsForm } from "./settings-form"
 export default async function SiteSettingsPage() {
   await requireOwner()
   const settings = await getSiteSettings()
-  const { t } = getT()
+  const { t } = await getT()
 
   return (
     <div className="w-full space-y-8">

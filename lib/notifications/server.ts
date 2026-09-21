@@ -28,7 +28,7 @@ function toItem(row: Row): NotificationItem {
 }
 
 export async function pollNotifications(): Promise<NotificationPoll> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const [count, latest] = await Promise.all([
     supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     supabase
@@ -54,7 +54,7 @@ export async function listNotifications({
   unreadOnly: boolean
   limit: number
 }): Promise<NotificationItem[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
   let query = supabase
     .from("notifications")
     .select(COLUMNS)
@@ -67,7 +67,7 @@ export async function listNotifications({
 }
 
 export async function markNotificationsRead({ id }: { id?: string }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   let query = supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })

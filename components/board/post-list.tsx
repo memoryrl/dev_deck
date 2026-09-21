@@ -13,7 +13,7 @@ import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export type { PostListRow }
 
-export function PostList({
+export async function PostList({
   items,
   empty,
   searchable = false,
@@ -42,7 +42,7 @@ export function PostList({
   endAction?: React.ReactNode
   composer?: React.ReactNode
 }) {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const emptyText = empty ?? t("list.emptyPosts")
   const authorName = authorFallback ?? t("role.owner")
   const displayCount = showCount ?? Boolean(searchable || paged)

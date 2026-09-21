@@ -36,7 +36,7 @@ export const listPublicPrompts = cache(async (limit?: number): Promise<Prompt[]>
   const role = await currentAccessRole()
   const key = limit ? `${memoryKey.prompts(role)}:${limit}` : memoryKey.prompts(role)
   return withMemoryCache(key, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     let query = supabase
       .from("prompts")
       .select(PROMPT_LIST_SELECT)
@@ -63,7 +63,7 @@ export async function listPromptsPage({
 }): Promise<PagedResult<Prompt>> {
   if (!isSupabaseConfigured()) return emptyPage(page)
   if (publicOnly && !(await canViewSystemBoard("prompts"))) return emptyPage(page)
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
   return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
     let query = supabase
@@ -86,7 +86,7 @@ export const countPublicPrompts = cache(async (): Promise<number> => {
   if (!(await canViewSystemBoard("prompts"))) return 0
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.prompts(role)}:count`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { count } = await supabase
       .from("prompts")
       .select("id", { count: "exact", head: true })
@@ -98,7 +98,7 @@ export const countPublicPrompts = cache(async (): Promise<number> => {
 export async function getPublicPromptById(id: string): Promise<Prompt | null> {
   if (!isSupabaseConfigured()) return null
   if (!(await canViewSystemBoard("prompts"))) return null
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase
     .from("prompts")
     .select("*")

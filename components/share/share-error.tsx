@@ -15,8 +15,8 @@ const ICONS = {
   deleted_invite: Link2Off,
 } as const
 
-export function ShareError({ reason }: { reason: ShareErrorReason }) {
-  const { t } = getT()
+export async function ShareError({ reason }: { reason: ShareErrorReason }) {
+  const { t } = await getT()
   const Icon = ICONS[reason]
 
   return (

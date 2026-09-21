@@ -11,11 +11,12 @@ import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
 import { SteamLibrary } from "./steam-library"
 
-export default function SteamPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; sort?: string }
-}) {
+export default async function SteamPage(
+  props: {
+    searchParams?: Promise<{ page?: string; sort?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   return (
     <div className="w-full">
       <PageTitleBanner title="Steam Tracker" className="mb-6" />
@@ -41,7 +42,7 @@ async function SteamLibraryBody({
     isSupabaseConfigured() ? listPublicGameReviews() : Promise.resolve([] as GameReview[]),
     fetchOwnedGames()
       .then((data) => ({ library: data, error: null as string | null }))
-      .catch(() => ({ library: null as SteamGamesResponse | null, error: getT().t("steam.fetchFailed") })),
+      .catch(async () => ({ library: null as SteamGamesResponse | null, error: (await getT()).t("steam.fetchFailed") })),
   ])
   const { library, error } = steamResult
 

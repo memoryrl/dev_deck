@@ -19,19 +19,20 @@ import { listGameReviewsPage } from "@/lib/steam/reviews"
 import { getT } from "@/lib/i18n/dictionary"
 import type { Board } from "@/types/board"
 
-export default async function PublicBoardPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string }
-  searchParams?: { page?: string; q?: string }
-}) {
+export default async function PublicBoardPage(
+  props: {
+    params: Promise<{ slug: string }>
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   // board와 role은 서로 결과를 안 쓴다 — 동시에 보내고, 게이트 판정만 둘 다 모인 뒤에 한다.
   const [board, role] = await Promise.all([getBoardBySlug(params.slug), currentAccessRole()])
   if (!board || !board.is_active) notFound()
   if (!roleAtLeast(role, board.view_role)) return <AccessDeniedPage role={role} />
 
-  const { t } = getT()
+  const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const system = isSystemBoard(board)

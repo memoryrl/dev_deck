@@ -12,7 +12,7 @@ function rowNumber(index: number, paged?: PagedResult<unknown>, itemCount = 0) {
   return itemCount - index
 }
 
-export function BulletinList({
+export async function BulletinList({
   items,
   empty,
   paged,
@@ -33,7 +33,7 @@ export function BulletinList({
   variant?: "board" | "teaser"
   className?: string
 }) {
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
   const extra = extraParams ?? {}
   const searched = Boolean(searchQuery.trim())
   const authorName = authorFallback ?? t("role.owner")

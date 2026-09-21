@@ -32,7 +32,7 @@ export async function savePublicPost(formData: FormData) {
   if (!title || isBlankContent(content)) return { ok: false as const, error: "제목과 본문은 필수입니다." }
 
   const id = String(formData.get("id") ?? "")
-  const supabase = createClient()
+  const supabase = await createClient()
   const fields = {
     board_id: boardId,
     title,
@@ -74,7 +74,7 @@ export async function savePublicPost(formData: FormData) {
 export async function removePublicPost(id: string, boardId: string) {
   const allowed = await canWriteBoard(boardId)
   if (!allowed.ok || !allowed.user) return { ok: false as const, error: allowed.error }
-  const supabase = createClient()
+  const supabase = await createClient()
   let query = supabase.from("board_posts").delete().eq("id", id)
   if (accessRoleOf(allowed.user) !== "owner") {
     query = query.eq("user_id", allowed.user.id)

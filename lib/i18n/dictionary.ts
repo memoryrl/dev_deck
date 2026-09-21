@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers"
+import { cache } from "react"
 import {
   DEFAULT_LOCALE,
   detectBrowserAppLanguage,
@@ -15,21 +16,22 @@ const DICTIONARIES: Record<AppLocale, Messages> = {
   en: en as Messages,
 }
 
-export function getRequestLocale(): AppLocale {
-  const fromCookie = normalizeAppLanguage(cookies().get(LANG_COOKIE)?.value)
+export const getRequestLocale = cache(async (): Promise<AppLocale> => {
+  const fromCookie = normalizeAppLanguage((await cookies()).get(LANG_COOKIE)?.value)
   if (fromCookie) return fromCookie
-  return detectBrowserAppLanguage(headers().get("accept-language")) ?? DEFAULT_LOCALE
-}
+  return detectBrowserAppLanguage((await headers()).get("accept-language")) ?? DEFAULT_LOCALE
+})
 
-export function getDictionary(locale: AppLocale = getRequestLocale()) {
+export function getDictionary(locale: AppLocale) {
   return DICTIONARIES[locale] ?? DICTIONARIES[DEFAULT_LOCALE]
 }
 
-export function getT(locale: AppLocale = getRequestLocale()) {
-  const dictionary = getDictionary(locale)
+export const getT = cache(async (locale?: AppLocale) => {
+  const resolved = locale ?? (await getRequestLocale())
+  const dictionary = getDictionary(resolved)
   return {
-    locale,
+    locale: resolved,
     dictionary,
     t: (key: string, vars?: Record<string, string | number>) => t(dictionary, key, vars),
   }
-}
+})

@@ -137,7 +137,7 @@ const DEFAULT_MENU_SEEDS: MenuSeed[] = [
 ]
 
 async function backfillPublicMenuLabelKeys() {
-  const supabase = createClient()
+  const supabase = await createClient()
   let { data, error } = await supabase
     .from("menus")
     .select("id, label, label_key, labels")
@@ -182,7 +182,7 @@ export async function ensureDefaultMenus() {
   if (!isSupabaseConfigured()) return { seeded: false as const, reason: "not_configured" as const }
 
   const alreadySeeded = await withMemoryCache(memoryKey.menusSeeded, MEMORY_TTL.menusSeeded, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { count, error } = await supabase.from("menus").select("*", { count: "exact", head: true })
     if (error) return false
     return (count ?? 0) > 0
@@ -193,7 +193,7 @@ export async function ensureDefaultMenus() {
     return { seeded: false as const, reason: "already_has_rows" as const, admin }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { count, error: countError } = await supabase
     .from("menus")
     .select("*", { count: "exact", head: true })

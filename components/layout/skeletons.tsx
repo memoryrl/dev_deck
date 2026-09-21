@@ -104,9 +104,9 @@ export function ArticleSkeleton() {
   )
 }
 
-export function SteamLibrarySkeleton() {
+export async function SteamLibrarySkeleton() {
   return (
-    <Screen label={getT().t("loading.steamLibrary")} className="space-y-6">
+    <Screen label={(await getT()).t("loading.steamLibrary")} className="space-y-6">
       <div className="flex items-center gap-3">
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="space-y-2">
@@ -125,9 +125,9 @@ export function SteamLibrarySkeleton() {
   )
 }
 
-export function SteamShowcaseSkeleton() {
+export async function SteamShowcaseSkeleton() {
   return (
-    <Screen label={getT().t("loading.steamSection")} className="mx-auto max-w-6xl px-5 pb-16">
+    <Screen label={(await getT()).t("loading.steamSection")} className="mx-auto max-w-6xl px-5 pb-16">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="h-10 w-10 rounded-full" />
@@ -164,9 +164,9 @@ export function SteamShowcaseSkeleton() {
   )
 }
 
-export function LatestColumnsSkeleton() {
+export async function LatestColumnsSkeleton() {
   return (
-    <Screen label={getT().t("loading.latest")} className="mx-auto max-w-6xl px-5 py-16">
+    <Screen label={(await getT()).t("loading.latest")} className="mx-auto max-w-6xl px-5 py-16">
       <div className="grid gap-10 md:grid-cols-2">
         {Array.from({ length: 2 }).map((_, column) => (
           <div key={column} className="space-y-4">
@@ -227,9 +227,9 @@ export function EditorFormSkeleton() {
   )
 }
 
-export function FormCardSkeleton() {
+export async function FormCardSkeleton() {
   return (
-    <Screen label={getT().t("loading.generic")} className="mx-auto w-full max-w-6xl flex-1 px-5 py-20">
+    <Screen label={(await getT()).t("loading.generic")} className="mx-auto w-full max-w-6xl flex-1 px-5 py-20">
       <div className="mx-auto w-full max-w-md space-y-4 rounded-xl border bg-card p-8">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-8 w-32" />
@@ -240,9 +240,9 @@ export function FormCardSkeleton() {
   )
 }
 
-export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" | "grid" | "article" }) {
+export async function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" | "grid" | "article" }) {
   return (
-    <Screen label={getT().t("loading.dashboard")} className="w-full space-y-8">
+    <Screen label={(await getT()).t("loading.dashboard")} className="w-full space-y-8">
       <TitleSkeleton />
       {variant === "grid" ? <CardGridSkeleton /> : null}
       {variant === "list" ? <ListSkeleton /> : null}
@@ -251,9 +251,9 @@ export function DashboardPageSkeleton({ variant = "list" }: { variant?: "list" |
   )
 }
 
-export function HomeLandingSkeleton() {
+export async function HomeLandingSkeleton() {
   return (
-    <Screen label={getT().t("loading.landing")}>
+    <Screen label={(await getT()).t("loading.landing")}>
       <div className="mx-auto max-w-6xl px-5 pb-6 pt-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -270,7 +270,7 @@ export function HomeLandingSkeleton() {
   )
 }
 
-export function PublicPageSkeleton({
+export async function PublicPageSkeleton({
   variant = "list",
 }: {
   variant?: "grid" | "list" | "article" | "form" | "home"
@@ -278,7 +278,7 @@ export function PublicPageSkeleton({
   if (variant === "form") return <FormCardSkeleton />
   if (variant === "home") {
     return (
-      <Screen label={getT().t("loading.home")}>
+      <Screen label={(await getT()).t("loading.home")}>
         <div className="mx-auto max-w-6xl space-y-4 px-5 pb-28 pt-20">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-16 w-full max-w-2xl" />
@@ -295,7 +295,7 @@ export function PublicPageSkeleton({
 
   return (
     <PublicContainer>
-      <Screen label={getT().t("loading.page")}>
+      <Screen label={(await getT()).t("loading.page")}>
         {variant === "article" ? (
           <ArticleSkeleton />
         ) : (

@@ -7,7 +7,7 @@ import type { PodiumEntry } from "@/lib/podium/types"
 import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 
 export default async function PromptsTopPage() {
-  const { t } = getT()
+  const { t } = await getT()
   const entries = await getTopPrompts().catch(() => [] as PodiumEntry[])
 
   return (

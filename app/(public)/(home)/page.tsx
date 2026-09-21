@@ -63,8 +63,8 @@ function ClassicHeroFallback() {
   )
 }
 
-function ClassicHeroCopy() {
-  const { t } = getT()
+async function ClassicHeroCopy() {
+  const { t } = await getT()
   return (
     <>
       <p className="text-sm font-semibold text-muted-foreground">{t("landing.kicker")}</p>
@@ -143,7 +143,7 @@ function takeLatest<T>(items: T[], featuredHref: string | undefined, hrefOf: (it
 
 async function HeroLoginLink() {
   const viewer = await currentViewer()
-  const { t } = getT()
+  const { t } = await getT()
   if (viewer.user) return null
   return (
     <Button asChild variant="ghost">

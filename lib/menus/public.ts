@@ -8,7 +8,7 @@ import type { MenuItem, MenuLocation, NavNode } from "@/types/menu"
 export const listNavMenus = cache(async (location: MenuLocation): Promise<NavNode[]> => {
   if (!isSupabaseConfigured()) return []
   return withMemoryCache(memoryKey.menus(location), MEMORY_TTL.menus, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("menus")
       .select("*, boards(slug, name, is_active)")
@@ -22,7 +22,7 @@ export const listNavMenus = cache(async (location: MenuLocation): Promise<NavNod
 
 export async function listAllMenus(): Promise<MenuItem[]> {
   if (!isSupabaseConfigured()) return []
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("menus")
     .select("*, boards(slug, name, is_active)")

@@ -3,8 +3,8 @@ import { HttpErrorView } from "@/components/errors/http-error-view"
 import { getT } from "@/lib/i18n/dictionary"
 import { resolveHttpError } from "@/lib/http-errors"
 
-export function generateMetadata(): Metadata {
-  const { locale } = getT()
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getT()
   const error = resolveHttpError(404, locale)
   return {
     title: `404 · ${error.title} · DevDeck`,
@@ -13,8 +13,8 @@ export function generateMetadata(): Metadata {
   }
 }
 
-export default function NotFound() {
-  const { t, locale } = getT()
+export default async function NotFound() {
+  const { t, locale } = await getT()
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-1 items-center">
       <HttpErrorView

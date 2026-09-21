@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button"
 import { getT } from "@/lib/i18n/dictionary"
 import { SITE_CONTACT } from "@/lib/site/profile"
 
-export function ContactCta() {
-  const { t } = getT()
+export async function ContactCta() {
+  const { t } = await getT()
   return (
     <section id="contact" className="mx-auto max-w-6xl px-5 pb-20 pt-8">
       <div className="dark relative overflow-hidden rounded-2xl border bg-[hsl(24_14%_11%)] text-card-foreground">

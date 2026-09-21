@@ -49,7 +49,7 @@ function formatDbError(error: {
 export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   if (!isSupabaseConfigured()) return DEFAULT_SETTINGS
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("site_settings")
     .select("key, value")
@@ -77,7 +77,7 @@ export async function updateSiteSettings(
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured()) return { success: false, error: "Supabase not configured" }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const now = new Date().toISOString()
   const rows = Object.entries(updates).map(([key, value]) => ({
     key,

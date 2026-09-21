@@ -6,9 +6,9 @@ import type { CareerSkill } from "@/types/career"
 
 const SHOW = 8
 
-export function SkillShowcase({ skills }: { skills: CareerSkill[] }) {
+export async function SkillShowcase({ skills }: { skills: CareerSkill[] }) {
   if (skills.length === 0) return null
-  const { t } = getT()
+  const { t } = await getT()
   const items = skills.slice(0, SHOW)
 
   return (

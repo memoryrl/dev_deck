@@ -18,7 +18,7 @@ export {
 
 export async function ensureSystemBoards() {
   if (!isSupabaseConfigured()) return
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.from("boards").select("kind, slug")
   if (error) return
 
@@ -65,7 +65,7 @@ export async function listModuleEntriesPage(
   pageSize = LIST_PAGE_SIZE
 ): Promise<PagedResult<ModuleEntry>> {
   if (!isSupabaseConfigured()) return emptyPage(page, pageSize)
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
 
   if (kind === "prompts") {

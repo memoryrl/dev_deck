@@ -2,7 +2,7 @@ import { Briefcase, Gamepad2, Sparkles, Star } from "lucide-react"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatPlaytime } from "@/lib/utils"
 
-export function StatsStrip({
+export async function StatsStrip({
   promptCount,
   careerCount,
   gameCount,
@@ -15,7 +15,7 @@ export function StatsStrip({
   playtimeMinutes: number
   reviewCount: number
 }) {
-  const { t } = getT()
+  const { t } = await getT()
   const items = [
     {
       label: t("landing.statsPrompts"),

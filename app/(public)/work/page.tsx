@@ -7,12 +7,13 @@ import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
 
-export default function WorkBoardPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; q?: string }
-}) {
-  const { t } = getT()
+export default async function WorkBoardPage(
+  props: {
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
 

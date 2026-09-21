@@ -14,12 +14,13 @@ import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { MemberStatsChart } from "./member-stats-chart"
 import { MembersBrowser } from "./members-browser"
 
-export default function MembersPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; q?: string }
-}) {
-  const { t } = getT()
+export default async function MembersPage(
+  props: {
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
 
@@ -61,7 +62,7 @@ export default function MembersPage({
 
 async function MemberList({ page, q }: { page: number; q: string }) {
   await requireOwner()
-  const { t } = getT()
+  const { t } = await getT()
   const result = await listMembers({ page, q })
   const searched = Boolean(q)
 

@@ -146,7 +146,7 @@ function groupsFromRows(rows: MenuItem[]): AdminSidebarGroup[] {
   })
 }
 
-type MenuWriteClient = ReturnType<typeof createClient>
+type MenuWriteClient = Awaited<ReturnType<typeof createClient>>
 
 async function insertMenuRow(
   supabase: MenuWriteClient,
@@ -179,7 +179,7 @@ export const listAdminMenus = cache(async (): Promise<AdminSidebarGroup[]> => {
   if (!isSupabaseConfigured()) return defaultAdminMenuGroups()
 
   return withMemoryCache(memoryKey.menus("admin"), MEMORY_TTL.menus, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("menus")
       .select("*")
@@ -200,7 +200,7 @@ export async function ensureAdminMenus(): Promise<{ seeded: boolean; error?: str
   if (!isSupabaseConfigured()) return { seeded: false, error: "not_configured" }
 
   const alreadySeeded = await withMemoryCache(memoryKey.adminMenusSeeded, MEMORY_TTL.menusSeeded, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { count, error } = await supabase
       .from("menus")
       .select("*", { count: "exact", head: true })
@@ -210,7 +210,7 @@ export async function ensureAdminMenus(): Promise<{ seeded: boolean; error?: str
   })
   if (alreadySeeded) return { seeded: false }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { count, error: countError } = await supabase
     .from("menus")
     .select("*", { count: "exact", head: true })

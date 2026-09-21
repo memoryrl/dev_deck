@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export type DashboardStats = {
@@ -28,7 +29,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   if (!isSupabaseConfigured()) return defaultStats
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
@@ -46,7 +47,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     uploadsResult,
   ] = await Promise.all([
     supabase.from("posts").select("*", { count: "exact", head: true }),
-    supabase.from("comments").select("*", { count: "exact", head: true }),
+    // 관리자 대시보드 집계 — 댓글의 비공개 컬럼까지 세어야 해서 서비스 롤로 읽는다.
+    createServiceClient().from("comments").select("id", { count: "exact", head: true }),
     supabase.from("prompts").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("login_history").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
@@ -79,7 +81,7 @@ export type RecentActivity = {
 export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
   if (!isSupabaseConfigured()) return []
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const [commentsResult, visitsResult] = await Promise.all([
     supabase

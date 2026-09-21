@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "허용되지 않은 경로입니다." }, { status: 403 })
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("uploads")
     .insert({

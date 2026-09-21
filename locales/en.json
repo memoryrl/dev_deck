@@ -629,7 +629,7 @@
     },
     "password": {
       "title": "Password",
-      "placeholder": "Enter a password (4+ characters)",
+      "placeholder": "Enter a password (8+ characters)",
       "keepPlaceholder": "Set — enter a new password to change it",
       "generate": "Generate a random password",
       "copy": "Copy password"
@@ -723,7 +723,7 @@
       "expiryRequired": "Enter an end date and time for the sharing period.",
       "expiryPast": "The end time must be in the future.",
       "maxVisitsInvalid": "Enter a maximum number of visits of 1 or more.",
-      "passwordInvalid": "The password must be 4 to 64 characters.",
+      "passwordInvalid": "The password must be 8 to 64 characters.",
       "passwordRequired": "Enter a password.",
       "inviteNameInvalid": "Enter the invitee's name (up to 40 characters).",
       "inviteMethodInvalid": "The delivery method is invalid.",

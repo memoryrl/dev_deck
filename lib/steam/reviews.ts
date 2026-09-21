@@ -25,7 +25,7 @@ export const listPublicGameReviews = cache(async (): Promise<GameReview[]> => {
   if (!(await canViewSystemBoard("steam"))) return []
   const role = await currentAccessRole()
   return withMemoryCache(memoryKey.reviews(role), MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase
       .from("game_reviews")
       .select(REVIEW_CARD_SELECT)
@@ -43,7 +43,7 @@ export async function listGameReviewsPage({
 }): Promise<PagedResult<GameReview>> {
   if (!isSupabaseConfigured()) return emptyPage(page)
   if (!(await canViewSystemBoard("steam"))) return emptyPage(page)
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
   return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
     let query = supabase
@@ -65,7 +65,7 @@ export const listLatestPublicGameReviews = cache(async (limit = 6): Promise<Game
   if (!(await canViewSystemBoard("steam"))) return []
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.reviews(role)}:latest:${limit}`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase
       .from("game_reviews")
       .select(REVIEW_TEASER_SELECT)
@@ -80,7 +80,7 @@ export const countPublicGameReviews = cache(async (): Promise<number> => {
   if (!(await canViewSystemBoard("steam"))) return 0
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.reviews(role)}:count`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { count } = await supabase.from("game_reviews").select("id", { count: "exact", head: true })
     return count ?? 0
   })
@@ -91,7 +91,7 @@ export const getLatestUmpcReview = cache(async (): Promise<GameReview | null> =>
   if (!(await canViewSystemBoard("steam"))) return null
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.reviews(role)}:umpc`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data } = await supabase
       .from("game_reviews")
       .select(REVIEW_CARD_SELECT)
@@ -107,7 +107,7 @@ export const getLatestUmpcReview = cache(async (): Promise<GameReview | null> =>
 export async function getPublicGameReview(appId: number): Promise<GameReview | null> {
   if (!isSupabaseConfigured()) return null
   if (!(await canViewSystemBoard("steam"))) return null
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase
     .from("game_reviews")
     .select("*")

@@ -33,7 +33,7 @@ export const listPublicCareerPosts = cache(async (limit?: number): Promise<Caree
   const role = await currentAccessRole()
   const key = limit ? `${memoryKey.career(role)}:${limit}` : memoryKey.career(role)
   return withMemoryCache(key, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     let query = supabase
       .from("career_posts")
       .select(CAREER_LIST_SELECT)
@@ -60,7 +60,7 @@ export async function listCareerPostsPage({
 }): Promise<PagedResult<CareerPost>> {
   if (!isSupabaseConfigured()) return emptyPage(page)
   if (publicOnly && !(await canViewSystemBoard("career"))) return emptyPage(page)
-  const supabase = createClient()
+  const supabase = await createClient()
   const needle = q.trim()
   return fetchPagedRows(page, LIST_PAGE_SIZE, async (from, to) => {
     let query = supabase
@@ -83,7 +83,7 @@ export const countPublicCareerPosts = cache(async (): Promise<number> => {
   if (!(await canViewSystemBoard("career"))) return 0
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.career(role)}:count`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { count } = await supabase
       .from("career_posts")
       .select("id", { count: "exact", head: true })
@@ -97,7 +97,7 @@ export const getFeaturedPublicCareer = cache(async (): Promise<CareerPost | null
   if (!(await canViewSystemBoard("career"))) return null
   const role = await currentAccessRole()
   return withMemoryCache(`${memoryKey.career(role)}:featured`, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: project } = await supabase
       .from("career_posts")
       .select(CAREER_LIST_SELECT)
@@ -121,7 +121,7 @@ export const getFeaturedPublicCareer = cache(async (): Promise<CareerPost | null
 export async function getPublicCareerPostById(id: string): Promise<CareerPost | null> {
   if (!isSupabaseConfigured()) return null
   if (!(await canViewSystemBoard("career"))) return null
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase
     .from("career_posts")
     .select("*")
@@ -137,7 +137,7 @@ export const listPublicCareerSkills = cache(async (limit?: number): Promise<Care
   const role = await currentAccessRole()
   const key = limit ? `${memoryKey.skills(role)}:${limit}` : memoryKey.skills(role)
   return withMemoryCache(key, MEMORY_TTL.publicList, async () => {
-    const supabase = createClient()
+    const supabase = await createClient()
     let query = supabase
       .from("career_skills")
       .select(SKILL_LIST_SELECT)

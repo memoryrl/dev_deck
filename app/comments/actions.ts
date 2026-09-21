@@ -6,8 +6,9 @@ import { commentRoleFor } from "@/lib/boards/permissions"
 import { getBoardById } from "@/lib/boards/public"
 import { clientIpFromHeaders, resolveIpRegion } from "@/lib/comments/ip"
 import { createClient, ensureProfile } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 import { isBlankContent, plainTextFromContent, sanitizeRichHtml } from "@/lib/content"
-import { checkRateLimit } from "@/lib/uploads/rate-limit"
+import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CommentTargetType } from "@/types/comment"
 
@@ -28,9 +29,9 @@ export async function createComment(formData: FormData) {
   if (!isSupabaseConfigured()) return { ok: false as const, error: "저장소를 사용할 수 없습니다." }
 
   // 비회원도 쓸 수 있는 공개 폼이라 세션 기반 제한이 불가능하다 — IP당 짧은
-  // 창구로 스팸 플러딩만 막는다.
-  const ip = clientIpFromHeaders()
-  if (!checkRateLimit(`comment:${ip}`, 5, 5 * 60 * 1000)) {
+  // 창구로 스팸 플러딩만 막는다. DB에서 세므로 서버리스 인스턴스가 여러 개여도 한도가 유지된다.
+  const ip = await clientIpFromHeaders()
+  if (!(await checkRateLimitPersistent(`comment:${ip}`, 5, 5 * 60 * 1000))) {
     return { ok: false as const, error: "댓글을 너무 자주 작성했습니다. 잠시 후 다시 시도해주세요." }
   }
 
@@ -49,7 +50,7 @@ export async function createComment(formData: FormData) {
   }
   if (body.length > BODY_HTML_MAX) return { ok: false as const, error: "댓글이 너무 깁니다." }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const user = await ensureProfile()
 
   if (targetType === "board") {
@@ -86,7 +87,9 @@ export async function createComment(formData: FormData) {
   }
 
   const region = await resolveIpRegion(ip)
-  const { error } = await supabase.from("comments").insert({
+  // 댓글 INSERT 권한은 DB에서 서버(서비스 롤)에만 남겨 두었다. 익명이 API로 직접 넣으면 IP·작성자를
+  // 위조하고 위의 검증·레이트리밋을 건너뛸 수 있기 때문이다. 작성자(user_id)·IP는 여기서 서버가 정한다.
+  const { error } = await createServiceClient().from("comments").insert({
     target_type: targetType,
     target_id: targetId,
     parent_id: parentId,
@@ -97,7 +100,10 @@ export async function createComment(formData: FormData) {
     ip_region: region,
     is_hidden: false,
   })
-  if (error) return { ok: false as const, error: error.message }
+  if (error) {
+    console.error("[comments] insert failed", error)
+    return { ok: false as const, error: "댓글을 저장하지 못했습니다. 잠시 후 다시 시도해주세요." }
+  }
 
   const returnTo = String(formData.get("return_to") ?? "").trim()
   revalidateTarget(targetType, targetId)

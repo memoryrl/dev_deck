@@ -9,11 +9,12 @@ import { listPromptsPage } from "@/lib/prompts/public"
 import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
-export default function PromptKitPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; q?: string }
-}) {
+export default async function PromptKitPage(
+  props: {
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
 

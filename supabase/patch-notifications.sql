@@ -60,7 +60,9 @@ GRANT ALL ON TABLE devdeck.notifications TO service_role;
 -- 헬퍼
 -- ---------------------------------------------------------------------------
 
--- devdeck.is_owner()와 같은 관리자 기준(이메일)을 임의의 사용자 id에 적용한다.
+-- devdeck.is_owner()와 같은 관리자 기준을 임의의 사용자 id에 적용한다.
+-- 주의: patch-security-hardening.sql 이 이 함수를 "고정된 관리자 UUID" 방식으로 다시 정의한다. 이 파일을 다시 실행했다면
+-- 보안 강화 패치도 이어서 다시 실행할 것(이 파일의 정의는 이메일 기준이라 더 약하다).
 CREATE OR REPLACE FUNCTION devdeck.is_owner_user(uid UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -339,3 +341,26 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- 보안: 내부 함수를 API(rpc)로 호출하지 못하게 막는다.
+-- Postgres 함수는 기본적으로 PUBLIC(=anon 포함)이 실행할 수 있고, devdeck 스키마는 PostgREST 로 노출되어 있어
+-- 아래 SECURITY DEFINER 함수를 막지 않으면 누구나 /rest/v1/rpc/push_post_created 를 불러
+-- 다른 사람의 알림함에 임의의 알림(링크 포함)을 넣거나 사용자 이름을 조회할 수 있다.
+-- 트리거는 함수 실행 권한을 "만드는 시점"에만 검사하므로 이 회수는 알림 생성에 영향이 없다.
+-- ---------------------------------------------------------------------------
+REVOKE ALL ON FUNCTION devdeck.is_owner_user(UUID) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_display_name(UUID) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.push_post_created(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_member_event() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_board_post() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_prompt() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_career_post() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_game_review() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION devdeck.notify_comment() FROM PUBLIC, anon, authenticated;
+
+-- 알림의 링크는 이 사이트 안의 경로만 허용한다(외부 주소로 보내는 알림 방지).
+ALTER TABLE devdeck.notifications DROP CONSTRAINT IF EXISTS notifications_link_check;
+ALTER TABLE devdeck.notifications
+  ADD CONSTRAINT notifications_link_check
+  CHECK (link_url IS NULL OR (link_url LIKE '/%' AND link_url NOT LIKE '//%'));

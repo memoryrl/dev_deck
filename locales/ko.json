@@ -629,7 +629,7 @@
     },
     "password": {
       "title": "비밀번호 설정",
-      "placeholder": "비밀번호를 입력하세요 (4자 이상)",
+      "placeholder": "비밀번호를 입력하세요 (8자 이상)",
       "keepPlaceholder": "설정됨 — 바꾸려면 새 비밀번호를 입력하세요",
       "generate": "무작위 비밀번호 만들기",
       "copy": "비밀번호 복사"
@@ -723,7 +723,7 @@
       "expiryRequired": "공유 기간의 종료 일시를 입력하세요.",
       "expiryPast": "종료 일시는 지금보다 이후여야 합니다.",
       "maxVisitsInvalid": "최대 방문 횟수는 1 이상의 숫자로 입력하세요.",
-      "passwordInvalid": "비밀번호는 4자 이상 64자 이하로 입력하세요.",
+      "passwordInvalid": "비밀번호는 8자 이상 64자 이하로 입력하세요.",
       "passwordRequired": "비밀번호를 입력하세요.",
       "inviteNameInvalid": "초대 받는 분의 이름을 40자 이내로 입력하세요.",
       "inviteMethodInvalid": "전달 방법이 올바르지 않습니다.",

@@ -12,7 +12,7 @@ import { EmptyPlaceholder } from "@/components/landing/empty-placeholder"
 const MEDAL_TONE = ["border-[#d4af37] bg-[#fff6d8]", "border-[#9aa3b0] bg-[#eef1f5]", "border-[#b87333] bg-[#f4e3d1]"]
 
 export default async function GamesTopPage() {
-  const { t } = getT()
+  const { t } = await getT()
   const entries = await getTopSteamGames().catch(() => [] as PodiumEntry[])
 
   return (

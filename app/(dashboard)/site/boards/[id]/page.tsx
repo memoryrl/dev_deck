@@ -15,13 +15,14 @@ import { isSystemBoard, kindLabel, listModuleEntriesPage, systemDashboardHref } 
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
 
-export default function SiteBoardDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string }
-  searchParams?: { page?: string; q?: string }
-}) {
+export default async function SiteBoardDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+    searchParams?: Promise<{ page?: string; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
 

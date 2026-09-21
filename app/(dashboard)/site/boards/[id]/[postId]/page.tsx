@@ -9,11 +9,12 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import { ensureProfile } from "@/lib/supabase/server"
 import { ShareButton } from "@/components/share/share-button"
 
-export default function SiteBoardPostPage({
-  params,
-}: {
-  params: { id: string; postId: string }
-}) {
+export default async function SiteBoardPostPage(
+  props: {
+    params: Promise<{ id: string; postId: string }>
+  }
+) {
+  const params = await props.params;
   const listHref = `/site/boards/${params.id}`
 
   return (

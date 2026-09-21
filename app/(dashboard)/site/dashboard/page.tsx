@@ -23,7 +23,7 @@ import { getT } from "@/lib/i18n/dictionary"
 
 export default async function DashboardHomePage() {
   await requireOwner()
-  const { t } = getT()
+  const { t } = await getT()
 
   return (
     <div className="w-full space-y-8">
@@ -41,7 +41,7 @@ async function DashboardContent() {
     getDashboardStats(),
     getRecentActivity(8),
   ])
-  const { t, locale } = getT()
+  const { t, locale } = await getT()
 
   return (
     <div className="space-y-8">
@@ -182,7 +182,7 @@ function StatCard({
 }: {
   label: string
   value: number
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   href?: string
   color?: string
   bgColor?: string
@@ -207,8 +207,8 @@ function StatCard({
   return content
 }
 
-function ActivityItem({ activity, locale }: { activity: RecentActivity; locale: AppLocale }) {
-  const { t } = getT()
+async function ActivityItem({ activity, locale }: { activity: RecentActivity; locale: AppLocale }) {
+  const { t } = await getT()
   const typeConfig = {
     comment: { badge: t("admin.dashboard.comment"), variant: "default" as const },
     visit: { badge: t("admin.dashboard.visit"), variant: "secondary" as const },

@@ -29,7 +29,7 @@ export function isFreshSignup(user: Pick<SessionUser, "created_at">, now = Date.
 export const listAcceptedTerms = cache(async (userId: string): Promise<Set<TermsSlug> | null> => {
   if (!isSupabaseConfigured()) return null
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("terms_consents")
     .select("slug")
@@ -65,7 +65,7 @@ export async function recordTermsConsent(input: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!isSupabaseConfigured()) return { ok: false, error: "Supabase not configured" }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const now = new Date().toISOString()
   const rows = TERMS_SLUGS.map((slug) => ({
     user_id: input.userId,
