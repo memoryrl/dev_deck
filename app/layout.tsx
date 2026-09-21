@@ -1,14 +1,18 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Public_Sans } from "next/font/google"
+import { headers } from "next/headers"
 import { Suspense } from "react"
 import { I18nProvider } from "@/components/i18n/i18n-provider"
 import { LanguageRouteSync } from "@/components/i18n/language-route-sync"
+import { GoogleAnalytics } from "@/components/layout/google-analytics"
 import { HashScrollFix } from "@/components/layout/hash-scroll-fix"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { VisitTracker } from "@/components/layout/visit-tracker"
 import { LayerDialogHost } from "@/components/ui/layer-dialog"
 import { getT } from "@/lib/i18n/dictionary"
+import { isAnalyticsLocalHost, parseGaMeasurementId } from "@/lib/site/analytics"
+import { getSiteSettings } from "@/lib/site/settings"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -39,8 +43,11 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { locale, dictionary } = getT()
+  const settings = await getSiteSettings()
+  const gaId = parseGaMeasurementId(settings.googleAnalyticsId)
+  const loadGa = Boolean(gaId) && !isAnalyticsLocalHost(headers().get("host"))
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>
@@ -54,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <VisitTracker />
             <HashScrollFix />
             <LayerDialogHost />
+            {loadGa && gaId ? <GoogleAnalytics measurementId={gaId} /> : null}
           </I18nProvider>
         </ThemeProvider>
       </body>

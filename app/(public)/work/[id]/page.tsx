@@ -16,6 +16,7 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatPeriod } from "@/lib/i18n/format"
 import type { CareerPost } from "@/types/career"
+import { ShareButton } from "@/components/share/share-button"
 
 export default async function PublicCareerPage({
   params,
@@ -45,11 +46,15 @@ export default async function PublicCareerPage({
   )
 }
 
-function CareerArticle({ post }: { post: CareerPost }) {
+function CareerArticle({ post, canShare = false }: { post: CareerPost; canShare?: boolean }) {
   const { t } = getT()
   return (
     <>
-      <PageTitleBanner title={post.title} className="mt-6" />
+      <PageTitleBanner
+        title={post.title}
+        className="mt-6"
+        actions={canShare ? <ShareButton targetType="career" targetId={post.id} /> : undefined}
+      />
       <p className="mt-4 text-sm text-muted-foreground">
         {[post.company, post.role, formatPeriod(post.period_start, post.period_end, t("date.present"))]
           .filter(Boolean)
@@ -82,7 +87,7 @@ async function NeighborsPager({ post, placement }: { post: CareerPost; placement
 
 async function OwnerAwareCareer({ post }: { post: CareerPost }) {
   const { isOwner } = await currentViewer()
-  const article = <CareerArticle post={post} />
+  const article = <CareerArticle post={post} canShare={isOwner} />
   if (!isOwner) return article
   return (
     <ArticleEditPanel form={<CareerForm post={post} returnTo={`/work/${post.id}`} deleteTo="/work" />}>

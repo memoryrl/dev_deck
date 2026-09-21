@@ -80,7 +80,8 @@
       "ops": "Operations",
       "design": "Design System",
       "other": "Other"
-    }
+    },
+    "shareLinks": "Share links"
   },
   "footer": {
     "blurb": "A personal portfolio hub for prompts, career notes, and a Steam library.",
@@ -405,10 +406,12 @@
       "socialImage": "Social preview image URL",
       "socialImageHint": "Image shown when sharing on social media. (Recommended: 1200x630)",
       "googleAnalyticsId": "Google Analytics ID",
+      "googleAnalyticsIdHint": "Create a GA4 property at analytics.google.com to get a G- measurement ID. After saving, visits on the deployed site are counted. localhost is not sent.",
       "advanced": "Advanced",
       "maintenanceMode": "Maintenance mode",
       "maintenanceModeHint": "When enabled, only admins can access the site.",
-      "saveSettings": "Save settings"
+      "saveSettings": "Save settings",
+      "saved": "Settings saved."
     },
     "system": {
       "title": "System Status",
@@ -479,6 +482,243 @@
     "topTitle": "Featured prompts",
     "topDescription": "AI Prompt Top 10, most recent first. An Olympic medal-ceremony topology.",
     "topEmpty": "No public prompts yet."
+  },
+  "share": {
+    "button": "Share",
+    "title": "Share",
+    "close": "Close",
+    "loading": "Loading…",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy. Please select and copy the address manually.",
+    "create": "Create share link",
+    "update": "Update link",
+    "saved": {
+      "create": "Share link created.",
+      "update": "Share settings saved."
+    },
+    "confirm": {
+      "stop": "Stopping sharing deletes the existing link and all invites.\nStop sharing?",
+      "change": "Changing the sharing method deletes the existing share settings.\nContinue?"
+    },
+    "mode": {
+      "title": "Choose how to share",
+      "none": "Don't share",
+      "noneHint": "This item isn't shared. Pick a sharing method to create a link.",
+      "public": "Anyone with the link",
+      "publicDesc": "Anyone who has the link can view this. (Password optional)",
+      "invite": "Invited people only",
+      "inviteDesc1": "Only people you invite can view this.",
+      "inviteDesc2": "You can see who has opened it."
+    },
+    "public": {
+      "title": "Manage link",
+      "desc": "These settings apply to everyone who opens the link."
+    },
+    "period": {
+      "title": "Sharing period",
+      "desc": "The item can only be viewed until the date you set."
+    },
+    "password": {
+      "title": "Password",
+      "placeholder": "Enter a password (4+ characters)",
+      "keepPlaceholder": "Set — enter a new password to change it",
+      "generate": "Generate a random password",
+      "copy": "Copy password"
+    },
+    "visits": {
+      "title": "Limit total visits",
+      "desc": "Cap total visits to keep the link from spreading too far.",
+      "label": "Maximum visits",
+      "placeholder": "Enter the maximum number of visits",
+      "total": "{{count}} visits so far"
+    },
+    "link": {
+      "label": "Share link",
+      "copy": "Copy link",
+      "mail": "Send link by email",
+      "native": "Share to another app"
+    },
+    "mail": {
+      "subject": "Shared: {{title}}",
+      "body": "Here's the share link."
+    },
+    "invite": {
+      "title": "Manage invites",
+      "desc": "Create and send a personal link for each person.",
+      "periodDesc": "This sharing period applies equally to everyone invited.",
+      "periodSave": "Save period",
+      "form": {
+        "title": "Send an invite",
+        "desc": "Each person gets their own link, so you can see who has read it."
+      },
+      "name": {
+        "label": "Name",
+        "desc": "Enter the invitee's name. It's shown with their read status.",
+        "placeholder": "Enter a name"
+      },
+      "method": {
+        "label": "How to send the link",
+        "desc": "Choose how to deliver the link.",
+        "COPY": "Copy link",
+        "EMAIL": "Send by email",
+        "SMS": "Send by text message"
+      },
+      "methodHint": {
+        "COPY": "Copies the link to your clipboard. Paste it wherever you like.",
+        "EMAIL": "Opens your email app with the invitation and link filled in. Send it from there.",
+        "SMS": "Opens your messaging app with the invitation and link filled in. Send it from there."
+      },
+      "email": {
+        "placeholder": "Enter an email address"
+      },
+      "phone": {
+        "placeholder": "Enter a mobile number"
+      },
+      "content": {
+        "label": "Invitation text",
+        "desc": "Leave blank to use the default text. The share link is added below it.",
+        "title": {
+          "placeholder": "Invitation subject"
+        },
+        "message": {
+          "placeholder": "Invitation message"
+        }
+      },
+      "btn": {
+        "COPY": "Copy invite link",
+        "EMAIL": "Send via email app",
+        "SMS": "Send via messaging app"
+      },
+      "defaultTitle": "Sharing \"{{title}}\" with you",
+      "defaultMessage": "I've shared \"{{title}}\" with you. Please take a look at the link below.",
+      "linkLabel": "Share link:",
+      "createdCopied": "Invite link copied.",
+      "list": {
+        "title": "Invited ({{count}})",
+        "summary": "{{read}} visited · {{unread}} not yet",
+        "empty": "No one has been invited yet."
+      },
+      "read": "Visited",
+      "unread": "Not yet",
+      "resend": "Send again",
+      "copy": "Copy link",
+      "delete": "Delete",
+      "deleteConfirm": "Delete {{name}}'s invite link?"
+    },
+    "error": {
+      "loginRequired": "Please sign in.",
+      "forbidden": "You don't have permission to share this.",
+      "targetMissing": "We couldn't find the item to share.",
+      "notConfigured": "Storage isn't available.",
+      "invalidTarget": "The share target is invalid.",
+      "expiryRequired": "Enter an end date and time for the sharing period.",
+      "expiryPast": "The end time must be in the future.",
+      "maxVisitsInvalid": "Enter a maximum number of visits of 1 or more.",
+      "passwordInvalid": "The password must be 4 to 64 characters.",
+      "passwordRequired": "Enter a password.",
+      "inviteNameInvalid": "Enter the invitee's name (up to 40 characters).",
+      "inviteMethodInvalid": "The delivery method is invalid.",
+      "inviteEmailInvalid": "Enter a valid email address.",
+      "invitePhoneInvalid": "Enter a valid mobile number.",
+      "inviteTextTooLong": "The subject can be up to 100 characters and the message up to 1000.",
+      "failed": "Something went wrong. Please try again in a moment."
+    },
+    "view": {
+      "crumb": "Shared item",
+      "promptResult": "Expected result",
+      "banner": {
+        "shared": "You're viewing this through a share link",
+        "invited": "Shared with {{name}}",
+        "expires": "Available until {{date}}"
+      },
+      "password": {
+        "title": "Enter the password",
+        "subtitle": "Use the password the sender gave you to open this item.",
+        "placeholder": "Password",
+        "label": "Share password",
+        "submit": "Continue",
+        "error": {
+          "invalid": "That password isn't correct.",
+          "tooMany": "Too many attempts. Please try again in a moment.",
+          "unavailable": "This link can't be opened right now."
+        }
+      },
+      "error": {
+        "home": "Go to home",
+        "expired": {
+          "title": "This link has expired",
+          "desc": "The sharing period for this link has ended. Please contact the person who shared it."
+        },
+        "limited": {
+          "title": "Visit limit reached",
+          "desc": "All the visits allowed for this link have been used. Please contact the person who shared it."
+        },
+        "forbidden": {
+          "title": "Invalid link",
+          "desc": "This link doesn't exist or isn't valid."
+        },
+        "target_deleted": {
+          "title": "The shared item was deleted",
+          "desc": "The item this link pointed to no longer exists. Please contact the person who shared it."
+        },
+        "deleted_public": {
+          "title": "This share link was deleted",
+          "desc": "The person who shared it has removed this link."
+        },
+        "deleted_invite": {
+          "title": "This invite link was deleted",
+          "desc": "The person who shared it has removed this invite."
+        }
+      }
+    },
+    "admin": {
+      "title": "Share links",
+      "description": "Track visits and access history for links created with Share.",
+      "total": "{{count}} total",
+      "empty": "No share links yet.",
+      "filter": {
+        "active": "Active",
+        "all": "Include deleted"
+      },
+      "stat": {
+        "live": "Active links",
+        "visits": "Total visits",
+        "inviteRead": "Invites visited",
+        "inviteTotal": "People invited"
+      },
+      "col": {
+        "target": "Item",
+        "type": "Type",
+        "creator": "Created by",
+        "expires": "Expires",
+        "visits": "Visits",
+        "status": "Status",
+        "created": "Created",
+        "actions": "Actions"
+      },
+      "type": {
+        "public": "Anyone",
+        "invite": "Invite"
+      },
+      "target": {
+        "board_post": "Post",
+        "prompt": "Prompt",
+        "career": "Career post",
+        "game": "Game review"
+      },
+      "status": {
+        "active": "Active",
+        "expired": "Expired",
+        "limited": "Limit reached",
+        "deleted": "Deleted"
+      },
+      "unlimited": "No limit",
+      "password": "Password protected",
+      "history": "Access history",
+      "deleteConfirm": "Delete the share link for \"{{title}}\"?\nIt will no longer open.",
+      "historyEmpty": "No access history yet.",
+      "historyAnonymous": "Visitor"
+    }
   },
   "notifications": {
     "title": "Notifications",

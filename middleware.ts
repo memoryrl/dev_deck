@@ -11,11 +11,11 @@ function buildCsp(nonce: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https: data: blob:",
     "font-src 'self'",
-    `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""}`,
+    `connect-src 'self'${supabaseUrl ? ` ${supabaseUrl}` : ""} https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://analytics.google.com`,
     "frame-src https://cdn.21st.dev https://my.spline.design",
     "object-src 'none'",
     "base-uri 'self'",

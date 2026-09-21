@@ -8,6 +8,7 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerPost } from "@/types/career"
+import { ShareButton } from "@/components/share/share-button"
 
 export default function CareerDetailPage({
   params,
@@ -19,7 +20,12 @@ export default function CareerDetailPage({
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager id={params.id} />
       </Suspense>
-      <PageTitleBanner title="글 수정" breadcrumb={[{ label: "글 수정" }]} className="mb-6 mt-6" />
+      <PageTitleBanner
+        title="글 수정"
+        breadcrumb={[{ label: "글 수정" }]}
+        actions={<ShareButton targetType="career" targetId={params.id} />}
+        className="mb-6 mt-6"
+      />
       <Suspense fallback={<EditorFormSkeleton />}>
         <CareerFormSection id={params.id} />
       </Suspense>

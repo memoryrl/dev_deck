@@ -15,6 +15,7 @@ import { currentViewer } from "@/lib/boards/access"
 import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
 import { getPublicGameReview } from "@/lib/steam/reviews"
+import { ShareButton } from "@/components/share/share-button"
 
 // 화면 뼈대(컨테이너·문서 흐름)는 즉시 스트리밍하고, 각 구간은 각자 데이터가 준비되는
 // 대로 따로 채워 넣는다. 예전엔 한 함수가 리뷰·게임데이터(외부 Steam API)·이웃글·로그인
@@ -91,6 +92,7 @@ async function ReviewSection({ appId }: { appId: number }) {
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="font-display text-2xl font-bold">리뷰</h2>
         {review.is_favorite ? <Badge variant="secondary">즐겨찾기</Badge> : null}
+        {isOwner ? <ShareButton targetType="game" targetId={String(appId)} className="ml-auto" /> : null}
       </div>
       <StarRating defaultValue={review.rating} readOnly />
       {review.review_text ? (

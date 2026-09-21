@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
 import { ReviewForm } from "./review-form"
+import { ShareButton } from "@/components/share/share-button"
 
 // games/[appid]/page.tsx와 같은 이유로 섹션별 Suspense — 외부 Steam API 호출
 // (fetchGamePageData)이 느려도 이웃글·리뷰 폼은 먼저 보인다.
@@ -62,5 +63,14 @@ async function ReviewFormSection({ appId }: { appId: number }) {
   // GameCatalogSection과 독립적으로 스트리밍되므로 실제 카탈로그 이름은 아직 모를 수
   // 있다 — 리뷰에 저장된 제목이나 앱ID로 대신한다(폼 라벨용, 페이지 본문 제목이 아니다).
   const title = review?.game_title ?? `App ${appId}`
-  return <ReviewForm appId={appId} gameTitle={title} review={review} />
+  return (
+    <div className="space-y-4">
+      {review ? (
+        <div className="flex justify-end">
+          <ShareButton targetType="game" targetId={String(appId)} />
+        </div>
+      ) : null}
+      <ReviewForm appId={appId} gameTitle={title} review={review} />
+    </div>
+  )
 }

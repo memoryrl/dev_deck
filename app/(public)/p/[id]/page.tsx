@@ -20,6 +20,7 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import { resolveResultEmbed } from "@/lib/embeds/result-preview"
 import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
 import type { Prompt } from "@/types/prompt"
+import { ShareButton } from "@/components/share/share-button"
 
 export default async function PublicPromptPage({
   params,
@@ -49,13 +50,18 @@ export default async function PublicPromptPage({
   )
 }
 
-function PromptArticle({ prompt }: { prompt: Prompt }) {
+function PromptArticle({ prompt, canShare = false }: { prompt: Prompt; canShare?: boolean }) {
   return (
     <>
       <PageTitleBanner
         title={prompt.title}
         breadcrumb={[{ label: "프롬프트", href: "/b/prompts" }]}
-        actions={<CopyButton text={plainTextFromContent(prompt.content) || prompt.content} />}
+        actions={
+          <>
+            {canShare ? <ShareButton targetType="prompt" targetId={prompt.id} /> : null}
+            <CopyButton text={plainTextFromContent(prompt.content) || prompt.content} />
+          </>
+        }
         className="mt-6"
       />
       <div className="mt-5 flex flex-wrap gap-2">
@@ -100,7 +106,7 @@ async function NeighborsPager({ prompt, placement }: { prompt: Prompt; placement
 // children에 재사용하면 Suspense가 폴백을 걷을 때 본문까지 같이 언마운트된다.
 async function OwnerAwarePrompt({ prompt }: { prompt: Prompt }) {
   const { isOwner } = await currentViewer()
-  const article = <PromptArticle prompt={prompt} />
+  const article = <PromptArticle prompt={prompt} canShare={isOwner} />
   if (!isOwner) return article
   return (
     <ArticleEditPanel form={<PromptForm prompt={prompt} returnTo={`/p/${prompt.id}`} deleteTo="/b/prompts" />}>

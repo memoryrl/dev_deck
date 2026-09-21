@@ -19,6 +19,7 @@ import { getBoardBySlug, getBoardPost, listBoardPosts } from "@/lib/boards/publi
 import { isSystemBoard } from "@/lib/boards/system"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import type { Board, BoardPost } from "@/types/board"
+import { ShareButton } from "@/components/share/share-button"
 
 export default async function PublicBoardPostPage({
   params,
@@ -41,10 +42,16 @@ export default async function PublicBoardPostPage({
   const canWrite =
     roleAtLeast(role, board.write_role) && (isOwner || post.user_id === userId)
   const listHref = boardPath(board.slug)
+  // 공유 링크는 글을 쓴 사람과 관리자만 만들 수 있다.
+  const canShare = Boolean(userId) && (isOwner || post.user_id === userId)
 
   const view = (
     <>
-      <PageTitleBanner title={post.title} className="mt-6" />
+      <PageTitleBanner
+        title={post.title}
+        className="mt-6"
+        actions={canShare ? <ShareButton targetType="board_post" targetId={post.id} /> : undefined}
+      />
       <div className="mt-8">
         <RichContent content={post.content} />
       </div>

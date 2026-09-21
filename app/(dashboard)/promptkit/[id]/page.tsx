@@ -8,6 +8,7 @@ import { findNeighbors } from "@/lib/posts/neighbors"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Prompt } from "@/types/prompt"
+import { ShareButton } from "@/components/share/share-button"
 
 export default function PromptDetailPage({
   params,
@@ -19,7 +20,12 @@ export default function PromptDetailPage({
       <Suspense fallback={<PagerSkeleton />}>
         <NeighborsPager id={params.id} />
       </Suspense>
-      <PageTitleBanner title="프롬프트 수정" breadcrumb={[{ label: "프롬프트 수정" }]} className="mb-6 mt-6" />
+      <PageTitleBanner
+        title="프롬프트 수정"
+        breadcrumb={[{ label: "프롬프트 수정" }]}
+        actions={<ShareButton targetType="prompt" targetId={params.id} />}
+        className="mb-6 mt-6"
+      />
       <Suspense fallback={<EditorFormSkeleton />}>
         <PromptFormSection id={params.id} />
       </Suspense>

@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 
@@ -21,7 +22,24 @@ const DEFAULT_SETTINGS: SiteSettings = {
   maintenanceMode: false,
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+function formatDbError(error: {
+  message: string
+  code?: string
+  details?: string | null
+  hint?: string | null
+}) {
+  const parts = [error.message, error.details, error.hint].filter(
+    (part): part is string => Boolean(part && part.trim())
+  )
+  const body = parts.join(" — ") || "데이터베이스 오류"
+  const blob = `${error.code ?? ""} ${body}`
+  if (/schema cache|does not exist|PGRST205|42P01/i.test(blob)) {
+    return `${body} — Supabase SQL 편집기에서 patch-site-settings.sql 을 실행하세요.`
+  }
+  return error.code ? `[${error.code}] ${body}` : body
+}
+
+export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   if (!isSupabaseConfigured()) return DEFAULT_SETTINGS
 
   const supabase = createClient()
@@ -44,7 +62,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   }
 
   return settings
-}
+})
 
 export async function updateSiteSettings(
   updates: Partial<SiteSettings>
@@ -52,17 +70,20 @@ export async function updateSiteSettings(
   if (!isSupabaseConfigured()) return { success: false, error: "Supabase not configured" }
 
   const supabase = createClient()
+  const now = new Date().toISOString()
+  const rows = Object.entries(updates).map(([key, value]) => ({
+    key,
+    value: typeof value === "boolean" ? String(value) : String(value ?? ""),
+    updated_at: now,
+  }))
 
-  for (const [key, value] of Object.entries(updates)) {
-    const stringValue = typeof value === "boolean" ? String(value) : (value as string)
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert(rows, { onConflict: "key" })
 
-    const { error } = await supabase
-      .from("site_settings")
-      .upsert({ key, value: stringValue }, { onConflict: "key" })
-
-    if (error) {
-      return { success: false, error: error.message }
-    }
+  if (error) {
+    console.error("[site_settings] upsert failed", error)
+    return { success: false, error: formatDbError(error) }
   }
 
   return { success: true }

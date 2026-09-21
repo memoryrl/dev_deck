@@ -7,6 +7,7 @@ import { EditorFormSkeleton, PagerSkeleton } from "@/components/layout/skeletons
 import { getBoardById, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import { ensureProfile } from "@/lib/supabase/server"
+import { ShareButton } from "@/components/share/share-button"
 
 export default function SiteBoardPostPage({
   params,
@@ -23,7 +24,7 @@ export default function SiteBoardPostPage({
       <Suspense
         fallback={<PageTitleBanner title="글 수정" breadcrumb={[{ label: "글 수정" }]} />}
       >
-        <BoardPostTitleSection boardId={params.id} />
+        <BoardPostTitleSection boardId={params.id} postId={params.postId} />
       </Suspense>
       <Suspense fallback={<EditorFormSkeleton />}>
         <BoardPostFormSection boardId={params.id} postId={params.postId} />
@@ -57,7 +58,7 @@ async function NeighborsPager({
   return <PostPager listHref={listHref} placement={placement} {...neighbors} />
 }
 
-async function BoardPostTitleSection({ boardId }: { boardId: string }) {
+async function BoardPostTitleSection({ boardId, postId }: { boardId: string; postId: string }) {
   const board = await getBoardById(boardId)
   return (
     <PageTitleBanner
@@ -66,6 +67,7 @@ async function BoardPostTitleSection({ boardId }: { boardId: string }) {
         { label: board?.name ?? "게시판", href: `/site/boards/${boardId}` },
         { label: "글 수정" },
       ]}
+      actions={<ShareButton targetType="board_post" targetId={postId} />}
     />
   )
 }
