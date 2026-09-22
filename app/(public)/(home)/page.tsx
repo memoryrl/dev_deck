@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { FeaturedWorkCard } from "@/components/landing/featured-work"
+import { HeroSceneProvider } from "@/components/landing/hero-scene-context"
 import { HeroVisual } from "@/components/landing/hero-visual"
 import { HeroWallpaper } from "@/components/landing/hero-wallpaper"
 import { HeroSection } from "@/components/landing/hero-topology/hero-section"
@@ -18,20 +19,20 @@ import { Button } from "@/components/ui/button"
 import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
 import { getT } from "@/lib/i18n/dictionary"
-import { pickHeroWallpaper, type HeroWallpaper as HeroWallpaperData } from "@/lib/landing/hero-wallpapers"
+import { pickHeroSceneIndex } from "@/lib/landing/hero-themes"
 import { buildLandingTopology, listLandingModules } from "@/lib/landing/topology"
 
 export default function HomePage() {
-  // 월페이퍼는 요청당 한 번만 뽑아 폴백과 본 히어로가 같은 사진을 쓰게 한다.
-  const wallpaper = pickHeroWallpaper()
+  // 폴백·본 히어로가 같은 시작 테마를 쓰도록 요청당 한 번만 고른다.
+  const sceneIndex = pickHeroSceneIndex()
   return (
     <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
       <section className="relative">
         {/* 데이터가 필요한 스위치+토폴로지는 별도 Suspense로 감싸 히어로 카피는
             즉시 페인트되게 한다. 폴백은 실제 클래식 히어로와 동일한 마크업이라
             데이터가 늦게 와도 레이아웃이 튀지 않는다 (08-landing-topology.md 5절). */}
-        <Suspense fallback={<ClassicHeroFallback wallpaper={wallpaper} />}>
-          <HeroSectionResolved wallpaper={wallpaper} />
+        <Suspense fallback={<ClassicHeroFallback sceneIndex={sceneIndex} />}>
+          <HeroSectionResolved sceneIndex={sceneIndex} />
         </Suspense>
       </section>
 
@@ -42,24 +43,28 @@ export default function HomePage() {
   )
 }
 
-async function HeroSectionResolved({ wallpaper }: { wallpaper: HeroWallpaperData }) {
+async function HeroSectionResolved({ sceneIndex }: { sceneIndex: number }) {
   const topology = await buildLandingTopology()
   return (
-    <HeroSection topology={topology} background={<HeroWallpaper wallpaper={wallpaper} />}>
-      <ClassicHeroCopy />
-    </HeroSection>
+    <HeroSceneProvider initialIndex={sceneIndex}>
+      <HeroSection topology={topology} background={<HeroWallpaper />}>
+        <ClassicHeroCopy />
+      </HeroSection>
+    </HeroSceneProvider>
   )
 }
 
-function ClassicHeroFallback({ wallpaper }: { wallpaper: HeroWallpaperData }) {
+function ClassicHeroFallback({ sceneIndex }: { sceneIndex: number }) {
   return (
-    <div className="relative overflow-x-clip">
-      <HeroWallpaper wallpaper={wallpaper} />
-      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
-        <ClassicHeroCopy />
+    <HeroSceneProvider initialIndex={sceneIndex}>
+      <div className="relative overflow-x-clip">
+        <HeroWallpaper />
+        <div className="relative z-10 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
+          <ClassicHeroCopy />
+        </div>
+        <HeroVisual />
       </div>
-      <HeroVisual />
-    </div>
+    </HeroSceneProvider>
   )
 }
 

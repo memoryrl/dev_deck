@@ -1,46 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Briefcase, Gamepad2, Sparkles } from "lucide-react"
-import { usePageActivity } from "@/components/landing/use-page-activity"
+import { useHeroScene } from "@/components/landing/hero-scene-context"
+import { useI18n } from "@/components/i18n/i18n-provider"
 import { cn } from "@/lib/utils"
 
-const cards = [
-  { title: "PromptKit", icon: Sparkles, tint: "from-[hsl(var(--lux-champagne)/0.42)]" },
-  { title: "CareerLog", icon: Briefcase, tint: "from-[hsl(var(--lux-cognac)/0.32)]" },
-  { title: "Steam", icon: Gamepad2, tint: "from-[hsl(var(--lux-espresso)/0.28)]" },
-]
-
+// 앞이 현재 메뉴 테마, 뒤는 직전·그다음 메뉴 — 4장 순환이지만 팬은 3장만 보이게.
 const SLOTS = [
   "z-[1] -translate-x-3 translate-y-6 -rotate-[14deg] scale-[0.92]",
   "z-[2] translate-y-2 -rotate-[5deg] scale-[0.97]",
   "z-[3] translate-x-2 -translate-y-1 rotate-[7deg] scale-100",
 ]
 
-const INTERVAL_MS = 2000
-
 export function HeroVisual() {
-  const [offset, setOffset] = useState(0)
-  const pageActive = usePageActivity()
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
-    if (media.matches || !pageActive) return undefined
-    const id = window.setInterval(() => {
-      setOffset((value) => (value + 1) % cards.length)
-    }, INTERVAL_MS)
-    return () => window.clearInterval(id)
-  }, [pageActive])
+  const { themes, themeIndex, theme, pageActive } = useHeroScene()
+  const { t } = useI18n()
+  const count = themes.length
 
   return (
     <>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[18rem] md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[min(52%,38rem)]">
         <div
           aria-hidden
-          className="absolute inset-0 bg-cover bg-center opacity-70 dark:opacity-50"
+          className="absolute inset-0 bg-cover bg-center opacity-70 transition-[background-image] duration-700 ease-in-out dark:opacity-50 motion-reduce:transition-none"
           style={{
-            backgroundImage:
-              "radial-gradient(ellipse at 80% 70%, hsl(var(--lux-champagne) / 0.38), transparent 52%), radial-gradient(ellipse at 90% 100%, hsl(var(--lux-cognac) / 0.2), transparent 48%), radial-gradient(ellipse at 60% 90%, hsl(var(--lux-sand) / 0.85), transparent 55%)",
+            backgroundImage: `${theme.glow}, radial-gradient(ellipse at 60% 90%, hsl(var(--lux-sand) / 0.85), transparent 55%)`,
             WebkitMaskImage:
               "linear-gradient(to left, black 28%, transparent 92%), linear-gradient(to top, black 35%, transparent 90%)",
             maskImage:
@@ -53,13 +36,16 @@ export function HeroVisual() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[18rem] md:inset-y-0 md:h-auto">
         <div className="relative mx-auto h-full max-w-6xl px-5">
           <div className="absolute bottom-6 right-5 flex h-48 w-[16.5rem] items-end justify-center sm:w-[20rem] md:bottom-16 md:h-64">
-            {cards.map((card, index) => {
+            {themes.map((card, index) => {
               const Icon = card.icon
-              const slot = (index + offset) % SLOTS.length
-              const isFront = slot === SLOTS.length - 1
+              // 현재 테마가 맨 앞(slot 2). 직전·다음이 뒤 슬롯.
+              const relative = (index - themeIndex + count) % count
+              if (relative > 2) return null
+              const slot = 2 - relative
+              const isFront = slot === 2
               return (
                 <div
-                  key={card.title}
+                  key={card.id}
                   className={cn(
                     "absolute h-36 w-28 rounded-2xl bg-gradient-to-br to-background/80 shadow-[0_18px_40px_-18px_hsl(var(--foreground)/0.35)] ring-1 ring-foreground/10 backdrop-blur-md transition-transform duration-700 ease-in-out motion-reduce:transition-none md:h-44 md:w-32",
                     card.tint,
@@ -68,7 +54,10 @@ export function HeroVisual() {
                 >
                   <div className="relative z-10 flex h-full flex-col justify-between p-3.5">
                     <Icon className="size-4 text-foreground/70" />
-                    <p className="font-display text-xs font-bold tracking-tight">{card.title}</p>
+                    <div>
+                      <p className="font-display text-xs font-bold tracking-tight">{card.brand}</p>
+                      <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">{t(card.labelKey)}</p>
+                    </div>
                   </div>
                   {isFront ? (
                     <span
