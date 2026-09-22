@@ -1,25 +1,80 @@
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import type { HeroWallpaper as HeroWallpaperData } from "@/lib/landing/hero-wallpapers"
+"use client"
 
-// 클래식 히어로 바닥에 깔리는 풀블리드 월페이퍼. 사진 위에 스크림을 겹쳐 얹는다:
-// 1) 카피가 놓이는 쪽(데스크톱은 좌측, 모바일은 상단)을 배경색으로 눌러 가독성 확보
-// 2) 하단은 페이지 배경으로 녹여 다음 섹션과 경계가 딱 끊기지 않게
-// 3) 다크 모드는 사진이 밝은 톤이라 전체를 한 번 더 어둡게 눌러 준다
+import Image from "next/image"
+import { useEffect, useMemo, useState } from "react"
+import { usePageActivity } from "@/components/landing/use-page-activity"
+import {
+  HERO_WALLPAPERS,
+  type HeroWallpaper as HeroWallpaperData,
+} from "@/lib/landing/hero-wallpapers"
+import { cn } from "@/lib/utils"
+
+// 우측 카드 스택(HeroVisual)과 같은 박자·이징으로 맞춘다.
+const INTERVAL_MS = 2000
+const TRANSITION_MS = 700
+
+function rotateFrom(seed: HeroWallpaperData): HeroWallpaperData[] {
+  const start = HERO_WALLPAPERS.findIndex((item) => item.id === seed.id)
+  const index = start >= 0 ? start : 0
+  return [...HERO_WALLPAPERS.slice(index), ...HERO_WALLPAPERS.slice(0, index)]
+}
+
 export function HeroWallpaper({ wallpaper }: { wallpaper: HeroWallpaperData }) {
-  const dark = wallpaper.tone === "dark"
+  const pageActive = usePageActivity()
+  const slides = useMemo(() => rotateFrom(wallpaper), [wallpaper])
+  // 끝에서 첫 장 복제본으로 한 칸 더 미끄러진 뒤, 애니메이션 없이 0으로 되돌린다.
+  const track = useMemo(() => [...slides, slides[0]], [slides])
+  const [index, setIndex] = useState(0)
+  const [animate, setAnimate] = useState(true)
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
+    if (media.matches || !pageActive || slides.length < 2) return undefined
+    const id = window.setInterval(() => {
+      setAnimate(true)
+      setIndex((value) => value + 1)
+    }, INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [pageActive, slides.length])
+
+  useEffect(() => {
+    if (index < slides.length) return undefined
+    const id = window.setTimeout(() => {
+      setAnimate(false)
+      setIndex(0)
+    }, TRANSITION_MS)
+    return () => window.clearTimeout(id)
+  }, [index, slides.length])
+
+  const visible = slides[Math.min(index, slides.length - 1)]
+  const dark = visible.tone === "dark"
+
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <Image
-        src={wallpaper.image}
-        alt=""
-        fill
-        priority
-        placeholder="blur"
-        sizes="100vw"
-        className="object-cover"
-        style={{ objectPosition: wallpaper.position }}
-      />
+      {track.map((slide, slideIndex) => (
+        <div
+          key={`${slide.id}-${slideIndex}`}
+          className={cn(
+            "absolute inset-0",
+            animate && "transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+          )}
+          style={{
+            transform: `translate3d(${(slideIndex - index) * 100}%, 0, 0)`,
+          }}
+        >
+          <Image
+            src={slide.image}
+            alt=""
+            fill
+            priority={slideIndex === 0}
+            placeholder="blur"
+            sizes="100vw"
+            className="object-cover"
+            style={{ objectPosition: slide.position }}
+          />
+        </div>
+      ))}
+
       <div className="absolute inset-0 hidden dark:block dark:bg-background/55" />
       <div
         className={cn(
