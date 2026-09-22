@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { FeaturedWorkCard } from "@/components/landing/featured-work"
 import { HeroVisual } from "@/components/landing/hero-visual"
+import { HeroWallpaper } from "@/components/landing/hero-wallpaper"
 import { HeroSection } from "@/components/landing/hero-topology/hero-section"
 import { CommunityLatest } from "@/components/landing/community-latest"
 import { ContactCta } from "@/components/landing/contact-cta"
@@ -17,17 +18,20 @@ import { Button } from "@/components/ui/button"
 import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
 import { getT } from "@/lib/i18n/dictionary"
+import { pickHeroWallpaper, type HeroWallpaper as HeroWallpaperData } from "@/lib/landing/hero-wallpapers"
 import { buildLandingTopology, listLandingModules } from "@/lib/landing/topology"
 
 export default function HomePage() {
+  // 월페이퍼는 요청당 한 번만 뽑아 폴백과 본 히어로가 같은 사진을 쓰게 한다.
+  const wallpaper = pickHeroWallpaper()
   return (
     <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
       <section className="relative">
         {/* 데이터가 필요한 스위치+토폴로지는 별도 Suspense로 감싸 히어로 카피는
             즉시 페인트되게 한다. 폴백은 실제 클래식 히어로와 동일한 마크업이라
             데이터가 늦게 와도 레이아웃이 튀지 않는다 (08-landing-topology.md 5절). */}
-        <Suspense fallback={<ClassicHeroFallback />}>
-          <HeroSectionResolved />
+        <Suspense fallback={<ClassicHeroFallback wallpaper={wallpaper} />}>
+          <HeroSectionResolved wallpaper={wallpaper} />
         </Suspense>
       </section>
 
@@ -38,23 +42,19 @@ export default function HomePage() {
   )
 }
 
-async function HeroSectionResolved() {
+async function HeroSectionResolved({ wallpaper }: { wallpaper: HeroWallpaperData }) {
   const topology = await buildLandingTopology()
   return (
-    <HeroSection topology={topology}>
+    <HeroSection topology={topology} background={<HeroWallpaper wallpaper={wallpaper} />}>
       <ClassicHeroCopy />
     </HeroSection>
   )
 }
 
-function ClassicHeroFallback() {
+function ClassicHeroFallback({ wallpaper }: { wallpaper: HeroWallpaperData }) {
   return (
     <div className="relative overflow-x-clip">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-28 size-[32rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-sand)/0.9),transparent_64%)] blur-2xl" />
-        <div className="absolute -right-16 top-0 size-[28rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-champagne)/0.28),transparent_64%)] blur-2xl" />
-        <div className="absolute bottom-0 left-1/3 size-[22rem] rounded-full bg-[radial-gradient(circle,hsl(var(--lux-cognac)/0.16),transparent_64%)] blur-2xl" />
-      </div>
+      <HeroWallpaper wallpaper={wallpaper} />
       <div className="relative z-10 mx-auto max-w-6xl px-5 pb-44 pt-20 md:pb-28 md:pt-28">
         <ClassicHeroCopy />
       </div>

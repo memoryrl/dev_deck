@@ -35,7 +35,16 @@ function HeroBlobs() {
 // 같은 히어로 박스 전체를 3D 오피스로 채운다. 캔버스·팝업 위 드래그는 캐러셀이
 // 가로채지 않고, 세로 이동이 가로보다 크면(스크롤 의도) 스와이프 자체를 포기해서
 // 모바일 세로 스크롤과도 부딪히지 않는다.
-export function HeroSection({ topology, children }: { topology: TopologyData; children: ReactNode }) {
+export function HeroSection({
+  topology,
+  background,
+  children,
+}: {
+  topology: TopologyData
+  /** 클래식 슬라이드 바닥에 깔 배경. 없으면 기존 그라디언트 블롭을 쓴다. */
+  background?: ReactNode
+  children: ReactNode
+}) {
   const { t } = useI18n()
   const [slide, setSlide] = useState<Slide>(0)
   const [visitedTopology, setVisitedTopology] = useState(false)
@@ -170,7 +179,7 @@ export function HeroSection({ topology, children }: { topology: TopologyData; ch
           style={{ transform: `translateX(${translatePercent}%)` }}
         >
           <div className="relative h-full w-full shrink-0">
-            <HeroBlobs />
+            {background ?? <HeroBlobs />}
             <HeroVisual />
           </div>
           <div className="relative h-full w-full shrink-0">
