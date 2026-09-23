@@ -468,6 +468,8 @@
       "noticePopupMode_layerHint": "Shows over the same page. Not affected by popup blockers.",
       "noticePopupMode_window": "New window",
       "noticePopupMode_windowHint": "Opens with window.open. If blocked, it opens after a click.",
+      "ollamaBaseUrl": "Ollama URL",
+      "ollamaBaseUrlHint": "Put frequently changing tunnel or local URLs here. Leave empty to fall back to .env.local. Visitors cannot read this value.",
       "maintenanceMode": "Maintenance mode",
       "maintenanceModeHint": "When enabled, only admins can access the site.",
       "saveSettings": "Save settings",

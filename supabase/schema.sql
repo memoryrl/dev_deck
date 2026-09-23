@@ -826,3 +826,27 @@ INSERT INTO devdeck.site_settings (key, value) VALUES
   ('noticePopupMode', 'layer'),
   ('maintenanceMode', 'false')
 ON CONFLICT (key) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS devdeck.app_env (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS app_env_key_uidx
+  ON devdeck.app_env (key);
+
+ALTER TABLE devdeck.app_env ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS app_env_owner_all ON devdeck.app_env;
+CREATE POLICY app_env_owner_all ON devdeck.app_env
+  FOR ALL TO authenticated
+  USING (devdeck.is_owner())
+  WITH CHECK (devdeck.is_owner());
+
+REVOKE ALL ON TABLE devdeck.app_env FROM anon, authenticated, PUBLIC;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE devdeck.app_env TO authenticated, service_role;
+
+INSERT INTO devdeck.app_env (key, value) VALUES
+  ('OLLAMA_BASE_URL', 'https://slots-cure-depending-inexpensive.trycloudflare.com')
+ON CONFLICT (key) DO NOTHING;

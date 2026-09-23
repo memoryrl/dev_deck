@@ -1,4 +1,5 @@
 import {
+  Bot,
   Briefcase,
   FileText,
   Gamepad2,
@@ -22,6 +23,7 @@ import {
 
 export const ADMIN_NAV_ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
+  Bot,
   Sparkles,
   Briefcase,
   Gamepad2,

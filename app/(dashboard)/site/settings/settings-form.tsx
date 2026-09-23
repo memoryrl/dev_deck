@@ -14,7 +14,13 @@ import { showAlert } from "@/lib/ui/layer-dialog"
 import { cn } from "@/lib/utils"
 import type { SiteSettings } from "@/lib/site/settings"
 
-export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
+export function SiteSettingsForm({
+  settings,
+  ollamaBaseUrl,
+}: {
+  settings: SiteSettings
+  ollamaBaseUrl: string
+}) {
   const { t } = useI18n()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -161,6 +167,18 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
                 </label>
               ))}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ollamaBaseUrl">{t("admin.settings.ollamaBaseUrl")}</Label>
+            <Input
+              id="ollamaBaseUrl"
+              name="ollamaBaseUrl"
+              defaultValue={ollamaBaseUrl}
+              placeholder="https://example.trycloudflare.com"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <p className="text-xs text-muted-foreground">{t("admin.settings.ollamaBaseUrlHint")}</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
