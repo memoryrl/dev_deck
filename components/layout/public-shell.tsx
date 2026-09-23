@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { PublicFooter } from "@/components/layout/public-footer"
 import { PublicHeader } from "@/components/layout/public-header"
 import { NoticePopupLauncher } from "@/components/layout/notice-popup"
+import { PortfolioAskWidget } from "@/components/portfolio-assistant/portfolio-ask-widget"
 import { parseNoticePopupMode } from "@/lib/boards/notice-popup-window"
 import { getNoticePopupPost } from "@/lib/boards/community"
 import { getT } from "@/lib/i18n/dictionary"
@@ -34,6 +35,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <NoticePopupSlot />
       </Suspense>
+      <PortfolioAskWidget />
     </div>
   )
 }

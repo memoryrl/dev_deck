@@ -286,6 +286,21 @@
     "dontShowHint": "Check this, then close to hide this notice.",
     "close": "Close popup"
   },
+  "portfolioAsk": {
+    "open": "Ask this portfolio",
+    "close": "Close",
+    "title": "Portfolio guide",
+    "subtitle": "Answers grounded in the career, project, and prompt content here",
+    "greeting": "Hi! Ask me anything about this portfolio.",
+    "sample1": "How much React experience is there?",
+    "sample2": "What's a recent project?",
+    "sample3": "Any public AI prompts?",
+    "placeholder": "Type a message",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "clear": "Clear chat",
+    "disclaimer": "Answered by a local AI model (exaone/qwen), grounded only in what's public here. Replies are in Korean for now."
+  },
   "rating": {
     "aria": "Rating",
     "points": "{{value}} stars"
@@ -469,7 +484,7 @@
       "noticePopupMode_window": "New window",
       "noticePopupMode_windowHint": "Opens with window.open. If blocked, it opens after a click.",
       "ollamaBaseUrl": "Ollama URL",
-      "ollamaBaseUrlHint": "Used on Vercel only. Stored in an owner-only table, not the public site settings. For tunnels, set OLLAMA_ORIGINS=* and restart Ollama. Visitors cannot read this value.",
+      "ollamaBaseUrlHint": "Used on Vercel only. Stored in an owner-only table, not the public site settings. Start the tunnel with cloudflared --http-host-header 127.0.0.1. Visitors cannot read this value.",
       "maintenanceMode": "Maintenance mode",
       "maintenanceModeHint": "When enabled, only admins can access the site.",
       "saveSettings": "Save settings",

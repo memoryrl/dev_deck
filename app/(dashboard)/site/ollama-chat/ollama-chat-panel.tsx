@@ -97,7 +97,7 @@ export function OllamaChatPanel({
             {ollamaError === "ollama_host_missing" || ollamaError === "ollama_loopback_blocked"
               ? "Vercel에서 localhost Ollama에 닿을 수 없습니다. 사이트 설정에 터널 주소를 넣으세요."
               : ollamaError === "ollama_http_403" || ollamaError === "ollama_http_530"
-                ? "Ollama가 터널을 403으로 거부합니다. OLLAMA_ORIGINS=* 후 Ollama를 재시작하세요."
+                ? "Ollama가 터널 Host를 거부합니다. cloudflared를 --http-host-header 127.0.0.1 로 다시 켜세요."
                 : "Ollama 서버에 연결할 수 없습니다 — 설치된 모델 목록을 못 불러와 기본값을 보여줍니다."}
           </span>
         ) : null}

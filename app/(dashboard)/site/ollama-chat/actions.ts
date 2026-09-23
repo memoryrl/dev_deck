@@ -40,7 +40,7 @@ export async function sendOllamaMessage(
           : result.error === "ollama_timeout"
             ? "응답이 너무 오래 걸려 중단했습니다."
             : result.error === "ollama_http_403" || result.error === "ollama_http_530"
-              ? "Ollama가 터널 Host를 거부했습니다. 이 맥에서 OLLAMA_ORIGINS=* 을 넣고 Ollama를 재시작하세요."
+              ? "Ollama가 터널 Host를 거부했습니다. cloudflared에 --http-host-header 127.0.0.1 을 붙여 다시 켜세요."
               : `Ollama 오류: ${result.error}`
     return { ok: false, error: message }
   }

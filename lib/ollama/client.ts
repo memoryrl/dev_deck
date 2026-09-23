@@ -83,16 +83,19 @@ export async function listOllamaModels(): Promise<OllamaResult<string[]>> {
   return { ok: true, data: (body.models ?? []).map((m) => m.name) }
 }
 
-/** 대화 한 턴을 보내고 전체 응답을 기다린다(stream:false) — 3B급 모델이라 왕복 몇 초면 충분하다. */
+/** 대화 한 턴을 보내고 전체 응답을 기다린다(stream:false) — 3B급 모델이라 왕복 몇 초면 충분하다.
+ *  options 는 Ollama의 모델 파라미터(temperature 등)를 그대로 전달한다 — 사실 근거 답변이
+ *  필요한 호출(포트폴리오 안내원)은 temperature를 낮춰 호출한다. */
 export async function chatWithOllama(
   model: string,
-  messages: OllamaChatMessage[]
+  messages: OllamaChatMessage[],
+  options?: Record<string, unknown>
 ): Promise<OllamaResult<{ content: string; durationMs: number }>> {
   const started = Date.now()
   const res = await ollamaFetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, messages, stream: false }),
+    body: JSON.stringify({ model, messages, stream: false, ...(options ? { options } : {}) }),
   })
   if (!res.ok) return res
   const body = (await res.data.json()) as { message?: { content?: string } }
