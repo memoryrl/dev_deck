@@ -30,6 +30,11 @@ export function isSystemBoard<T extends Pick<Board, "kind">>(
   return isSystemBoardKind(board.kind)
 }
 
+/** 공개 목록(/b/slug)에서 인라인 글쓰기를 여는 게시판. Steam은 게임 단위 작성이라 제외. */
+export function canComposeOnPublicList(board: Pick<Board, "kind">) {
+  return !isSystemBoard(board) || board.kind === "prompts" || board.kind === "career"
+}
+
 export function kindLabel(kind: BoardKind) {
   if (kind === "prompts") return "PromptKit"
   if (kind === "career") return "CareerLog"

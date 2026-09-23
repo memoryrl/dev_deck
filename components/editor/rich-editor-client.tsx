@@ -43,6 +43,9 @@ type RichEditorClientProps = {
   defaultValue?: string
   placeholder?: string
   compact?: boolean
+  /** 마운트된 뒤 CKEditor 인스턴스를 밖으로 내보낸다 — AI 템플릿 삽입처럼
+   *  부모가 나중에 editor.setData()로 본문을 채워야 할 때 쓴다. */
+  onEditorReady?: (editor: ClassicEditor) => void
 }
 
 export function RichEditorClient({
@@ -50,6 +53,7 @@ export function RichEditorClient({
   defaultValue = "",
   placeholder = "본문을 입력하세요",
   compact = false,
+  onEditorReady,
 }: RichEditorClientProps) {
   const initialHtml = contentToEditorHtml(defaultValue)
   const [html, setHtml] = useState(initialHtml)
@@ -138,6 +142,8 @@ export function RichEditorClient({
           },
         }}
         onReady={(editor) => {
+          onEditorReady?.(editor)
+
           editor.plugins.get("FileRepository").createUploadAdapter = (loader) =>
             new EditorImageUploadAdapter(loader)
 

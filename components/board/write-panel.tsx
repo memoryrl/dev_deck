@@ -71,7 +71,7 @@ export function WriteForm({ children, className }: { children: ReactNode; classN
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
       )}
     >
-      <div className="overflow-hidden">
+      <div className={open ? "overflow-visible" : "overflow-hidden"}>
         {open ? (
           <div
             className={cn(

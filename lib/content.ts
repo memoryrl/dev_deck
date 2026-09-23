@@ -7,7 +7,7 @@ export function looksLikeHtml(value: string) {
   return BLOCK_HTML_RE.test(value)
 }
 
-function escapeHtml(text: string) {
+export function escapeHtml(text: string) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
@@ -47,7 +47,19 @@ export function isBlankContent(value: string) {
 
 export function sanitizeRichHtml(html: string) {
   return sanitizeHtml(html, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["h1", "h2", "img", "figure", "figcaption"]),
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      "h1",
+      "h2",
+      "img",
+      "figure",
+      "figcaption",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "th",
+      "td",
+    ]),
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
       a: ["href", "name", "target", "rel"],
@@ -61,6 +73,9 @@ export function sanitizeRichHtml(html: string) {
       img: [...sanitizeHtml.defaults.allowedAttributes.img, "class", "style"],
       figure: ["class", "style"],
       figcaption: ["class"],
+      table: ["class"],
+      th: ["class", "style"],
+      td: ["class", "style"],
     },
     allowedStyles: {
       "*": {

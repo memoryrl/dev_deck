@@ -12,6 +12,7 @@ function refresh() {
   forgetMemoryCache("public:prompts")
   revalidatePath("/")
   revalidatePath("/promptkit")
+  revalidatePath("/b/prompts")
   revalidatePath("/p", "layout")
 }
 

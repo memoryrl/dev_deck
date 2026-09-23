@@ -1,10 +1,12 @@
 "use client"
 
+import type { ClassicEditor } from "ckeditor5"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { removePublicPost, savePublicPost } from "@/app/(public)/b/actions"
 import { boardPath } from "@/lib/access"
 import { NOTICE_BOARD_SLUG } from "@/lib/boards/slugs"
+import { AiTemplatePicker } from "@/components/board/ai-template-picker"
 import { RichEditor } from "@/components/editor/rich-editor"
 import { Button } from "@/components/ui/button"
 import { showConfirm } from "@/lib/ui/layer-dialog"
@@ -29,6 +31,7 @@ export function PublicPostForm({
   const [popup, setPopup] = useState(Boolean(post?.is_popup))
   const [error, setError] = useState<string | null>(null)
   const allowPopup = slug === NOTICE_BOARD_SLUG
+  const editorRef = useRef<ClassicEditor | null>(null)
 
   async function onSubmit(formData: FormData) {
     formData.set("board_id", boardId)
@@ -70,9 +73,32 @@ export function PublicPostForm({
         <Input id="excerpt" name="excerpt" defaultValue={post?.excerpt ?? ""} />
       </div>
       <div>
-        <Label>본문</Label>
+        <div className="flex items-start justify-between gap-2">
+          <Label className="pt-1.5">본문</Label>
+          <AiTemplatePicker
+            boardId={boardId}
+            boardSlug={slug}
+            hasContent={() => {
+              const html = editorRef.current?.getData() ?? ""
+              return html.replace(/<[^>]*>/g, "").trim().length > 0
+            }}
+            onGenerated={(html) => editorRef.current?.setData(html)}
+            onGeneratingChange={(generating) => {
+              const editor = editorRef.current
+              if (!editor) return
+              if (generating) editor.enableReadOnlyMode("ai-template")
+              else editor.disableReadOnlyMode("ai-template")
+            }}
+          />
+        </div>
         <div className="mt-2">
-          <RichEditor name="content" defaultValue={post?.content ?? ""} />
+          <RichEditor
+            name="content"
+            defaultValue={post?.content ?? ""}
+            onEditorReady={(editor) => {
+              editorRef.current = editor
+            }}
+          />
         </div>
       </div>
       <div className="flex items-center gap-2">

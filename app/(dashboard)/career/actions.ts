@@ -14,6 +14,7 @@ function refresh() {
   revalidatePath("/")
   revalidatePath("/career")
   revalidatePath("/career/skills")
+  revalidatePath("/b/career")
   revalidatePath("/work")
 }
 

@@ -98,7 +98,8 @@
   line-height: 1.85;
 }
 
-.prose-deck :where(h1, h2, h3, h4, h5, h6) {
+.prose-deck :where(h1, h2, h3, h4, h5, h6),
+.rich-editor .ck-content :where(h1, h2, h3, h4, h5, h6) {
   @apply font-display font-bold tracking-tight;
   line-height: 1.3;
 }
@@ -107,12 +108,18 @@
   font-size: 1.75em;
 }
 
-.prose-deck :where(h2) {
+.prose-deck :where(h2),
+.rich-editor .ck-content :where(h2) {
   font-size: 1.45em;
+  margin: 0.4em 0 0.75em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
-.prose-deck :where(h3) {
+.prose-deck :where(h3),
+.rich-editor .ck-content :where(h3) {
   font-size: 1.22em;
+  margin: 1.25em 0 0.45em;
 }
 
 .prose-deck :where(h4, h5, h6) {
@@ -176,7 +183,7 @@
 }
 
 .prose-deck.rich-content :where(blockquote) {
-  @apply border-l-2 border-foreground/20 pl-4 text-muted-foreground;
+  border-left-width: 3px;
 }
 
 .prose-deck.rich-content :where(pre) {
@@ -233,6 +240,49 @@
 .prose-deck :where(figcaption) {
   @apply text-center text-muted-foreground;
   margin-top: 0.4em;
+}
+
+.prose-deck :where(figure.table),
+.rich-editor .ck-content :where(figure.table) {
+  margin: 1.1em 0;
+  width: 100%;
+}
+
+.prose-deck :where(table),
+.rich-editor .ck-content :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  border: 1px solid hsl(var(--border));
+}
+
+.prose-deck :where(th),
+.prose-deck :where(td),
+.rich-editor .ck-content :where(th),
+.rich-editor .ck-content :where(td) {
+  padding: 0.65em 0.85em;
+  border: 1px solid hsl(var(--border));
+  vertical-align: top;
+  text-align: left;
+}
+
+.prose-deck :where(th),
+.rich-editor .ck-content :where(th) {
+  width: 28%;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: hsl(var(--muted) / 0.55);
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+}
+
+.prose-deck :where(blockquote),
+.rich-editor .ck-content :where(blockquote) {
+  margin: 0.75em 0 1.1em;
+  padding: 0.7em 0.95em;
+  border-left: 3px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.35);
+  color: hsl(var(--muted-foreground));
 }
 
 .rich-editor {

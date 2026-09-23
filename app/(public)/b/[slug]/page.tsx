@@ -11,7 +11,9 @@ import { PublicContainer } from "@/components/layout/public-container"
 import { boardPath, roleAtLeast } from "@/lib/access"
 import { currentAccessRole } from "@/lib/boards/access"
 import { getBoardBySlug, listBoardPostsPage } from "@/lib/boards/public"
-import { isSystemBoard, systemPublicHref } from "@/lib/boards/system"
+import { CareerForm } from "@/app/(dashboard)/career/career-form"
+import { PromptForm } from "@/app/(dashboard)/promptkit/prompt-form"
+import { canComposeOnPublicList, isSystemBoard, systemPublicHref } from "@/lib/boards/system"
 import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery, type PagedResult } from "@/lib/pagination"
 import { listPromptsPage, withPromptThumbnails } from "@/lib/prompts/public"
@@ -36,7 +38,7 @@ export default async function PublicBoardPage(
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
   const system = isSystemBoard(board)
-  const canWrite = !system && roleAtLeast(role, board.write_role)
+  const canWrite = roleAtLeast(role, board.write_role) && canComposeOnPublicList(board)
 
   return (
     <PublicContainer>
@@ -50,10 +52,11 @@ export default async function PublicBoardPage(
                 board={board}
                 page={page}
                 q={q}
+                includePrivate
                 endAction={<WriteToggle />}
                 composer={
                   <WriteForm>
-                    <PublicPostForm boardId={board.id} slug={board.slug} />
+                    <BoardComposer board={board} />
                   </WriteForm>
                 }
               />
@@ -80,23 +83,31 @@ export default async function PublicBoardPage(
   )
 }
 
+function BoardComposer({ board }: { board: Board }) {
+  if (board.kind === "prompts") return <PromptForm returnTo={boardPath(board.slug)} />
+  if (board.kind === "career") return <CareerForm returnTo={boardPath(board.slug)} />
+  return <PublicPostForm boardId={board.id} slug={board.slug} />
+}
+
 async function BoardPostList({
   board,
   page,
   q,
   endAction,
   composer,
+  includePrivate = false,
 }: {
   board: Board
   page: number
   q: string
   endAction?: ReactNode
   composer?: ReactNode
+  includePrivate?: boolean
 }) {
   const system = isSystemBoard(board)
   const pathname = boardPath(board.slug)
   const paged = system
-    ? await listSystemPublicPage(board.kind, page, q)
+    ? await listSystemPublicPage(board.kind, page, q, includePrivate)
     : await listGenericBoardPage(board.id, board.slug, page, q)
 
   return (
@@ -128,9 +139,15 @@ async function listGenericBoardPage(boardId: string, slug: string, page: number,
   } satisfies PagedResult<PostListRow>
 }
 
-async function listSystemPublicPage(kind: "prompts" | "career" | "steam", page: number, q: string) {
+async function listSystemPublicPage(
+  kind: "prompts" | "career" | "steam",
+  page: number,
+  q: string,
+  includePrivate = false
+) {
+  const publicOnly = !includePrivate
   if (kind === "prompts") {
-    const prompts = await listPromptsPage({ page, q, publicOnly: true })
+    const prompts = await listPromptsPage({ page, q, publicOnly })
     const rows = await withPromptThumbnails(prompts.rows)
     return {
       ...prompts,
@@ -138,13 +155,13 @@ async function listSystemPublicPage(kind: "prompts" | "career" | "steam", page: 
         href: systemPublicHref(kind, prompt.id),
         title: prompt.title,
         createdAt: prompt.created_at,
-        meta: prompt.category,
+        meta: [prompt.category, prompt.is_public ? null : "비공개"].filter(Boolean).join(" · ") || null,
         thumbnailUrl: prompt.thumbnailUrl,
       })),
     } satisfies PagedResult<PostListRow>
   }
   if (kind === "career") {
-    const posts = await listCareerPostsPage({ page, q, publicOnly: true })
+    const posts = await listCareerPostsPage({ page, q, publicOnly })
     return {
       ...posts,
       rows: posts.rows.map((post) => ({
@@ -152,7 +169,7 @@ async function listSystemPublicPage(kind: "prompts" | "career" | "steam", page: 
         title: post.title,
         createdAt: post.created_at,
         author: post.company,
-        meta: post.post_type,
+        meta: [post.post_type, post.is_public ? null : "비공개"].filter(Boolean).join(" · ") || null,
       })),
     } satisfies PagedResult<PostListRow>
   }

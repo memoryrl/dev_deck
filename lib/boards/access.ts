@@ -53,3 +53,10 @@ export async function canViewSystemBoard(kind: SystemBoardKind): Promise<boolean
   const role = await currentAccessRole()
   return roleAtLeast(role, board.view_role)
 }
+
+export async function canWriteSystemBoard(kind: SystemBoardKind): Promise<boolean> {
+  const board = await getSystemBoard(kind)
+  if (!board || !board.is_active) return false
+  const role = await currentAccessRole()
+  return roleAtLeast(role, board.write_role)
+}

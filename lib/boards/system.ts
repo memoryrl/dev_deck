@@ -10,6 +10,7 @@ export {
   SYSTEM_BOARD_SEEDS,
   isSystemBoardKind,
   isSystemBoard,
+  canComposeOnPublicList,
   kindLabel,
   systemDashboardHref,
   systemEntryHref,
