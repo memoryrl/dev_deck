@@ -54,9 +54,9 @@ export function BoardPostAdminForm({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       {allowPopup && post ? <NoticePopupToggle postId={post.id} enabled={Boolean(post.is_popup)} /> : null}
-      <form action={onSubmit} className="space-y-4">
+      <form action={onSubmit} className="min-w-0 space-y-4">
       <div>
         <Label htmlFor="title">제목</Label>
         <Input id="title" name="title" required defaultValue={post?.title} />
@@ -82,7 +82,7 @@ export function BoardPostAdminForm({
         </div>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit">{post ? "저장" : "등록"}</Button>
         {post ? (
           <Button type="button" variant="destructive" onClick={onDelete}>

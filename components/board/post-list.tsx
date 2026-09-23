@@ -52,7 +52,7 @@ export async function PostList({
   return (
     <div className={cn(className)}>
       {searchable && pathname ? (
-        <form action={pathname} className="flex items-center gap-2">
+        <form action={pathname} className="flex min-w-0 flex-wrap items-center gap-2">
           {Object.entries(extra).map(([key, value]) =>
             value === undefined || value === "" ? null : (
               <input key={key} type="hidden" name={key} value={String(value)} />
@@ -69,10 +69,10 @@ export async function PostList({
             name="q"
             defaultValue={searchQuery}
             placeholder={t("common.searchPlaceholder")}
-            className="h-9 flex-1 rounded-sm shadow-none"
+            className="h-9 min-w-0 flex-1 basis-32 rounded-sm shadow-none"
             aria-label={t("common.searchPlaceholder")}
           />
-          <Button type="submit" className="h-9 rounded-sm px-4">
+          <Button type="submit" className="h-9 shrink-0 rounded-sm px-4">
             {t("common.search")}
           </Button>
           <Button asChild variant="outline" size="icon" className="size-9 shrink-0 rounded-sm">
@@ -80,7 +80,7 @@ export async function PostList({
               <RefreshCw />
             </Link>
           </Button>
-          {endAction}
+          {endAction ? <div className="ml-auto shrink-0">{endAction}</div> : null}
         </form>
       ) : endAction ? (
         <div className="flex justify-end">{endAction}</div>

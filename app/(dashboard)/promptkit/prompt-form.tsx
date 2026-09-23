@@ -40,7 +40,7 @@ export function PromptForm({ prompt, returnTo, deleteTo }: { prompt?: Prompt; re
   }
 
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="min-w-0 space-y-4">
       <div>
         <Label htmlFor="title">제목</Label>
         <Input id="title" name="title" required defaultValue={prompt?.title} />
@@ -74,7 +74,7 @@ export function PromptForm({ prompt, returnTo, deleteTo }: { prompt?: Prompt; re
         <Label>공개</Label>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button type="submit">{prompt ? "저장" : "만들기"}</Button>
         {prompt ? (
           <Button type="button" variant="destructive" onClick={onDelete}>

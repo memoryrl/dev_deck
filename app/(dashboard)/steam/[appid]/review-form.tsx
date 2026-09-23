@@ -35,7 +35,7 @@ export function ReviewForm({
   }
 
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="min-w-0 space-y-4">
       <div>
         <Label>평점</Label>
         <div className="mt-2">
@@ -62,7 +62,7 @@ export function ReviewForm({
         <Label>즐겨찾기</Label>
       </div>
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button type="submit">저장</Button>
         {review ? (
           <Button

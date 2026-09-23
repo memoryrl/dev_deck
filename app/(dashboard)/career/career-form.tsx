@@ -41,7 +41,7 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
   }
 
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="min-w-0 space-y-4">
       <div>
         <Label htmlFor="title">제목</Label>
         <Input id="title" name="title" required defaultValue={post?.title} />
@@ -51,6 +51,7 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
         <CustomSelect
           id="post_type"
           name="post_type"
+          className="w-full min-w-0"
           defaultValue={post?.post_type ?? "project"}
           options={[
             { value: "project", label: "project" },
@@ -63,22 +64,22 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
         <Label htmlFor="excerpt">요약</Label>
         <Input id="excerpt" name="excerpt" defaultValue={post?.excerpt ?? ""} />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <div className="min-w-0">
           <Label htmlFor="company">회사</Label>
           <Input id="company" name="company" defaultValue={post?.company ?? ""} />
         </div>
-        <div>
+        <div className="min-w-0">
           <Label htmlFor="role">역할</Label>
           <Input id="role" name="role" defaultValue={post?.role ?? ""} />
         </div>
-        <div>
+        <div className="min-w-0">
           <Label htmlFor="period_start">시작일</Label>
-          <Input id="period_start" name="period_start" type="date" defaultValue={post?.period_start ?? ""} />
+          <Input id="period_start" name="period_start" type="date" className="min-w-0" defaultValue={post?.period_start ?? ""} />
         </div>
-        <div>
+        <div className="min-w-0">
           <Label htmlFor="period_end">종료일</Label>
-          <Input id="period_end" name="period_end" type="date" defaultValue={post?.period_end ?? ""} />
+          <Input id="period_end" name="period_end" type="date" className="min-w-0" defaultValue={post?.period_end ?? ""} />
         </div>
       </div>
       <div>
@@ -100,7 +101,7 @@ export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; re
         <Label>공개</Label>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button type="submit">{post ? "저장" : "만들기"}</Button>
         {post ? (
           <Button type="button" variant="destructive" onClick={onDelete}>

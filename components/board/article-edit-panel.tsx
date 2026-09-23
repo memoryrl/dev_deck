@@ -16,7 +16,7 @@ export function ArticleEditPanel({
   const [editing, setEditing] = useState(false)
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mt-4 flex justify-end">
         <Button
           type="button"
@@ -28,7 +28,11 @@ export function ArticleEditPanel({
           {editing ? "취소" : label}
         </Button>
       </div>
-      {editing ? <div className="mt-6">{form}</div> : <div className="mt-5">{children}</div>}
+      {editing ? (
+        <div className="write-compose mt-6 min-w-0">{form}</div>
+      ) : (
+        <div className="mt-5">{children}</div>
+      )}
     </div>
   )
 }

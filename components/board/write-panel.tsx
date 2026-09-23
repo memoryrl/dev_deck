@@ -35,7 +35,7 @@ export function WritePanel({
   )
   return (
     <WritePanelContext.Provider value={value}>
-      <div className="space-y-3">{children}</div>
+      <div className="min-w-0 space-y-3">{children}</div>
     </WritePanelContext.Provider>
   )
 }
@@ -67,15 +67,15 @@ export function WriteForm({ children, className }: { children: ReactNode; classN
   return (
     <div
       className={cn(
-        "grid transition-[grid-template-rows] duration-300 ease-out",
+        "grid min-w-0 transition-[grid-template-rows] duration-300 ease-out",
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
       )}
     >
-      <div className={open ? "overflow-visible" : "overflow-hidden"}>
+      <div className={cn("min-w-0", open ? "overflow-x-clip overflow-y-visible" : "overflow-hidden")}>
         {open ? (
           <div
             className={cn(
-              "mt-3 border border-foreground/10 bg-[hsl(var(--lux-sand)/0.35)] px-4 py-5 dark:bg-card/60 sm:px-5",
+              "write-compose mt-3 min-w-0 border border-foreground/10 bg-[hsl(var(--lux-sand)/0.35)] px-3 py-4 dark:bg-card/60 sm:px-5 sm:py-5",
               className
             )}
           >

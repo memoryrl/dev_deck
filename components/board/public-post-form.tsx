@@ -63,7 +63,7 @@ export function PublicPostForm({
   }
 
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="min-w-0 space-y-4">
       <div>
         <Label htmlFor="title">제목</Label>
         <Input id="title" name="title" required defaultValue={post?.title} />
@@ -73,7 +73,7 @@ export function PublicPostForm({
         <Input id="excerpt" name="excerpt" defaultValue={post?.excerpt ?? ""} />
       </div>
       <div>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Label className="pt-1.5">본문</Label>
           <AiTemplatePicker
             boardId={boardId}
@@ -112,7 +112,7 @@ export function PublicPostForm({
         </div>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit">{post ? "저장" : "글쓰기"}</Button>
         {post ? (
           <Button type="button" variant="destructive" onClick={onDelete}>

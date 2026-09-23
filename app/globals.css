@@ -276,6 +276,14 @@
   white-space: nowrap;
 }
 
+@media (max-width: 639px) {
+  .prose-deck :where(th),
+  .rich-editor .ck-content :where(th) {
+    width: auto;
+    white-space: normal;
+  }
+}
+
 .prose-deck :where(blockquote),
 .rich-editor .ck-content :where(blockquote) {
   margin: 0.75em 0 1.1em;
@@ -287,6 +295,21 @@
 
 .rich-editor {
   --ck-color-base-background: hsl(var(--field));
+  min-width: 0;
+  max-width: 100%;
+}
+
+.write-compose,
+.write-compose form {
+  min-width: 0;
+}
+
+.write-compose :where(input, textarea, select) {
+  max-width: 100%;
+}
+
+.write-compose .rich-editor {
+  max-width: 100%;
 }
 
 /* CKEditor 5는 자체 색 변수(--ck-color-*)를 쓰고 기본이 밝은 테마다. 다크에서는 툴바 글자(#333)가 어두운 배경에
@@ -330,16 +353,29 @@
 
 .rich-editor .ck.ck-editor {
   @apply w-full;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .rich-editor .ck.ck-toolbar {
   @apply !rounded-t-xl !border-border !bg-muted/40;
+  flex-wrap: wrap !important;
+}
+
+.rich-editor .ck.ck-toolbar .ck-toolbar__items {
+  flex-wrap: wrap !important;
 }
 
 .rich-editor .ck.ck-editor__main > .ck-editor__editable {
   min-height: 16rem;
   background-color: hsl(var(--field)) !important;
-  @apply !rounded-b-xl !border-border px-4 py-3 text-[15px] leading-relaxed;
+  overflow-x: auto;
+  word-break: break-word;
+  @apply !rounded-b-xl !border-border px-3 py-3 text-[15px] leading-relaxed sm:px-4;
+}
+
+.rich-editor .ck-content :where(img, table, pre, figure) {
+  max-width: 100%;
 }
 
 .rich-editor-compact .ck.ck-editor__main > .ck-editor__editable {

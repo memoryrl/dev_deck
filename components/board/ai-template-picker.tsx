@@ -95,7 +95,7 @@ export function AiTemplatePicker({
       {open ? (
         <div
           className={cn(
-            "absolute right-0 top-full z-50 mt-1.5 w-[min(20rem,calc(100vw-2rem))]",
+            "absolute right-0 top-full z-50 mt-1.5 w-[min(20rem,calc(100vw-2.5rem))]",
             // 생성 중엔 2px 여백을 두고 그 틈으로 회전하는 conic-gradient가 테두리처럼 비치게 한다.
             generating &&
               "relative overflow-hidden rounded-xl p-[2px] before:absolute before:inset-[-150%] before:animate-spin before:content-[''] before:[background:conic-gradient(from_0deg,transparent,hsl(var(--lux-cognac)),transparent_40%)]"
