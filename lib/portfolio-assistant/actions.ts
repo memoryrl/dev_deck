@@ -1,8 +1,9 @@
 "use server"
 
+import { recordPortfolioAsk } from "@/lib/portfolio-assistant/admin"
 import { buildPortfolioBrief } from "@/lib/portfolio-assistant/context"
-import { clientIpFromHeaders } from "@/lib/comments/ip"
 import { chatWithOllama, type OllamaChatMessage } from "@/lib/ollama/client"
+import { getAuthUser } from "@/lib/supabase/server"
 import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
 
 const CONTENT_MAX = 1_000
@@ -15,7 +16,7 @@ const CODE_MODEL = "qwen2.5-coder:3b"
 
 export type AskPortfolioResult =
   | { ok: true; content: string; model: string }
-  | { ok: false; error: string }
+  | { ok: false; error: string; loginRequired?: boolean }
 
 function systemPrompt(brief: string) {
   return [
@@ -60,8 +61,11 @@ function containsHallucinatedLink(content: string, validLinks: string[]): boolea
 }
 
 export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPortfolioResult> {
-  const ip = await clientIpFromHeaders()
-  if (!(await checkRateLimitPersistent(`portfolio-ask:${ip}`, 10, 5 * 60 * 1000))) {
+  const user = await getAuthUser()
+  if (!user) {
+    return { ok: false, error: "로그인한 회원만 질문할 수 있습니다.", loginRequired: true }
+  }
+  if (!(await checkRateLimitPersistent(`portfolio-ask:${user.id}`, 10, 5 * 60 * 1000))) {
     return { ok: false, error: "질문을 너무 자주 보냈습니다. 잠시 후 다시 시도해주세요." }
   }
 
@@ -87,8 +91,14 @@ export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPo
     { temperature: 0.2 }
   )
   if (!result.ok) return { ok: false, error: publicOllamaErrorMessage() }
-  if (containsHallucinatedLink(result.data.content, brief.validLinks)) {
-    return { ok: true, content: HALLUCINATION_FALLBACK, model }
-  }
-  return { ok: true, content: result.data.content, model }
+  const content = containsHallucinatedLink(result.data.content, brief.validLinks)
+    ? HALLUCINATION_FALLBACK
+    : result.data.content
+  void recordPortfolioAsk({
+    userId: user.id,
+    question: lastUser?.content ?? "",
+    answer: content,
+    model,
+  })
+  return { ok: true, content, model }
 }

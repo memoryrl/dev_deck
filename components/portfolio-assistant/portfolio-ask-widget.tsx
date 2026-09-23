@@ -1,6 +1,7 @@
 "use client"
 
 import { Bot, MessageCircle, RotateCcw, Send, User, X } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { askPortfolio } from "@/lib/portfolio-assistant/actions"
 import { useI18n } from "@/components/i18n/i18n-provider"
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils"
 
 type ChatMessage = { role: "user" | "assistant"; content: string; model?: string }
 
-export function PortfolioAskWidget() {
+export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -25,7 +26,7 @@ export function PortfolioAskWidget() {
 
   async function send(content: string) {
     const text = content.trim()
-    if (!text || pending) return
+    if (!text || pending || !signedIn) return
 
     const next = [...messages, { role: "user" as const, content: text }]
     setMessages(next)
@@ -95,21 +96,29 @@ export function PortfolioAskWidget() {
                 <div className="flex items-start gap-2">
                   <BubbleIcon role="assistant" />
                   <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-foreground">
-                    {t("portfolioAsk.greeting")}
+                    {signedIn ? t("portfolioAsk.greeting") : t("portfolioAsk.memberOnly")}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 pl-9">
-                  {samples.map((sample) => (
-                    <button
-                      key={sample}
-                      type="button"
-                      onClick={() => void send(sample)}
-                      className="rounded-full border border-input px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      {sample}
-                    </button>
-                  ))}
-                </div>
+                {signedIn ? (
+                  <div className="flex flex-wrap gap-1.5 pl-9">
+                    {samples.map((sample) => (
+                      <button
+                        key={sample}
+                        type="button"
+                        onClick={() => void send(sample)}
+                        className="rounded-full border border-input px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {sample}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="pl-9">
+                    <Button asChild size="sm" className="rounded-full">
+                      <Link href="/login">{t("portfolioAsk.loginToAsk")}</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               messages.map((message, index) => <ChatBubble key={index} message={message} />)
@@ -133,17 +142,17 @@ export function PortfolioAskWidget() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={t("portfolioAsk.placeholder")}
+                placeholder={signedIn ? t("portfolioAsk.placeholder") : t("portfolioAsk.memberOnly")}
                 rows={1}
                 className="min-h-9 resize-none py-2 text-sm"
-                disabled={pending}
+                disabled={pending || !signedIn}
               />
               <Button
                 type="button"
                 size="icon"
                 aria-label={t("portfolioAsk.send")}
                 onClick={() => void send(draft)}
-                disabled={pending || !draft.trim()}
+                disabled={pending || !signedIn || !draft.trim()}
               >
                 <Send className="size-4" />
               </Button>

@@ -71,6 +71,8 @@
     "uploads": "업로드",
     "members": "회원",
     "loginHistory": "접속 이력",
+    "ollamaChat": "로컬 LLM 테스트",
+    "portfolioAsks": "포트폴리오 질문",
     "settings": "설정",
     "system": "시스템",
     "designSystem": "디자인 시스템",
@@ -299,7 +301,9 @@
     "send": "보내기",
     "thinking": "생각하는 중…",
     "clear": "대화 지우기",
-    "disclaimer": "로컬 AI 모델(exaone·qwen)이 답합니다. 공개된 정보만 근거로 답해요."
+    "disclaimer": "로컬 AI 모델(exaone·qwen)이 답합니다. 공개된 정보만 근거로 답해요.",
+    "memberOnly": "로그인한 회원만 질문할 수 있어요.",
+    "loginToAsk": "로그인하고 질문하기"
   },
   "rating": {
     "aria": "평점",

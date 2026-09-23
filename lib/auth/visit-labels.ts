@@ -59,6 +59,7 @@ const SCREEN_ROUTES: { pattern: RegExp; label: string }[] = [
   { pattern: /^\/site\/uploads\/?$/, label: "업로드" },
   { pattern: /^\/site\/members\/?$/, label: "회원 관리" },
   { pattern: /^\/site\/login-history\/?$/, label: "접속 이력" },
+  { pattern: /^\/site\/portfolio-asks\/?$/, label: "포트폴리오 질문" },
 ]
 
 export function screenLabelFromPath(rawPath: string) {

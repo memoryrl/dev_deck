@@ -55,6 +55,7 @@ export const DEFAULT_ADMIN_MENU_TREE: AdminMenuSeed[] = [
       { label: "공유 링크", labelKey: "nav.shareLinks", href: "/site/shares", icon: "Share2", sortOrder: 15 },
       { label: "약관", labelKey: "nav.terms", href: "/site/terms", icon: "FileText", sortOrder: 17 },
       { label: "로컬 LLM 테스트", labelKey: "nav.ollamaChat", href: "/site/ollama-chat", icon: "Bot", sortOrder: 18 },
+      { label: "포트폴리오 질문", labelKey: "nav.portfolioAsks", href: "/site/portfolio-asks", icon: "MessageCircle", sortOrder: 19 },
       { label: "설정", labelKey: "nav.settings", href: "/site/settings", icon: "Settings", sortOrder: 20 },
       { label: "시스템", labelKey: "nav.system", href: "/site/system", icon: "Monitor", sortOrder: 30 },
     ],

@@ -8,6 +8,7 @@ import {
   LayoutList,
   LayoutTemplate,
   Menu,
+  MessageCircle,
   MessageSquare,
   Monitor,
   Palette,
@@ -35,6 +36,7 @@ export const ADMIN_NAV: { href: string; labelKey: string; label: string; icon: L
   { href: "/site/settings", labelKey: "nav.settings", label: "설정", icon: Settings },
   { href: "/site/system", labelKey: "nav.system", label: "시스템", icon: Monitor },
   { href: "/site/ollama-chat", labelKey: "nav.ollamaChat", label: "로컬 LLM 테스트", icon: Bot },
+  { href: "/site/portfolio-asks", labelKey: "nav.portfolioAsks", label: "포트폴리오 질문", icon: MessageCircle },
   { href: "/site/design-system/common", labelKey: "nav.designSystemCommon", label: "공통영역", icon: Palette },
   { href: "/site/design-system/screens", labelKey: "nav.designSystemScreens", label: "화면영역", icon: LayoutTemplate },
 ]

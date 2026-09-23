@@ -71,6 +71,8 @@
     "uploads": "Uploads",
     "members": "Members",
     "loginHistory": "Access History",
+    "ollamaChat": "Local LLM test",
+    "portfolioAsks": "Portfolio questions",
     "settings": "Settings",
     "system": "System",
     "designSystem": "Design System",
@@ -299,7 +301,9 @@
     "send": "Send",
     "thinking": "Thinking…",
     "clear": "Clear chat",
-    "disclaimer": "Answered by a local AI model (exaone/qwen), grounded only in what's public here. Replies are in Korean for now."
+    "disclaimer": "Answered by a local AI model (exaone/qwen), grounded only in what's public here. Replies are in Korean for now.",
+    "memberOnly": "Only signed-in members can ask.",
+    "loginToAsk": "Sign in to ask"
   },
   "rating": {
     "aria": "Rating",
