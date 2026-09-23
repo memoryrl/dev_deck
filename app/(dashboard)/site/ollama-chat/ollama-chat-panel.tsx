@@ -15,7 +15,19 @@ type ChatMessage = {
   durationMs?: number
 }
 
-export function OllamaChatPanel({ models, ollamaOffline }: { models: string[]; ollamaOffline: boolean }) {
+export function OllamaChatPanel({
+  models,
+  ollamaOffline,
+  ollamaHost,
+  ollamaSource,
+  ollamaError,
+}: {
+  models: string[]
+  ollamaOffline: boolean
+  ollamaHost: string | null
+  ollamaSource: "db" | "env" | "local-default" | "none"
+  ollamaError: string | null
+}) {
   const [model, setModel] = useState(models[0] ?? "")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState("")
@@ -70,9 +82,23 @@ export function OllamaChatPanel({ models, ollamaOffline }: { models: string[]; o
           triggerClassName="w-56"
           aria-label="테스트할 모델"
         />
+        <span className="text-xs text-muted-foreground">
+          연결: {ollamaHost ?? "없음"}
+          {ollamaSource === "db"
+            ? " (사이트 설정)"
+            : ollamaSource === "env"
+              ? " (.env)"
+              : ollamaSource === "local-default"
+                ? " (이 맥)"
+                : ""}
+        </span>
         {ollamaOffline ? (
           <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
-            Ollama 서버에 연결할 수 없습니다 — 설치된 모델 목록을 못 불러와 기본값을 보여줍니다.
+            {ollamaError === "ollama_host_missing" || ollamaError === "ollama_loopback_blocked"
+              ? "Vercel에서 localhost Ollama에 닿을 수 없습니다. 사이트 설정에 터널 주소를 넣으세요."
+              : ollamaError === "ollama_http_403" || ollamaError === "ollama_http_530"
+                ? "Ollama가 터널을 403으로 거부합니다. OLLAMA_ORIGINS=* 후 Ollama를 재시작하세요."
+                : "Ollama 서버에 연결할 수 없습니다 — 설치된 모델 목록을 못 불러와 기본값을 보여줍니다."}
           </span>
         ) : null}
         <Button

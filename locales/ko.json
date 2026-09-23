@@ -469,7 +469,7 @@
       "noticePopupMode_window": "새 창",
       "noticePopupMode_windowHint": "브라우저 팝업 창(window.open)으로 띄웁니다. 차단되면 클릭 후에 열립니다.",
       "ollamaBaseUrl": "Ollama 주소",
-      "ollamaBaseUrlHint": "자주 바뀌는 터널·로컬 URL은 여기에 둡니다. 비우면 .env.local 값을 씁니다. 방문객에게는 노출되지 않습니다.",
+      "ollamaBaseUrlHint": "Vercel 전용입니다. 공개 설정 테이블이 아니라 관리자만 읽는 값에 저장됩니다. 터널을 쓰려면 이 맥에서 OLLAMA_ORIGINS=* 후 Ollama를 재시작하세요. 방문객에게는 노출되지 않습니다.",
       "maintenanceMode": "유지보수 모드",
       "maintenanceModeHint": "활성화하면 관리자 외 접속이 차단됩니다.",
       "saveSettings": "설정 저장",

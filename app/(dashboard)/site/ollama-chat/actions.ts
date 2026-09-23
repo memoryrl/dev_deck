@@ -33,11 +33,15 @@ export async function sendOllamaMessage(
   const result = await chatWithOllama(model, messages)
   if (!result.ok) {
     const message =
-      result.error === "ollama_unreachable"
-        ? "Ollama 서버에 연결할 수 없습니다. 사이트 설정의 Ollama 주소와 터널을 확인하세요."
-        : result.error === "ollama_timeout"
-          ? "응답이 너무 오래 걸려 중단했습니다."
-          : `Ollama 오류: ${result.error}`
+      result.error === "ollama_host_missing" || result.error === "ollama_loopback_blocked"
+        ? "Vercel에서는 이 맥의 localhost Ollama에 닿을 수 없습니다. 사이트 설정에 살아있는 Cloudflare 터널 주소를 넣으세요."
+        : result.error === "ollama_unreachable"
+          ? "Ollama 서버에 연결할 수 없습니다. 사이트 설정의 Ollama 주소와 터널을 확인하세요."
+          : result.error === "ollama_timeout"
+            ? "응답이 너무 오래 걸려 중단했습니다."
+            : result.error === "ollama_http_403" || result.error === "ollama_http_530"
+              ? "Ollama가 터널 Host를 거부했습니다. 이 맥에서 OLLAMA_ORIGINS=* 을 넣고 Ollama를 재시작하세요."
+              : `Ollama 오류: ${result.error}`
     return { ok: false, error: message }
   }
   return { ok: true, content: result.data.content, durationMs: result.data.durationMs }

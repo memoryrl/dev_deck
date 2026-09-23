@@ -469,7 +469,7 @@
       "noticePopupMode_window": "New window",
       "noticePopupMode_windowHint": "Opens with window.open. If blocked, it opens after a click.",
       "ollamaBaseUrl": "Ollama URL",
-      "ollamaBaseUrlHint": "Put frequently changing tunnel or local URLs here. Leave empty to fall back to .env.local. Visitors cannot read this value.",
+      "ollamaBaseUrlHint": "Used on Vercel only. Stored in an owner-only table, not the public site settings. For tunnels, set OLLAMA_ORIGINS=* and restart Ollama. Visitors cannot read this value.",
       "maintenanceMode": "Maintenance mode",
       "maintenanceModeHint": "When enabled, only admins can access the site.",
       "saveSettings": "Save settings",

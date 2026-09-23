@@ -5,22 +5,66 @@ const REQUEST_TIMEOUT_MS = 120_000
 
 export type OllamaChatMessage = { role: "user" | "assistant" | "system"; content: string }
 
+export type OllamaConnection = {
+  host: string | null
+  source: "db" | "env" | "local-default" | "none"
+  loopbackBlocked: boolean
+}
+
 type OllamaResult<T> = { ok: true; data: T } | { ok: false; error: string }
 
-async function resolveOllamaHost(): Promise<string> {
+function isVercelRuntime() {
+  return process.env.VERCEL === "1"
+}
+
+function isLoopbackOrigin(url: string): boolean {
+  try {
+    const { hostname } = new URL(url)
+    return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "[::1]" || hostname === "::1"
+  } catch {
+    return false
+  }
+}
+
+export async function getOllamaConnection(): Promise<OllamaConnection> {
+  // localhost:3000 은 이 맥의 Ollama에 바로 붙인다. 터널은 Vercel 전용이다.
+  // (터널 Host 를 Ollama가 기본값으로 403 한다 — OLLAMA_ORIGINS=* 가 필요)
+  if (!isVercelRuntime()) {
+    return { host: DEFAULT_OLLAMA_HOST, source: "local-default", loopbackBlocked: false }
+  }
+
   const fromDb = parseHttpOriginUrl(await getAppEnv(APP_ENV_KEYS.ollamaBaseUrl))
-  if (fromDb) return fromDb
+  if (fromDb) {
+    if (isLoopbackOrigin(fromDb)) return { host: null, source: "none", loopbackBlocked: true }
+    return { host: fromDb, source: "db", loopbackBlocked: false }
+  }
   const fromEnv = parseHttpOriginUrl(process.env.OLLAMA_BASE_URL ?? process.env.OLLAMA_HOST ?? "")
-  if (fromEnv) return fromEnv
-  return DEFAULT_OLLAMA_HOST
+  if (fromEnv) {
+    if (isLoopbackOrigin(fromEnv)) return { host: null, source: "none", loopbackBlocked: true }
+    return { host: fromEnv, source: "env", loopbackBlocked: false }
+  }
+  return { host: null, source: "none", loopbackBlocked: false }
 }
 
 async function ollamaFetch(path: string, init?: RequestInit): Promise<OllamaResult<Response>> {
-  const host = await resolveOllamaHost()
+  const { host, loopbackBlocked } = await getOllamaConnection()
+  if (!host) {
+    return { ok: false, error: loopbackBlocked ? "ollama_loopback_blocked" : "ollama_host_missing" }
+  }
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const res = await fetch(`${host}${path}`, { ...init, signal: controller.signal })
+    const headers = new Headers(init?.headers)
+    if (!headers.has("User-Agent")) {
+      headers.set("User-Agent", "DevDeck-Ollama/1.0")
+    }
+    if (!headers.has("Accept")) headers.set("Accept", "application/json")
+    const res = await fetch(`${host}${path}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+      cache: "no-store",
+    })
     if (!res.ok) return { ok: false, error: `ollama_http_${res.status}` }
     return { ok: true, data: res }
   } catch (err) {
