@@ -847,6 +847,7 @@ CREATE POLICY app_env_owner_all ON devdeck.app_env
 REVOKE ALL ON TABLE devdeck.app_env FROM anon, authenticated, PUBLIC;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE devdeck.app_env TO authenticated, service_role;
 
+-- 실제 터널 주소는 여기(git에 커밋되는 파일)에 적지 않는다 — /site/settings 화면에서만 넣는다.
 INSERT INTO devdeck.app_env (key, value) VALUES
-  ('OLLAMA_BASE_URL', 'https://slots-cure-depending-inexpensive.trycloudflare.com')
+  ('OLLAMA_BASE_URL', '')
 ON CONFLICT (key) DO NOTHING;
