@@ -7,7 +7,7 @@ import { createPortal } from "react-dom"
 import { ArrowRight } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { isExternalHref, registerEscortHandler, resolveEscortModule } from "@/lib/landing/escort-bus"
-import { topologyFromNavNodes } from "@/lib/landing/topology-modules"
+import { topologyFromNavNodes, type TopologyData } from "@/lib/landing/topology-modules"
 import type { NavNode } from "@/types/menu"
 
 // 랜딩의 토폴로지 슬라이드가 화면에 없을 때(다른 페이지, 클래식 히어로) 헤더·푸터·모바일
@@ -16,11 +16,11 @@ import type { NavNode } from "@/types/menu"
 // 스켈레톤 UI가 보이기 전에 안내 연출이 먼저 나온다. 방 데이터는 헤더가 이미 가진
 // 내비 트리로 만들어 랜딩과 같은 책상 배치·로봇 배정을 쓴다.
 
-type Escort = { moduleId: string; href: string; label: string }
+type Escort = { moduleId: string; href: string; label: string; data: TopologyData }
 
 const LEAVE_VEIL_MS = 420
 // 씬 로드 실패(WebGL 없음, 청크 로드 실패 등)로 로봇이 끝내 나가지 않으면 그냥 이동한다
-const ESCORT_SAFETY_MS = 9000
+const ESCORT_SAFETY_MS = 10000
 // 첫 클릭에서 three.js 청크·로봇 모델을 기다리지 않게, 화면이 잠잠해진 뒤 미리 받아 둔다
 const WARM_DELAY_MS = 2500
 
@@ -102,7 +102,12 @@ export function EscortOverlay({
   const hasSeated = data.modules.some((module) => !module.vacant)
   const [escort, setEscort] = useState<Escort | null>(null)
   const [leaving, setLeaving] = useState(false)
+  // 베일이 다 덮인 뒤에는 씬을 먼저 내리고 나서 이동한다. 이동 커밋에서 헤더가 새 props로
+  // 다시 그려지며 Canvas가 리렌더 직후 언마운트되면 R3F의 비동기 configure→render가
+  // 사라진 컨테이너에 이벤트를 붙이려다 터지는 경합이 있어서다.
+  const [sceneDone, setSceneDone] = useState(false)
   const navigated = useRef(false)
+  const leavingRef = useRef(false)
   const timers = useRef<number[]>([])
 
   const clearTimers = () => {
@@ -113,25 +118,37 @@ export function EscortOverlay({
   const reset = useCallback(() => {
     clearTimers()
     navigated.current = false
+    leavingRef.current = false
     setEscort(null)
     setLeaving(false)
+    setSceneDone(false)
   }, [])
 
   const navigateTo = useCallback(
     (href: string) => {
       if (navigated.current) return
       navigated.current = true
+      setSceneDone(true)
       if (isExternalHref(href)) window.location.assign(href)
       else router.push(href)
     },
     [router]
   )
 
+  // 베일을 올리고 다 덮이면 이동한다 — 로봇이 나간 뒤에도, "바로 이동"도, 안전 타임아웃도 같은 길
+  const leave = useCallback(
+    (href: string) => {
+      if (leavingRef.current) return
+      leavingRef.current = true
+      setLeaving(true)
+      timers.current.push(window.setTimeout(() => navigateTo(href), LEAVE_VEIL_MS))
+    },
+    [navigateTo]
+  )
+
   const finishEscort = useCallback(() => {
-    if (!escort || leaving) return
-    setLeaving(true)
-    timers.current.push(window.setTimeout(() => navigateTo(escort.href), LEAVE_VEIL_MS))
-  }, [escort, leaving, navigateTo])
+    if (escort) leave(escort.href)
+  }, [escort, leave])
 
   useEffect(() => {
     return registerEscortHandler(
@@ -143,13 +160,15 @@ export function EscortOverlay({
         if (!target) return false
         if (!isExternalHref(request.href)) router.prefetch(request.href)
         navigated.current = false
-        setEscort({ moduleId: target.id, href: request.href, label: request.label })
-        timers.current.push(window.setTimeout(() => navigateTo(request.href), ESCORT_SAFETY_MS))
+        leavingRef.current = false
+        // 안내 중 헤더가 새 내비 데이터로 다시 그려져도 방이 바뀌지 않게 스냅샷을 든다
+        setEscort({ moduleId: target.id, href: request.href, label: request.label, data })
+        timers.current.push(window.setTimeout(() => leave(request.href), ESCORT_SAFETY_MS))
         return true
       },
       { fallback: true }
     )
-  }, [escort, data.modules, router, navigateTo])
+  }, [escort, data, router, leave])
 
   useEffect(() => {
     if (!hasSeated) return
@@ -171,24 +190,26 @@ export function EscortOverlay({
               aria-modal="true"
               aria-label={t("landing.robotFollowMeDetail", { label: escort.label })}
             >
-              <TopologyScene
-                data={data}
-                activeModuleId={escort.moduleId}
-                onSelectModule={() => {}}
-                active
-                escortModuleId={escort.moduleId}
-                escortSpeech={{
-                  title: t("landing.robotFollowMe"),
-                  detail: t("landing.robotFollowMeDetail", { label: escort.label }),
-                }}
-                onEscortExit={finishEscort}
-              />
+              {!sceneDone ? (
+                <TopologyScene
+                  data={escort.data}
+                  activeModuleId={escort.moduleId}
+                  onSelectModule={() => {}}
+                  active
+                  escortModuleId={escort.moduleId}
+                  escortSpeech={{
+                    title: t("landing.robotFollowMe"),
+                    detail: t("landing.robotFollowMeDetail", { label: escort.label }),
+                  }}
+                  onEscortExit={finishEscort}
+                />
+              ) : null}
 
               {!leaving ? (
                 <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center md:bottom-8">
                   <button
                     type="button"
-                    onClick={() => navigateTo(escort.href)}
+                    onClick={() => leave(escort.href)}
                     className="topology-escort-skip pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background"
                   >
                     {t("landing.escortSkip")}
