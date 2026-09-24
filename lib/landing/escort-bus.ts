@@ -15,6 +15,11 @@ export type EscortRequest = {
   menuId?: string | null
   /** 링크가 속한 묶음 제목(푸터 컬럼 등) — href로 못 찾을 때 책상 라벨과 맞춰 본다 */
   groupLabel?: string | null
+  /**
+   * 메뉴가 아닌 일반 링크(본문 카드, 버튼형 링크 등)에서 온 요청. 이 화면을 맡는 로봇이
+   * 분명할 때만 안내하고, 못 찾으면 "첫 번째 로봇"으로 대신하지 않는다 → 연출 없이 이동.
+   */
+  strict?: boolean
 }
 
 type EscortHandler = (request: EscortRequest) => boolean
@@ -130,5 +135,50 @@ export function resolveEscortModule(
   const byLabel = seated.find(
     (module) => module.label === request.groupLabel || module.label === request.label
   )
-  return byLabel ?? seated[0]
+  if (byLabel) return byLabel
+  return request.strict ? null : seated[0]
+}
+
+/**
+ * 말풍선에 넣을 목적지 이름. 일반 링크는 본문 텍스트가 길거나(카드 제목) 비어 있을 수
+ * 있어(아이콘 링크), 토폴로지 데이터에 있는 메뉴·하위 항목 라벨을 우선 쓴다.
+ */
+export function escortTargetLabel(node: TopologyModuleNode, href: string, fallback?: string | null) {
+  const exact = node.items.find((item) => item.href === href)
+  if (exact) return exact.label
+  if (node.href === href) return node.label
+  const path = pathOf(href)
+  const byPath = node.items.find((item) => pathOf(item.href) === path)
+  if (byPath) return byPath.label
+  if (pathOf(node.href) === path) return node.label
+  const text = fallback?.replace(/\s+/g, " ").trim()
+  if (text && text.length <= 32) return text
+  return node.label
+}
+
+/**
+ * 메뉴 외의 모든 내부 링크 클릭을 한 곳에서 가로채는 document 캡처 리스너.
+ * Next Link는 자기 onClick에서 defaultPrevented면 이동을 건너뛰므로, 그보다 먼저(캡처)
+ * preventDefault 해야 연출 뒤 이동으로 바꿀 수 있다. 헤더·푸터·토폴로지 패널처럼 스스로
+ * 연출을 요청하는 영역은 data-escort-handled로 표시해 두 번 처리하지 않는다.
+ * 같은 경로 안의 이동(페이지네이션·필터·탭)과 새 탭·다운로드·외부 링크는 건드리지 않는다.
+ */
+export function escortAnyLinkClick(event: MouseEvent) {
+  if (event.defaultPrevented || event.button !== 0) return
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  const anchor = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null
+  if (!anchor || anchor.closest("[data-escort-handled]")) return
+  if ((anchor.target && anchor.target !== "_self") || anchor.hasAttribute("download")) return
+  const raw = anchor.getAttribute("href") ?? ""
+  if (!raw || raw.startsWith("#") || isExternalHref(raw)) return
+  let url: URL
+  try {
+    url = new URL(anchor.href, window.location.href)
+  } catch {
+    return
+  }
+  if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return
+  if (prefersReducedMotion()) return
+  const label = anchor.getAttribute("aria-label") ?? anchor.textContent ?? ""
+  if (requestEscort({ href: `${url.pathname}${url.search}`, label, strict: true })) event.preventDefault()
 }

@@ -6,7 +6,13 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { createPortal } from "react-dom"
 import { ArrowRight } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
-import { isExternalHref, registerEscortHandler, resolveEscortModule } from "@/lib/landing/escort-bus"
+import {
+  escortAnyLinkClick,
+  escortTargetLabel,
+  isExternalHref,
+  registerEscortHandler,
+  resolveEscortModule,
+} from "@/lib/landing/escort-bus"
 import { topologyFromNavNodes, type TopologyData } from "@/lib/landing/topology-modules"
 import type { NavNode } from "@/types/menu"
 
@@ -161,8 +167,9 @@ export function EscortOverlay({
         if (!isExternalHref(request.href)) router.prefetch(request.href)
         navigated.current = false
         leavingRef.current = false
+        const label = request.strict ? escortTargetLabel(target, request.href, request.label) : request.label
         // 안내 중 헤더가 새 내비 데이터로 다시 그려져도 방이 바뀌지 않게 스냅샷을 든다
-        setEscort({ moduleId: target.id, href: request.href, label: request.label, data })
+        setEscort({ moduleId: target.id, href: request.href, label, data })
         timers.current.push(window.setTimeout(() => leave(request.href), ESCORT_SAFETY_MS))
         return true
       },
@@ -173,6 +180,14 @@ export function EscortOverlay({
   useEffect(() => {
     if (!hasSeated) return
     return warmScene()
+  }, [hasSeated])
+
+  // 메뉴가 아닌 모든 내부 링크(본문 카드, 버튼형 링크 등)도 화면이 바뀌면 로봇이 안내한다.
+  // 맡을 로봇이 분명하지 않으면(strict) 연출 없이 평소처럼 이동한다.
+  useEffect(() => {
+    if (!hasSeated) return
+    document.addEventListener("click", escortAnyLinkClick, true)
+    return () => document.removeEventListener("click", escortAnyLinkClick, true)
   }, [hasSeated])
 
   useEffect(() => clearTimers, [])

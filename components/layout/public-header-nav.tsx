@@ -270,7 +270,7 @@ export function PublicHeaderNav({
   }, [])
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative" data-escort-handled="">
       <div
         className={cn(
           "relative",

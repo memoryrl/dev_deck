@@ -59,7 +59,7 @@ export function PublicMobileNav({
   }, [open, onClose])
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 top-14 z-50 lg:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 top-14 z-50 lg:hidden" data-escort-handled="">
       <button
         type="button"
         aria-label={t("common.closeMenu")}
