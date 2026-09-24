@@ -296,6 +296,42 @@ Vercel Cron keep-alive 결과. INSERT는 `service_role`만.
 
 화면 언어 선택은 `lib/terms/documents.ts`의 `localizeTerms(doc, locale)`이 한다. `en`이면서 `content_en`이 비어 있지 않을 때만 영문을 내고, 그 외에는 한국어. 대체된 경우 가입 화면에 안내 문구가 붙는다.
 
+### 2.14 `app_env` / `portfolio_asks` / `ai_board_templates`
+
+로컬 LLM 기능용 테이블. 동작은 [15-llm.md](./15-llm.md).
+
+**`app_env`** — 자주 바뀌는 서버용 환경값(Ollama 터널 주소 등). 공개 `site_settings`와 분리한다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| key | TEXT | PK | 예: `OLLAMA_BASE_URL` |
+| value | TEXT | NOT NULL, 기본 `''` | 실제 값은 SQL이 아니라 `/site/settings`에서 넣는다 |
+| updated_at | timestamptz | NOT NULL | |
+
+**`portfolio_asks`** — 포트폴리오 안내원 질문·답변 기록.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| user_id | UUID | NOT NULL | 질문한 회원 |
+| question | TEXT | NOT NULL | 1,000자로 자름 |
+| answer | TEXT | NOT NULL | 4,000자로 자름 |
+| model | TEXT | NOT NULL | 답한 모델 |
+| created_at | timestamptz | NOT NULL | 인덱스: `created_at DESC`, `(user_id, created_at DESC)` |
+
+**`ai_board_templates`** — 게시판 AI 템플릿 캐시. 한 번 만든 양식은 다시 AI를 부르지 않는다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| id | UUID | PK | |
+| board_id | UUID | FK → `boards` CASCADE | |
+| template_id | TEXT | 형식 `^[a-z0-9]+(-[a-z0-9]+)*$` | 카탈로그의 템플릿 id |
+| html | TEXT | NOT NULL | 정리(sanitize)된 HTML |
+| model | TEXT | NOT NULL | 만든 모델 |
+| created_at / updated_at | timestamptz | NOT NULL | |
+
+`(board_id, template_id)` 유니크. 기존 DB는 `supabase/patch-app-env.sql`, `patch-portfolio-asks.sql`, `patch-ai-board-templates.sql`을 SQL Editor에서 실행한다.
+
 ## 3. 인덱스
 
 ```sql
@@ -428,6 +464,19 @@ INSERT는 `profiles` 트리거(`SECURITY DEFINER`)와 탈퇴 시 서비스 롤�
 | terms_consents_update_own | authenticated | UPDATE | `user_id = auth.uid()` |
 
 `terms_save()`는 `anon`에서 REVOKE, `authenticated`에 EXECUTE. 함수 안에서 다시 `is_owner()`를 검사한다.
+
+### 5.9 `app_env` / `portfolio_asks` / `ai_board_templates`
+
+| 테이블 | Policy | 역할 | 명령 | 조건 |
+| --- | --- | --- | --- | --- |
+| app_env | app_env_owner_all | authenticated | ALL | `devdeck.is_owner()` |
+| portfolio_asks | portfolio_asks_select_own_or_owner | authenticated | SELECT | `user_id = auth.uid() OR devdeck.is_owner()` |
+| portfolio_asks | portfolio_asks_insert_own | authenticated | INSERT | `user_id = auth.uid()` |
+| ai_board_templates | ai_board_templates_select / insert / update | authenticated | SELECT / INSERT / UPDATE | `true` |
+
+`anon`은 세 테이블 모두 권한이 없다. `portfolio_asks`는 UPDATE·DELETE 정책이 없다.
+
+> **알려진 과제:** `ai_board_templates`의 쓰기 정책이 조건 없이 열려 있어, 로그인한 회원이 PostgREST로 다른 게시판의 캐시 양식을 덮어쓸 수 있다. 읽고 쓸 때 모두 `sanitizeRichHtml`을 거치므로 XSS는 아니지만 양식이 오염될 수 있다. 쓰기를 서버(`service_role`)로만 하고 정책을 `is_owner()`로 좁힐 것.
 
 ## 6. 목표 SQL 스케치
 

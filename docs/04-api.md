@@ -157,7 +157,7 @@ type AiRunResponse = {
 
 ## 2. Server Actions
 
-위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts`, `app/(dashboard)/site/actions.ts`, `app/(public)/b/actions.ts`.
+위치: `app/(dashboard)/promptkit/actions.ts`, `app/(dashboard)/career/actions.ts`, `app/(dashboard)/steam/actions.ts`, `app/(dashboard)/site/actions.ts`, `app/(public)/b/actions.ts`, `app/(dashboard)/site/ollama-chat/actions.ts`, `lib/portfolio-assistant/actions.ts`.
 
 공통:
 
@@ -200,6 +200,7 @@ type AiRunResponse = {
 | `deleteMenu` | id | owner. 하위 CASCADE |
 | `upsertBoardPost` / `deleteBoardPost` | 대시보드 글 | owner |
 | `savePublicPost` / `removePublicPost` | 공개 게시판 글쓰기 | write_role 충족 회원/관리자. 관리자는 모든 글 수정·삭제 |
+| `generateBoardTemplate` | board_id, template_id | `canWriteBoard`와 같은 검사. 캐시(`ai_board_templates`)가 있으면 AI를 부르지 않음. 없으면 사용자당 10분 10회, 결과는 sanitize 후 저장 |
 | `createComment` | target_type, target_id, body(CKEditor HTML), author_name?, parent_id? | 프롬프트·커리어·Steam은 비회원 가능. 게시판은 `comment_role` 충족. IP·지역 서버 기록. 텍스트 2000자. 욕설 트리거 치환 |
 | `hideComment` / `deleteComment` | id | owner |
 | `addProfanityWord` / `removeProfanityWord` | word, replacement? | owner |
@@ -213,13 +214,22 @@ type AiRunResponse = {
 
 `upsert`는 `(user_id, app_id)` 유니크를 이용한다.
 
-### 2.4 Auth
+### 2.5 Auth
 
 | Action | 동작 |
 | --- | --- |
 | `signOut` | 세션 종료 후 `/` |
 
 OAuth 시작은 클라이언트 `supabase.auth.signInWithOAuth`. Google은 `prompt=select_account`로 계정 선택 화면을 연다.
+
+### 2.6 LLM
+
+| Action | 입력 | 검증 |
+| --- | --- | --- |
+| `sendOllamaMessage` | model, messages[] | `requireOwner`. 모델 이름 정규식, 메시지 40개·8,000자 |
+| `askPortfolio` | messages[] | 로그인 필수(`loginRequired`). 사용자당 5분 10회. 12개·1,000자. 답에 지어낸 링크가 있으면 안내 문구로 대체. 질문·답변을 `portfolio_asks`에 기록 |
+
+Ollama 호출은 모두 `lib/ollama/client.ts`를 지난다(로컬은 127.0.0.1, Vercel은 `app_env`의 터널 주소). 자세한 건 [15-llm.md](./15-llm.md).
 
 ## 3. Steam 유틸 (`lib/steam`)
 

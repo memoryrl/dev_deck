@@ -6,7 +6,7 @@ AI로 일하는 방식, 회사 프로젝트에서 쌓인 역할, Steam에서 보
 
 [사이트 열기](https://devdeck-blue.vercel.app) · [저장소](https://github.com/memoryrl/dev_deck)
 
-한국어 / English · Next.js 14 · Supabase · Vercel · three.js · Steam Web API
+한국어 / English · Next.js 15 · Supabase · Vercel · three.js · Steam Web API
 
 ---
 
@@ -73,7 +73,7 @@ Owner    ──►  Google ──►  PromptKit · CareerLog · Steam · 게시�
 
 | 영역 | |
 | --- | --- |
-| App | Next.js 14 App Router, React 18, TypeScript |
+| App | Next.js 15 App Router, React 19, TypeScript |
 | UI | Tailwind, shadcn/ui, Lucide, CKEditor 5, three.js |
 | Auth / Data | Supabase Auth (Google), Postgres 스키마 `devdeck`, RLS |
 | Steam | Web API 서버 프록시. 키는 환경 변수만 |
@@ -121,6 +121,11 @@ npm run build
 | [08 Topology](./docs/08-landing-topology.md) | 랜딩 3D 오피스 |
 | [09 i18n](./docs/09-i18n.md) | 한국어 / English |
 | [10 Login history](./docs/10-login-history.md) | 로그인·접속·페이지뷰 |
+| [11 Notifications](./docs/11-notifications.md) | 알림 종·토스트·패널 |
+| [12 Share](./docs/12-share.md) | 공유 링크 |
+| [13 Security](./docs/13-security.md) | 보안 점검 반영 |
+| [14 Open source list](./docs/14-opensource-list.md) | `/opensource` 자동 목록 |
+| [15 LLM](./docs/15-llm.md) | 로컬 Ollama: 안내원 · AI 템플릿 |
 
 ---
 

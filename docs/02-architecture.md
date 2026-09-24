@@ -4,7 +4,7 @@
 
 | 영역 | 선택 | 이유 |
 | --- | --- | --- |
-| Framework | Next.js 14+ App Router | Server Components, Server Actions, Route Handler |
+| Framework | Next.js 15 App Router | Server Components, Server Actions, Route Handler |
 | Language | TypeScript | 스키마·API 타입을 문서와 맞추기 쉽음 |
 | UI | Tailwind CSS, Lucide, shadcn/ui | New York + Neutral. Tailwind 3 + Radix |
 | Backend | Supabase Auth + Postgres + RLS | 별도 API 서버 없이 권한 경계 |
