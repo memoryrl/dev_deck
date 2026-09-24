@@ -83,7 +83,7 @@ function prefixScore(target: string, candidate: string | null | undefined) {
 
 /**
  * 링크 하나를 어느 책상(로봇)이 안내할지 정한다.
- * 1) 메뉴 id 일치 → 2) 모듈·하위 항목 href가 가장 길게 일치 → 3) 라벨 일치 → 4) 첫 번째 재석 로봇.
+ * 1) 메뉴 id 일치 → 2) href 완전 일치 → 3) 모듈·하위 항목 경로가 가장 길게 일치 → 4) 라벨 일치 → 5) 첫 번째 재석 로봇.
  * 외근(vacant) 좌석은 로봇이 없으므로 제외한다.
  */
 export function resolveEscortModule(
@@ -97,6 +97,12 @@ export function resolveEscortModule(
     const byId = seated.find((module) => module.id === request.menuId)
     if (byId) return byId
   }
+
+  // 쿼리까지 똑같은 링크가 있으면 그 책상 — 경로가 같고 쿼리만 다른 링크들이 섞이지 않게
+  const exact = seated.find(
+    (module) => module.href === request.href || module.items.some((item) => item.href === request.href)
+  )
+  if (exact) return exact
 
   const target = pathOf(request.href)
   let best: TopologyModuleNode | null = null
