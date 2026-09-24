@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { ArrowUpRight, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react"
+import { createPortal } from "react-dom"
+import { ArrowRight, ArrowUpRight, X } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { TopologyIntro } from "@/components/landing/hero-topology/topology-intro"
 import { cn } from "@/lib/utils"
@@ -55,6 +57,35 @@ function popupSide(index: number): "left" | "right" {
   return index % 2 === 0 ? "left" : "right"
 }
 
+type Escort = { moduleId: string; href: string; label: string }
+
+// 로봇이 문 밖으로 사라진 뒤 화면을 덮는 베일이 다 차오르는 시간 — CSS(.topology-leave-veil)와 맞춘다
+const LEAVE_VEIL_MS = 420
+
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  } catch {
+    return false
+  }
+}
+
+function isExternalHref(href: string) {
+  return /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")
+}
+
+// 새 탭·수식키 클릭·이미 처리된 이벤트는 브라우저 기본 동작(새 탭 등)에 맡긴다
+function isPlainLeftClick(event: ReactMouseEvent<HTMLAnchorElement>) {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  )
+}
+
 export function TopologyPanel({
   data,
   className,
@@ -68,9 +99,16 @@ export function TopologyPanel({
   active?: boolean
 }) {
   const { t } = useI18n()
+  const router = useRouter()
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
   const activeModule = data.modules.find((module) => module.id === activeModuleId) ?? null
   const [displayed, setDisplayed] = useState<TopologyModuleNode | null>(null)
+  // 메뉴/하위 메뉴 링크를 누르면 바로 이동하지 않고, 그 책상의 로봇이 "따라오세요" 하고
+  // 문 밖으로 나간 뒤(escort) 화면을 베일로 덮고(leaving) 실제 이동한다.
+  const [escort, setEscort] = useState<Escort | null>(null)
+  const [leaving, setLeaving] = useState(false)
+  const navigated = useRef(false)
+  const leaveTimer = useRef<number | null>(null)
   // 이 컴포넌트는 사용자가 토폴로지 뷰로 전환한 뒤에만 마운트되므로(hero-section.tsx
   // 참고) 서버 렌더링을 거치지 않는다 — localStorage를 초기값에서 바로 읽어도 안전하다.
   // 처음 방문(키 없음)이면 카드를 펼친 채로 시작하고, 이미 본 적 있으면 접힌 아이콘으로
@@ -106,7 +144,45 @@ export function TopologyPanel({
     setActiveModuleId(null) // 안내 카드와 책상 팝업은 같은 좌측 하단 자리를 쓰므로 겹치지 않게 팝업을 닫는다
   }
 
-  const open = Boolean(activeModule)
+  const navigateTo = useCallback(
+    (href: string) => {
+      if (navigated.current) return
+      navigated.current = true
+      if (isExternalHref(href)) window.location.assign(href)
+      else router.push(href)
+    },
+    [router]
+  )
+
+  // 로봇이 문 밖으로 사라진 뒤: 베일을 올리고 다 덮이면 이동한다
+  const finishEscort = useCallback(() => {
+    if (!escort || leaving) return
+    setLeaving(true)
+    leaveTimer.current = window.setTimeout(() => navigateTo(escort.href), LEAVE_VEIL_MS)
+  }, [escort, leaving, navigateTo])
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimer.current != null) window.clearTimeout(leaveTimer.current)
+    }
+  }, [])
+
+  function handleNavigate(event: ReactMouseEvent<HTMLAnchorElement>, href: string, label: string) {
+    if (escort || !activeModule || activeModule.vacant) return
+    if (!isPlainLeftClick(event)) return
+    // 움직임 최소화 설정이면 연출 없이 링크 기본 동작으로 바로 이동
+    if (prefersReducedMotion()) return
+    event.preventDefault()
+    if (!isExternalHref(href)) router.prefetch(href)
+    setEscort({ moduleId: activeModule.id, href, label })
+  }
+
+  function handleSelectModule(id: string | null) {
+    if (escort) return
+    setActiveModuleId(id)
+  }
+
+  const open = Boolean(activeModule) && !escort
   const activeCard = activeModule ?? displayed
   const activeIndex = activeCard ? data.modules.findIndex((module) => module.id === activeCard.id) : -1
   const side = activeCard ? popupSide(Math.max(activeIndex, 0)) : "left"
@@ -117,14 +193,24 @@ export function TopologyPanel({
       <TopologyScene
         data={data}
         activeModuleId={activeModuleId}
-        onSelectModule={setActiveModuleId}
+        onSelectModule={handleSelectModule}
         panPixels={panPixels}
         active={active}
+        escortModuleId={escort?.moduleId ?? null}
+        escortSpeech={
+          escort
+            ? {
+                title: t("landing.robotFollowMe"),
+                detail: t("landing.robotFollowMeDetail", { label: escort.label }),
+              }
+            : undefined
+        }
+        onEscortExit={finishEscort}
       />
 
       <TopologyIntro
         open={introOpen}
-        hidden={open}
+        hidden={open || Boolean(escort)}
         modules={data.modules.filter((module) => !module.vacant)}
         onOpen={reopenIntro}
         onClose={closeIntro}
@@ -159,6 +245,7 @@ export function TopologyPanel({
                     </p>
                     <Link
                       href={activeCard.href}
+                      onClick={(event) => handleNavigate(event, activeCard.href, activeCard.label)}
                       className="mt-1 inline-flex items-center gap-1 font-display text-xl font-extrabold tracking-tight hover:underline"
                     >
                       {activeCard.label}
@@ -189,6 +276,7 @@ export function TopologyPanel({
                       <li key={item.id}>
                         <Link
                           href={item.href}
+                          onClick={(event) => handleNavigate(event, item.href, item.label)}
                           className="group flex items-start gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-background/55"
                         >
                           <span
@@ -218,6 +306,7 @@ export function TopologyPanel({
 
                 <Link
                   href={activeCard.href}
+                  onClick={(event) => handleNavigate(event, activeCard.href, activeCard.label)}
                   className="mt-3 flex items-center justify-between rounded-xl border border-foreground/8 bg-background/40 px-3 py-2 text-xs font-semibold tracking-wide text-muted-foreground transition hover:bg-background/70 hover:text-foreground"
                 >
                   {t("landing.openModule")}
@@ -228,6 +317,31 @@ export function TopologyPanel({
           ) : null}
         </aside>
       </div>
+
+      {/* 안내 연출을 기다리기 싫으면 바로 이동 */}
+      {escort && !leaving ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center md:bottom-6">
+          <button
+            type="button"
+            onClick={() => navigateTo(escort.href)}
+            className="topology-escort-skip pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-sm ring-1 ring-foreground/10 backdrop-blur-md transition hover:bg-background"
+          >
+            {t("landing.escortSkip")}
+            <ArrowRight className="size-3.5" />
+          </button>
+        </div>
+      ) : null}
+
+      {/* 로봇이 나간 뒤 화면 전체를 덮고 실제 페이지 이동으로 이어지는 베일.
+          히어로 트랙이 transform 안이라 fixed가 갇히므로 body로 포털한다. */}
+      {escort && leaving
+        ? createPortal(
+            <div className="topology-leave-veil" role="status" aria-live="polite">
+              <p className="topology-leave-veil-text">{t("landing.escortLeaving", { label: escort.label })}</p>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   )
 }

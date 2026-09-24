@@ -5,7 +5,9 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Html, OrbitControls } from "@react-three/drei"
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib"
 import * as THREE from "three"
-import { TopologyDesk } from "@/components/landing/hero-topology/topology-desk"
+import { ROBOT_SEAT_Z, SEAT_HEIGHT, TopologyDesk } from "@/components/landing/hero-topology/topology-desk"
+import { DOOR_HEIGHT, DOOR_WIDTH, TopologyDoor } from "@/components/landing/hero-topology/topology-door"
+import { buildEscortPath, TopologyEscortRobot } from "@/components/landing/hero-topology/topology-escort-robot"
 import { TopologyRobotVacuum, type VacuumObstacle } from "@/components/landing/hero-topology/topology-robot-vacuum"
 import { TopologyAirPurifier } from "@/components/landing/hero-topology/topology-air-purifier"
 import { TopologyBookshelf } from "@/components/landing/hero-topology/topology-bookshelf"
@@ -60,8 +62,15 @@ const MIN_BASE_ZOOM = 40
 const FOCUS_ZOOM = 124
 const LERP_FACTOR = 0.28
 const FOCUS_ARRIVE = 0.05
-const ROBOT_LOCAL = new THREE.Vector3(0, 1.05, 0.55)
+// 안내 로봇을 따라갈 때는 문과 로봇이 함께 보이도록 덜 확대하고, 걷는 속도에 맞춰 부드럽게 쫓는다
+const ESCORT_ZOOM = 96
+const ESCORT_LERP = 0.1
+const ROBOT_LOCAL = new THREE.Vector3(0, 1.05, ROBOT_SEAT_Z)
 const Y_AXIS = new THREE.Vector3(0, 1, 0)
+// 옆벽에 붙는 출입문 — 벽면에서 이만큼 안쪽이 로봇이 지나는 통로(문 안쪽 지점)이자
+// 왼쪽 벽을 따라 걷는 통로의 x다. 경로 클램프 여백과 같은 값이어야 꺾임 없이 이어진다.
+const AISLE_MARGIN = 0.42
+const DOOR_FRAME_T = 0.08
 
 function memberSeatPose(col: number): { x: number; rotationY: number } {
   const pair = Math.floor(col / 2)
@@ -128,6 +137,12 @@ type Props = {
   panPixels?: number
   /** 히어로 캐러셀이 클래식 슬라이드에 있거나 탭이 백그라운드면 false — 렌더 루프 자체를 끈다 */
   active?: boolean
+  /** 메뉴/하위 메뉴를 골라 안내 로봇이 문으로 걸어 나가는 중인 모듈 id */
+  escortModuleId?: string | null
+  /** 안내 로봇 말풍선 문구 — Canvas 밖(i18n 컨텍스트)에서 만들어 넘긴다 */
+  escortSpeech?: { title: string; detail: string }
+  /** 안내 로봇이 문 밖으로 완전히 사라진 뒤 호출 — 여기서 화면 전환을 시작한다 */
+  onEscortExit?: () => void
 }
 
 function CameraFocus({
@@ -137,6 +152,7 @@ function CameraFocus({
   cameraOffset,
   baseZoom,
   controlsRef,
+  escortRef,
 }: {
   focusKey: string | null
   layout: { position: THREE.Vector3; rotationY: number } | null
@@ -144,6 +160,8 @@ function CameraFocus({
   cameraOffset: THREE.Vector3
   baseZoom: number
   controlsRef: React.RefObject<OrbitControlsImpl | null>
+  /** 안내 로봇이 걷는 동안 그 월드 위치(참조) — null이면 평소 포커스 로직 */
+  escortRef: React.MutableRefObject<THREE.Vector3 | null>
 }) {
   const { camera } = useThree()
   const lastKey = useRef<string>("__init__")
@@ -156,6 +174,31 @@ function CameraFocus({
   useFrame(() => {
     const controls = controlsRef.current
     if (!controls) return
+
+    const escortPos = escortRef.current
+    if (escortPos) {
+      // 로봇을 따라가는 동안은 사용자 조작을 끊고, 도착 판정 없이 계속 쫓는다.
+      // 끝난 뒤(다른 키로 바뀌면) 평소 포커스 로직이 다시 목표를 잡는다.
+      lastKey.current = "__escort__"
+      animating.current = true
+      controls.enabled = false
+      controls.enableDamping = false
+      const delta = (controls as OrbitControlsImpl & { sphericalDelta?: THREE.Spherical }).sphericalDelta
+      delta?.set(0, 0, 0)
+      desiredTarget.current.copy(escortPos)
+      desiredTarget.current.y += 0.5
+      desiredCam.current.copy(escortPos).add(FOCUS_WORLD_OFFSET)
+      desiredZoom.current = ESCORT_ZOOM
+      controls.target.lerp(desiredTarget.current, ESCORT_LERP)
+      camera.position.lerp(desiredCam.current, ESCORT_LERP)
+      const ortho = camera as THREE.OrthographicCamera
+      if (ortho.isOrthographicCamera) {
+        ortho.zoom = THREE.MathUtils.lerp(ortho.zoom, desiredZoom.current, ESCORT_LERP)
+        ortho.updateProjectionMatrix()
+      }
+      camera.lookAt(controls.target)
+      return
+    }
 
     const key = focusKey ?? "__home__"
     if (lastKey.current !== key) {
@@ -264,9 +307,20 @@ function OfficePlant({ position }: { position: [number, number, number] }) {
   )
 }
 
-export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels = 0, active = true }: Props) {
+export function TopologyScene({
+  data,
+  activeModuleId,
+  onSelectModule,
+  panPixels = 0,
+  active = true,
+  escortModuleId = null,
+  escortSpeech,
+  onEscortExit,
+}: Props) {
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const dragging = useRef(false)
+  const escortPositionRef = useRef<THREE.Vector3 | null>(null)
+  const doorOpenRef = useRef(0)
   const documentVisible = useDocumentVisible()
   const dark = useTopologyDark()
   const tone = useTone()
@@ -300,8 +354,39 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
   const floorMinX = -floorWidth / 2
   const backWallZ = floorMinZ + WALL_T / 2
   const sideWallX = floorMinX + WALL_T / 2
-  const sideWallDepth = floorDepth - WALL_T
-  const sideWallCenterZ = floorMinZ + WALL_T + sideWallDepth / 2
+  const floorMaxZ = floorMinZ + floorDepth
+
+  // 출입문 — 옆벽(화이트보드 벽)의 앞쪽, 마지막 팀원 열보다 앞에 둔다. 화이트보드
+  // (floorCenterZ+0.35 ± 0.75)와 앞 구석 공기청정기(floorMaxZ-0.4) 사이 빈 구간이다.
+  // 옆벽은 문 자리를 비우고 앞·뒤 두 토막 + 문 위 상인방 토막으로 나눠 그린다.
+  const lastRowZ = MEMBER_Z_START + Math.max(layout.numRows - 1, 0) * ROW_SPACING
+  const doorZ = THREE.MathUtils.clamp(lastRowZ + 1.45, floorMinZ + 2.2, floorMaxZ - 0.75)
+  const doorGapHalf = DOOR_WIDTH / 2 + DOOR_FRAME_T
+  const sideWallRearStart = floorMinZ + WALL_T
+  const sideWallRearEnd = doorZ - doorGapHalf
+  const sideWallFrontStart = doorZ + doorGapHalf
+  const sideWallFrontEnd = floorMaxZ
+  const doorLintelBottom = DOOR_HEIGHT + DOOR_FRAME_T
+  const doorInsideX = floorMinX + AISLE_MARGIN
+  const doorOutsideX = floorMinX - 0.85
+  // 팀장 책상 앞과 파티션 사이 복도 — 팀장 로봇이 문으로 갈 때 지나는 길
+  const leadPartitionZ = (LEAD_Z + MEMBER_Z_START) / 2 - 0.15
+  const leadCorridorZ = (LEAD_Z + 0.475 + (leadPartitionZ - 0.04)) / 2
+
+  const escortSeat = escortModuleId ? deskLayout.get(escortModuleId) ?? null : null
+  const escortIndex = escortModuleId ? data.modules.findIndex((module) => module.id === escortModuleId) : -1
+  const escortPath = useMemo(() => {
+    if (!escortSeat) return null
+    return buildEscortPath({
+      seat: escortSeat,
+      seatHeight: SEAT_HEIGHT,
+      robotLocalZ: ROBOT_SEAT_Z,
+      floor: { minX: floorMinX, maxX: floorMinX + floorWidth, minZ: floorMinZ, maxZ: floorMaxZ },
+      aisleMargin: AISLE_MARGIN,
+      door: { insideX: doorInsideX, outsideX: doorOutsideX, z: doorZ },
+      lead: escortSeat.wide ? { corridorZ: leadCorridorZ, halfWidth: LEAD_WIDTH / 2 } : null,
+    })
+  }, [escortSeat, floorMinX, floorWidth, floorMinZ, floorMaxZ, doorInsideX, doorOutsideX, doorZ, leadCorridorZ])
 
   // 로봇청소기가 실제로 우회해야 할 고정 소품들의 위치 — 아래 JSX에 그대로 쓰는
   // 좌표와 같은 값이어야 하므로 여기서 한 번만 정의해서 같이 쓴다.
@@ -389,6 +474,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         cameraOffset={cameraOffset}
         baseZoom={layout.zoom}
         controlsRef={controlsRef}
+        escortRef={escortPositionRef}
       />
 
       {/* 다크: 밤 사무실 — 차가운 달빛 톤의 약한 환경광 + TV에서 새는 푸른 빛 */}
@@ -432,10 +518,21 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
         <boxGeometry args={[floorWidth, WALL_H, WALL_T]} />
         <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[sideWallX, WALL_H / 2, sideWallCenterZ]}>
-        <boxGeometry args={[WALL_T, WALL_H, sideWallDepth]} />
+      <mesh position={[sideWallX, WALL_H / 2, (sideWallRearStart + sideWallRearEnd) / 2]}>
+        <boxGeometry args={[WALL_T, WALL_H, sideWallRearEnd - sideWallRearStart]} />
         <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
       </mesh>
+      <mesh position={[sideWallX, WALL_H / 2, (sideWallFrontStart + sideWallFrontEnd) / 2]}>
+        <boxGeometry args={[WALL_T, WALL_H, sideWallFrontEnd - sideWallFrontStart]} />
+        <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[sideWallX, (doorLintelBottom + WALL_H) / 2, doorZ]}>
+        <boxGeometry args={[WALL_T, WALL_H - doorLintelBottom, doorGapHalf * 2]} />
+        <meshStandardMaterial color={palette.wall} transparent opacity={palette.wallOpacity} roughness={0.15} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* 출입문 — 옆벽 앞쪽. 메뉴를 고르면 안내 로봇이 이 문으로 나가고 화면이 전환된다 */}
+      <TopologyDoor position={[sideWallX, 0, doorZ]} openRef={doorOpenRef} />
 
       {/* TV — 팀장 책상 뒤(팀장 자리가 있을 때). "팀장이 TV 등지고 앉는다"는 요청의 기준점 */}
       <group position={[-0.7, 1.55, backWallZ + WALL_T / 2 + 0.01]}>
@@ -519,6 +616,7 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
             wide={seat.wide}
             active={activeModuleId === module.id}
             skinIndex={index}
+            robotHidden={escortModuleId === module.id}
             onSelect={() => {
               if (module.vacant) return
               onSelectModule(activeModuleId === module.id ? null : module.id)
@@ -526,6 +624,21 @@ export function TopologyScene({ data, activeModuleId, onSelectModule, panPixels 
           />
         )
       })}
+
+      {/* 안내 로봇 — 선택한 책상의 로봇이 스툴에서 내려와 문까지 걸어 나간다.
+          좌석 로봇은 robotHidden으로 비우고, 월드 좌표에서 따로 움직인다. */}
+      {escortPath && escortModuleId && onEscortExit ? (
+        <TopologyEscortRobot
+          key={escortModuleId}
+          path={escortPath}
+          skinIndex={Math.max(escortIndex, 0)}
+          speechTitle={escortSpeech?.title ?? ""}
+          speechDetail={escortSpeech?.detail ?? ""}
+          doorOpenRef={doorOpenRef}
+          positionRef={escortPositionRef}
+          onExit={onEscortExit}
+        />
+      ) : null}
     </Canvas>
   )
 }
