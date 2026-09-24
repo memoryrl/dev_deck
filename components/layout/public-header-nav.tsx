@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useCallback, useEffect, useId, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent } from "react"
 import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { AccountMenu } from "@/components/layout/account-menu"
 import { AuthSegment } from "@/components/layout/auth-segment"
@@ -12,6 +12,7 @@ import { NotificationCenter } from "@/components/notifications/notification-cent
 import { MENU_ICON, megaIdFromLabelKey, publicMenus, SCENE_LINE, type MegaId } from "@/components/layout/public-nav-data"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
+import { escortLinkClick } from "@/lib/landing/escort-bus"
 import { isActiveHref, pickActiveHref } from "@/lib/menus/active"
 import { localizeNavNodes } from "@/lib/menus/label"
 import { cn } from "@/lib/utils"
@@ -97,7 +98,7 @@ function MegaHighlight({
   body: string
   cta: string
   icon?: (typeof MENU_ICON)[MegaId]
-  onNavigate: () => void
+  onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>) => void
 }) {
   const [broken, setBroken] = useState(false)
   const showPhoto = Boolean(photo) && !broken
@@ -221,8 +222,15 @@ export function PublicHeaderNav({
       : undefined)
   const scene: SceneId = staticMega?.id ?? "default"
   const ActiveIcon = staticMega ? MENU_ICON[staticMega.id] : undefined
+  const highlightHref = staticMega ? staticMega.highlight.href : activeNode?.children[0]?.href ?? "/"
   const photo = photos[scene]
   const closeDrawer = useCallback(() => setDrawer(false), [])
+
+  // 메뉴 링크 클릭: 메가 메뉴를 닫고, 랜딩 토폴로지가 보이는 중이면 로봇 안내 연출을 거쳐 이동한다
+  function navigate(event: ReactMouseEvent<HTMLAnchorElement>, href: string, label: string, menuId?: string | null) {
+    setOpen(null)
+    escortLinkClick(event, { href, label, menuId })
+  }
 
   useEffect(() => {
     const next = {
@@ -281,17 +289,18 @@ export function PublicHeaderNav({
               const Icon = megaId ? MENU_ICON[megaId] : undefined
               const current =
                 isActiveHref(activeHref, menu.href) || menu.children.some((child) => isActiveHref(activeHref, child.href))
-              if (menu.href && menu.children.length === 0) {
+              const rootHref = menu.href
+              if (rootHref && menu.children.length === 0) {
                 return (
                   <Link
                     key={menu.id}
-                    href={menu.href}
+                    href={rootHref}
                     className={cn(
                       "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-foreground/75 transition-colors hover:bg-foreground/[0.06] hover:text-foreground",
                       current && "font-bold text-foreground"
                     )}
                     aria-current={current ? "page" : undefined}
-                    onClick={() => setOpen(null)}
+                    onClick={(event) => navigate(event, rootHref, menu.label, menu.id)}
                   >
                     {menu.label}
                   </Link>
@@ -379,7 +388,7 @@ export function PublicHeaderNav({
             <div className="mx-auto max-w-6xl px-5 pb-8 pt-2">
               <div className="grid overflow-hidden rounded-2xl bg-background/70 ring-1 ring-foreground/10 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.65fr)]">
                 <MegaHighlight
-                  href={staticMega ? staticMega.highlight.href : activeNode.children[0]?.href ?? "/"}
+                  href={highlightHref}
                   photo={photo}
                   scene={scene}
                   label={activeNode.label}
@@ -387,7 +396,7 @@ export function PublicHeaderNav({
                   body={staticMega ? t(staticMega.highlight.bodyKey) : t("mega.fallbackBody")}
                   cta={staticMega ? t(staticMega.highlight.ctaKey) : activeNode.children[0]?.label ?? t("common.shortcut")}
                   icon={ActiveIcon}
-                  onNavigate={() => setOpen(null)}
+                  onNavigate={(event) => navigate(event, highlightHref, activeNode.label, activeNode.id)}
                 />
                 <div className="grid gap-1 p-3 sm:grid-cols-2 sm:p-4">
                   {staticMega
@@ -412,7 +421,7 @@ export function PublicHeaderNav({
                                   href={linkHref}
                                   className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
                                   aria-current={linkCurrent ? "page" : undefined}
-                                  onClick={() => setOpen(null)}
+                                  onClick={(event) => navigate(event, linkHref, t(link.labelKey), activeNode.id)}
                                 >
                                   <span className={cn("text-sm font-medium", linkCurrent && "font-bold")}>{t(link.labelKey)}</span>
                                   {link.noteKey ? (
@@ -439,7 +448,7 @@ export function PublicHeaderNav({
                                     href={link.href}
                                     className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-foreground/[0.05]"
                                     aria-current={linkCurrent ? "page" : undefined}
-                                    onClick={() => setOpen(null)}
+                                    onClick={(event) => navigate(event, link.href, link.label, activeNode.id)}
                                   >
                                     <span className={cn("text-sm font-medium", linkCurrent && "font-bold")}>{link.label}</span>
                                   </Link>

@@ -8,6 +8,13 @@ import { createPortal } from "react-dom"
 import { ArrowRight, ArrowUpRight, X } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { TopologyIntro } from "@/components/landing/hero-topology/topology-intro"
+import {
+  isExternalHref,
+  isPlainLeftClick,
+  prefersReducedMotion,
+  registerEscortHandler,
+  resolveEscortModule,
+} from "@/lib/landing/escort-bus"
 import { cn } from "@/lib/utils"
 import type { TopologyData, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology"
 
@@ -62,30 +69,6 @@ type Escort = { moduleId: string; href: string; label: string }
 // 로봇이 문 밖으로 사라진 뒤 화면을 덮는 베일이 다 차오르는 시간 — CSS(.topology-leave-veil)와 맞춘다
 const LEAVE_VEIL_MS = 420
 
-function prefersReducedMotion() {
-  try {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  } catch {
-    return false
-  }
-}
-
-function isExternalHref(href: string) {
-  return /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")
-}
-
-// 새 탭·수식키 클릭·이미 처리된 이벤트는 브라우저 기본 동작(새 탭 등)에 맡긴다
-function isPlainLeftClick(event: ReactMouseEvent<HTMLAnchorElement>) {
-  return (
-    !event.defaultPrevented &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  )
-}
-
 export function TopologyPanel({
   data,
   className,
@@ -109,6 +92,7 @@ export function TopologyPanel({
   const [leaving, setLeaving] = useState(false)
   const navigated = useRef(false)
   const leaveTimer = useRef<number | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   // 이 컴포넌트는 사용자가 토폴로지 뷰로 전환한 뒤에만 마운트되므로(hero-section.tsx
   // 참고) 서버 렌더링을 거치지 않는다 — localStorage를 초기값에서 바로 읽어도 안전하다.
   // 처음 방문(키 없음)이면 카드를 펼친 채로 시작하고, 이미 본 적 있으면 접힌 아이콘으로
@@ -167,15 +151,38 @@ export function TopologyPanel({
     }
   }, [])
 
+  const startEscort = useCallback(
+    (moduleId: string, href: string, label: string) => {
+      if (!isExternalHref(href)) router.prefetch(href)
+      setActiveModuleId(moduleId)
+      setEscort({ moduleId, href, label })
+    },
+    [router]
+  )
+
   function handleNavigate(event: ReactMouseEvent<HTMLAnchorElement>, href: string, label: string) {
     if (escort || !activeModule || activeModule.vacant) return
     if (!isPlainLeftClick(event)) return
     // 움직임 최소화 설정이면 연출 없이 링크 기본 동작으로 바로 이동
     if (prefersReducedMotion()) return
     event.preventDefault()
-    if (!isExternalHref(href)) router.prefetch(href)
-    setEscort({ moduleId: activeModule.id, href, label })
+    startEscort(activeModule.id, href, label)
   }
+
+  // 헤더·푸터 내비게이션 링크도 같은 연출을 탄다 — 이 패널이 실제로 보이는 슬라이드일 때만
+  // 맡고, 이미 안내 중이면 거절해 링크가 평소처럼 바로 이동하게 한다. 푸터처럼 화면
+  // 아래에서 눌렀으면 로봇이 보이도록 히어로를 뷰포트 안으로 스크롤한다.
+  useEffect(() => {
+    if (!active) return
+    return registerEscortHandler((request) => {
+      if (escort) return false
+      const target = resolveEscortModule(data.modules, request)
+      if (!target) return false
+      startEscort(target.id, request.href, request.label)
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      return true
+    })
+  }, [active, escort, data.modules, startEscort])
 
   function handleSelectModule(id: string | null) {
     if (escort) return
@@ -189,7 +196,13 @@ export function TopologyPanel({
   const tint = activeCard ? TINT_FACE[activeCard.tint] : TINT_FACE.champagne
 
   return (
-    <div className={cn("relative z-0 h-[560px] w-full overflow-hidden bg-[#efe6d8] dark:bg-[#1d1a17] md:h-[640px]", className)}>
+    <div
+      ref={rootRef}
+      className={cn(
+        "relative z-0 h-[560px] w-full scroll-mt-14 overflow-hidden bg-[#efe6d8] dark:bg-[#1d1a17] md:h-[640px]",
+        className
+      )}
+    >
       <TopologyScene
         data={data}
         activeModuleId={activeModuleId}
