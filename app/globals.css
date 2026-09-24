@@ -745,6 +745,16 @@
   animation: topology-escort-skip-in 0.4s ease-out 0.6s both;
 }
 
+/* 랜딩 밖에서 메뉴를 눌렀을 때 화면 전체를 토폴로지 방으로 덮는 오버레이 —
+   헤더(z-50) 위, 이동 베일(z-90) 아래 */
+.topology-escort-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow: hidden;
+  animation: topology-leave-veil-in 0.32s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
     animation: none;
@@ -752,7 +762,8 @@
 
   .topology-leave-veil,
   .topology-leave-veil-text,
-  .topology-escort-skip {
+  .topology-escort-skip,
+  .topology-escort-overlay {
     animation: none;
   }
 

@@ -170,12 +170,13 @@ export function TopologyPanel({
   }
 
   // 헤더·푸터 내비게이션 링크도 같은 연출을 탄다 — 이 패널이 실제로 보이는 슬라이드일 때만
-  // 맡고, 이미 안내 중이면 거절해 링크가 평소처럼 바로 이동하게 한다. 푸터처럼 화면
-  // 아래에서 눌렀으면 로봇이 보이도록 히어로를 뷰포트 안으로 스크롤한다.
+  // 맡는다. 이미 안내 중이면 추가 클릭은 삼킨다(곧 첫 목적지로 이동하므로, 오버레이가
+  // 겹쳐 뜨거나 링크가 먼저 튀어 나가지 않게). 푸터처럼 화면 아래에서 눌렀으면 로봇이
+  // 보이도록 히어로를 뷰포트 안으로 스크롤한다.
   useEffect(() => {
     if (!active) return
     return registerEscortHandler((request) => {
-      if (escort) return false
+      if (escort) return true
       const target = resolveEscortModule(data.modules, request)
       if (!target) return false
       startEscort(target.id, request.href, request.label)

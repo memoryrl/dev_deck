@@ -1,11 +1,20 @@
-import { ADMIN_NAV } from "@/components/layout/admin-nav"
-import { megaIdFromLabelKey, publicMenus } from "@/components/layout/public-nav-data"
 import { roleAtLeast } from "@/lib/access"
 import { currentViewer } from "@/lib/boards/access"
 import { getT } from "@/lib/i18n/dictionary"
-import { menuLabel, resolveMenuLabelKey } from "@/lib/menus/label"
+import { menuLabel } from "@/lib/menus/label"
 import { listAllMenus } from "@/lib/menus/public"
 import type { MenuItem } from "@/types/menu"
+import {
+  MAX_ITEMS_PER_MODULE,
+  TOPOLOGY_TINTS,
+  buildAdminModule,
+  resolveModuleGuideDescription,
+  type TopologyData,
+  type TopologyItemNode,
+  type TopologyModuleNode,
+} from "@/lib/landing/topology-modules"
+
+export type { TopologyData, TopologyItemNode, TopologyModuleNode, TopologyTint } from "@/lib/landing/topology-modules"
 
 // "결국 루트 메뉴에 따라 로봇이 배정된다"는
 // 방향에 맞춰, 하드코딩된 PromptKit/CareerLog/Steam 3개 대신 실제 헤더 루트 메뉴
@@ -14,37 +23,9 @@ import type { MenuItem } from "@/types/menu"
 // 마주보는 페어 2개). 하위 메뉴는 그 책상의 목록 자리에 그대로 나온다. 팀장 자리는
 // "관리자 대시보드" 좌석이다. 관리자 로그인 시 로봇이 앉아 있고, 그 외에는 책상·모니터만
 // 남기고 외근 팻말을 올린다.
-
-export type TopologyTint = "champagne" | "cognac" | "espresso"
-
-export type TopologyItemNode = {
-  id: string
-  label: string
-  meta: string | null
-  href: string
-}
-
-export type TopologyModuleNode = {
-  id: string
-  label: string
-  href: string
-  tint: TopologyTint
-  isLead: boolean
-  restricted: boolean
-  /** 관리자 자리: 비로그인·일반회원에게는 로봇 없이 책상만 두고 외근 팻말을 올린다 */
-  vacant: boolean
-  /** 로봇 말풍선 부연설명 (헤더 메가 메뉴와 동일한 카피) */
-  guideDescription: string
-  items: TopologyItemNode[]
-}
-
-export type TopologyData = {
-  modules: TopologyModuleNode[]
-}
-
-const TINTS: TopologyTint[] = ["champagne", "cognac", "espresso"]
-const MAX_ITEMS_PER_MODULE = 4
-const ADMIN_MODULE_ID = "admin-dashboard"
+//
+// 타입과 순수 빌더(클라이언트에서도 쓰는 것)는 topology-modules.ts에 있고, 이 파일은
+// Supabase·뷰어 조회가 필요한 서버 전용 조립만 맡는다.
 
 function resolveHref(item: Pick<MenuItem, "href" | "boards">, fallback = "/") {
   if (item.boards?.slug) return `/b/${item.boards.slug}`
@@ -55,46 +36,6 @@ function isVisible(item: MenuItem) {
   if (!item.is_active) return false
   if (item.board_id && item.boards?.is_active === false) return false
   return true
-}
-
-function resolveModuleGuideDescription(
-  item: Pick<MenuItem, "label" | "label_key">,
-  t: (key: string) => string,
-  isAdminModule: boolean,
-): string {
-  if (isAdminModule) return t("landing.moduleAdminGuide")
-  const key = resolveMenuLabelKey({ label: item.label, labelKey: item.label_key })
-  const megaId = megaIdFromLabelKey(key)
-  const mega =
-    publicMenus.find((menu) => menu.labelKey === key) ??
-    publicMenus.find((menu) => menu.id === megaId) ??
-    publicMenus.find((menu) => t(menu.labelKey) === item.label)
-  if (mega) return t(mega.highlight.bodyKey)
-  return t("mega.fallbackBody")
-}
-
-// 관리자 대시보드 좌석. 관리자가 아니면 로봇만 빼고 책상·모니터는 남겨
-// "외근중" 팻말을 올린다(방이 비어 보이지 않게).
-
-function buildAdminModule(t: (key: string) => string, vacant: boolean): TopologyModuleNode {
-  return {
-    id: ADMIN_MODULE_ID,
-    label: t("dashboard.adminMenu"),
-    href: vacant ? "/" : (ADMIN_NAV[0]?.href ?? "/site/dashboard"),
-    tint: "espresso",
-    isLead: true,
-    restricted: vacant,
-    vacant,
-    guideDescription: resolveModuleGuideDescription({ label: t("dashboard.adminMenu"), label_key: "dashboard.adminMenu" }, t, true),
-    items: vacant
-      ? []
-      : ADMIN_NAV.slice(0, MAX_ITEMS_PER_MODULE).map((entry) => ({
-          id: entry.href,
-          label: t(entry.labelKey),
-          meta: null,
-          href: entry.href,
-        })),
-  }
 }
 
 // 헤더 루트 메뉴(devdeck.menus, location='header', parent_id=null)를 팀원 모듈
@@ -130,7 +71,7 @@ export async function listLandingModules(): Promise<TopologyModuleNode[]> {
       id: root.id,
       label: menuLabel(t, { label: root.label, labelKey: root.label_key, labels: root.labels }, locale),
       href: resolveHref(root, items[0]?.href ?? "/"),
-      tint: TINTS[index % TINTS.length],
+      tint: TOPOLOGY_TINTS[index % TOPOLOGY_TINTS.length],
       isLead: false,
       restricted: false,
       vacant: false,
