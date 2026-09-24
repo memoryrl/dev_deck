@@ -65,6 +65,9 @@ const FOCUS_ARRIVE = 0.05
 // 안내 로봇을 따라갈 때는 문과 로봇이 함께 보이도록 덜 확대하고, 걷는 속도에 맞춰 부드럽게 쫓는다
 const ESCORT_ZOOM = 96
 const ESCORT_LERP = 0.1
+// 직교 카메라라 거리는 화면 구도에 영향이 없다 — 포커스 오프셋 그대로 두면 카메라 쪽
+// 가구·로봇이 near 평면에 잘려 나가므로, 같은 방향으로 충분히 물러난다.
+const ESCORT_WORLD_OFFSET = FOCUS_WORLD_OFFSET.clone().multiplyScalar(3.4)
 const ROBOT_LOCAL = new THREE.Vector3(0, 1.05, ROBOT_SEAT_Z)
 const Y_AXIS = new THREE.Vector3(0, 1, 0)
 // 옆벽에 붙는 출입문 — 벽면에서 이만큼 안쪽이 로봇이 지나는 통로(문 안쪽 지점)이자
@@ -187,7 +190,7 @@ function CameraFocus({
       delta?.set(0, 0, 0)
       desiredTarget.current.copy(escortPos)
       desiredTarget.current.y += 0.5
-      desiredCam.current.copy(escortPos).add(FOCUS_WORLD_OFFSET)
+      desiredCam.current.copy(escortPos).add(ESCORT_WORLD_OFFSET)
       desiredZoom.current = ESCORT_ZOOM
       controls.target.lerp(desiredTarget.current, ESCORT_LERP)
       camera.position.lerp(desiredCam.current, ESCORT_LERP)

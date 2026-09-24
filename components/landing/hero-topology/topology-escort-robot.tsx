@@ -79,14 +79,14 @@ export function buildEscortPath(args: {
 
 type Phase = "greet" | "hop" | "walk" | "gone"
 
-const GREET_DURATION = 1.15
+const GREET_DURATION = 1.05
 const HOP_DURATION = 0.5
 const HOP_ARC = 0.36
 const TURN_SPEED = 9
 const DOOR_TRIGGER_DISTANCE = 1.5
-const EXIT_HOLD = 0.45
+const EXIT_HOLD = 0.35
 // 먼 자리에서도 3초 안팎에 문에 닿게 속도를 거리로 정한다. 빠르면 걷기 대신 뛰기 클립.
-const WALK_TARGET_SECONDS = 3.2
+const WALK_TARGET_SECONDS = 2.8
 const MIN_SPEED = 1.7
 const MAX_SPEED = 3.1
 const RUN_THRESHOLD = 2.4
@@ -181,7 +181,10 @@ export function TopologyEscortRobot({
       const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       for (const material of list) {
         if (material instanceof MeshStandardMaterial) {
+          // 불투명으로 컴파일된 셰이더는 OPAQUE 정의로 alpha를 1로 고정한다 —
+          // transparent만 바꾸면 opacity가 무시되므로 프로그램을 다시 만들게 한다.
           material.transparent = true
+          material.needsUpdate = true
           materials.push(material)
         }
       }
