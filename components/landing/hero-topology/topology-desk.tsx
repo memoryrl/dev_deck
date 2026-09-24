@@ -21,7 +21,9 @@ function legOffsets(halfWidth: number): [number, number][] {
   ]
 }
 
-const SEAT_HEIGHT = 0.5
+export const SEAT_HEIGHT = 0.5
+/** 책상 로컬 좌표에서 스툴·로봇이 놓이는 +Z 오프셋 */
+export const ROBOT_SEAT_Z = 0.55
 const SEAT_THICKNESS = 0.06
 const SEAT_RADIUS = 0.22
 
@@ -223,6 +225,8 @@ type TopologyDeskProps = {
   wide?: boolean
   active: boolean
   skinIndex?: number
+  /** 안내 로봇이 이 자리에서 일어나 걸어 나가는 동안 true — 좌석의 로봇을 비운다 */
+  robotHidden?: boolean
   onSelect: () => void
 }
 
@@ -234,6 +238,7 @@ export function TopologyDesk({
   wide = false,
   active,
   skinIndex = 0,
+  robotHidden = false,
   onSelect,
 }: TopologyDeskProps) {
   const tone = useTone()
@@ -329,7 +334,7 @@ export function TopologyDesk({
       <DeskProp moduleId={module.id} color={color} vacant={Boolean(module.vacant)} />
       {dark && !module.vacant ? <DeskLamp x={-(width / 2 - 0.22)} /> : null}
 
-      <group position={[0, 0, 0.55]}>
+      <group position={[0, 0, ROBOT_SEAT_Z]}>
         <Stool />
       </group>
 
@@ -340,7 +345,7 @@ export function TopologyDesk({
           외근(vacant) 좌석은 로봇·히트박스를 빼고 책상·모니터·팻말만 둔다. */}
       {module.vacant ? null : (
         <group
-          position={[0, SEAT_HEIGHT, 0.55]}
+          position={[0, SEAT_HEIGHT, ROBOT_SEAT_Z]}
           onClick={handleClick}
           onPointerOver={(event) => {
             event.stopPropagation()
@@ -351,13 +356,15 @@ export function TopologyDesk({
             leaveHover()
           }}
         >
-          <TopologyRobot
-            skinIndex={skinIndex}
-            active={active}
-            hovered={hovered}
-            guideTitle={t("landing.robotGuideTitle", { label: module.label })}
-            guideDescription={module.guideDescription}
-          />
+          {robotHidden ? null : (
+            <TopologyRobot
+              skinIndex={skinIndex}
+              active={active}
+              hovered={hovered}
+              guideTitle={t("landing.robotGuideTitle", { label: module.label })}
+              guideDescription={module.guideDescription}
+            />
+          )}
           {/* visible=false여도 레이캐스트는 통과한다 — 로봇 실루엣보다 살짝 넉넉한 정도.
               모바일 탭 오차를 감안해 데스크톱 전용이던 시절보다 조금 더 넉넉하게 잡는다
               (페어 간격 1.62보다 한참 작아 옆 책상 히트박스와는 안 겹친다). */}

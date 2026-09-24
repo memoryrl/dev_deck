@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ArrowUpRight } from "lucide-react"
+import { escortLinkClick } from "@/lib/landing/escort-bus"
 import { isActiveHref, pickActiveHref } from "@/lib/menus/active"
 import { cn } from "@/lib/utils"
 
@@ -33,6 +34,10 @@ export function FooterNav({ columns }: { columns: FooterColumn[] }) {
                   <Link
                     href={link.href}
                     aria-current={current ? "page" : undefined}
+                    // 랜딩 토폴로지가 보이는 중이면 로봇 안내 연출을 거쳐 이동 — 아니면 평소처럼 바로 이동
+                    onClick={(event) =>
+                      escortLinkClick(event, { href: link.href, label: link.label, groupLabel: column.title })
+                    }
                     className={cn(
                       "group inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground",
                       current && "font-bold text-foreground"

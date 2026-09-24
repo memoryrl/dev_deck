@@ -689,8 +689,70 @@
   border-top: 10px solid #fffdf8;
 }
 
+/* 토폴로지 안내 로봇이 문 밖으로 나간 뒤 화면을 덮는 전환 베일 — 다 덮이면 실제 페이지 이동 */
+@keyframes topology-leave-veil-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes topology-leave-veil-text {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topology-leave-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--background));
+  animation: topology-leave-veil-in 0.42s ease-out both;
+}
+
+.topology-leave-veil-text {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--muted-foreground));
+  animation: topology-leave-veil-text 0.4s ease-out 0.12s both;
+}
+
+@keyframes topology-escort-skip-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topology-escort-skip {
+  animation: topology-escort-skip-in 0.4s ease-out 0.6s both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
+    animation: none;
+  }
+
+  .topology-leave-veil,
+  .topology-leave-veil-text,
+  .topology-escort-skip {
     animation: none;
   }
 

@@ -13,6 +13,7 @@ import { MENU_ICON, megaIdFromLabelKey, type MegaId } from "@/components/layout/
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { lockDocumentScroll } from "@/lib/dom/lock-scroll"
+import { escortLinkClick } from "@/lib/landing/escort-bus"
 import { isActiveHref, pickActiveHref } from "@/lib/menus/active"
 import { cn } from "@/lib/utils"
 import type { SessionUserView } from "@/lib/auth/session-user"
@@ -98,17 +99,21 @@ export function PublicMobileNav({
             const expanded = section === menu.id
             const current =
               isActiveHref(activeHref, menu.href) || menu.children.some((child) => isActiveHref(activeHref, child.href))
-            if (menu.href && menu.children.length === 0) {
+            const rootHref = menu.href
+            if (rootHref && menu.children.length === 0) {
               return (
                 <Link
                   key={menu.id}
-                  href={menu.href}
+                  href={rootHref}
                   className={cn(
                     "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-foreground/[0.05]",
                     current && "bg-foreground/[0.06] font-extrabold"
                   )}
                   aria-current={current ? "page" : undefined}
-                  onClick={onClose}
+                  onClick={(event) => {
+                    onClose()
+                    escortLinkClick(event, { href: rootHref, label: menu.label, menuId: menu.id })
+                  }}
                 >
                   {menu.label}
                 </Link>
@@ -140,7 +145,10 @@ export function PublicMobileNav({
                         href={link.href}
                         className="block rounded-xl px-3 py-2 hover:bg-foreground/[0.05]"
                         aria-current={linkCurrent ? "page" : undefined}
-                        onClick={onClose}
+                        onClick={(event) => {
+                          onClose()
+                          escortLinkClick(event, { href: link.href, label: link.label, menuId: menu.id })
+                        }}
                       >
                         <span className={cn("text-sm font-medium", linkCurrent && "font-extrabold")}>{link.label}</span>
                         {link.note ? (

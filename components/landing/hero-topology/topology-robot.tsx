@@ -27,10 +27,13 @@ const TURN_SPEED = 7.5
 const MODEL_URL = "/models/robot.glb"
 const MODEL_SCALE = 0.17
 const MODEL_FACING_OFFSET = Math.PI
-const IDLE_CLIP = "RobotArmature|Robot_Idle"
-const GREET_CLIP = "RobotArmature|Robot_Wave"
+export const IDLE_CLIP = "RobotArmature|Robot_Idle"
+export const GREET_CLIP = "RobotArmature|Robot_Wave"
+export const JUMP_CLIP = "RobotArmature|Robot_Jump"
+export const WALK_CLIP = "RobotArmature|Robot_Walking"
+export const RUN_CLIP = "RobotArmature|Robot_Running"
 
-type RobotSkin = { main: string; grey: string; black: string }
+export type RobotSkin = { main: string; grey: string; black: string }
 
 // 모듈 틴트(espresso 등)를 그대로 입히면 몸통 Black 재질이 거의 검정이라 책상마다
 // 구분이 안 된다. 책상 순서대로 고른 고정 팔레트라 새로고침해도 색이 바뀌지 않는다.
@@ -49,7 +52,7 @@ const ROBOT_SKINS: RobotSkin[] = [
   { main: "#3cb8d4", grey: "#a8d4e0", black: "#247888" },
 ]
 
-function skinFor(index: number): RobotSkin {
+export function skinFor(index: number): RobotSkin {
   return ROBOT_SKINS[index % ROBOT_SKINS.length]
 }
 
@@ -103,7 +106,16 @@ function tintClone(material: Material, skin: RobotSkin): Material {
 // 스킨 계산(관절 가중치)은 그대로 두고 노드 자체의 위치만 원점으로 되돌린다.
 const FLOATING_MESH_NAMES = new Set(["Hand.L", "Hand.R"])
 
-function RobotModel({ skin, active }: { skin: RobotSkin; active: boolean }) {
+export function RobotModel({
+  skin,
+  clip,
+  timeScale = 1,
+}: {
+  skin: RobotSkin
+  /** 재생할 애니메이션 클립 이름 — 바뀌면 이전 클립에서 크로스페이드한다 */
+  clip: string
+  timeScale?: number
+}) {
   const { scene, animations } = useGLTF(MODEL_URL)
   const clonedScene = useMemo(() => SkeletonUtils.clone(scene) as Group, [scene])
   const { actions } = useAnimations(animations, clonedScene)
@@ -127,20 +139,14 @@ function RobotModel({ skin, active }: { skin: RobotSkin; active: boolean }) {
   }, [clonedScene, skin])
 
   useEffect(() => {
-    const idle = actions[IDLE_CLIP]
-    const greet = actions[GREET_CLIP]
-    if (active) {
-      idle?.fadeOut(0.2)
-      greet?.reset().fadeIn(0.2).play()
-    } else {
-      greet?.fadeOut(0.2)
-      idle?.reset().fadeIn(0.2).play()
-    }
+    const action = actions[clip]
+    if (!action) return
+    action.reset().fadeIn(0.2).play()
+    action.setEffectiveTimeScale(timeScale)
     return () => {
-      idle?.fadeOut(0.15)
-      greet?.fadeOut(0.15)
+      action.fadeOut(0.2)
     }
-  }, [actions, active])
+  }, [actions, clip, timeScale])
 
   return (
     <group scale={MODEL_SCALE} rotation={[0, MODEL_FACING_OFFSET, 0]}>
@@ -197,27 +203,32 @@ export function TopologyRobot({
       {active || hovered ? <RobotHighlight color={highlight} soft={hovered && !active} /> : null}
       {active ? <pointLight color={highlight} intensity={1.4} distance={2.4} position={[0, 0.7, 0.2]} /> : null}
 
-      <RobotModel skin={skin} active={active} />
+      <RobotModel skin={skin} clip={active ? GREET_CLIP : IDLE_CLIP} />
 
-      {active && showSpeech ? (
-        <Html
-          position={[0, 1.68, 0.12]}
-          center
-          occlude={false}
-          zIndexRange={[40, 0]}
-          wrapperClass="topology-speech-html"
-          className="pointer-events-none select-none"
-        >
-          <div className="topology-speech">
-            <p className="topology-speech-text">
-              <span className="topology-speech-title">{guideTitle}</span>
-              <span className="topology-speech-detail">{guideDescription}</span>
-            </p>
-            <span className="topology-speech-tail" aria-hidden />
-          </div>
-        </Html>
-      ) : null}
+      {active && showSpeech ? <RobotSpeech title={guideTitle} detail={guideDescription} /> : null}
     </group>
+  )
+}
+
+/** 로봇 머리 위 만화 말풍선 — 로봇 발 위치(그룹 원점) 기준으로 띄운다 */
+export function RobotSpeech({ title, detail }: { title: string; detail: string }) {
+  return (
+    <Html
+      position={[0, 1.68, 0.12]}
+      center
+      occlude={false}
+      zIndexRange={[40, 0]}
+      wrapperClass="topology-speech-html"
+      className="pointer-events-none select-none"
+    >
+      <div className="topology-speech">
+        <p className="topology-speech-text">
+          <span className="topology-speech-title">{title}</span>
+          <span className="topology-speech-detail">{detail}</span>
+        </p>
+        <span className="topology-speech-tail" aria-hidden />
+      </div>
+    </Html>
   )
 }
 
