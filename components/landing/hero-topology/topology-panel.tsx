@@ -9,6 +9,7 @@ import { ArrowRight, ArrowUpRight, X } from "lucide-react"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { TopologyIntro } from "@/components/landing/hero-topology/topology-intro"
 import {
+  escortTargetLabel,
   isExternalHref,
   isPlainLeftClick,
   prefersReducedMotion,
@@ -179,7 +180,8 @@ export function TopologyPanel({
       if (escort) return true
       const target = resolveEscortModule(data.modules, request)
       if (!target) return false
-      startEscort(target.id, request.href, request.label)
+      const label = request.strict ? escortTargetLabel(target, request.href, request.label) : request.label
+      startEscort(target.id, request.href, label)
       rootRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
       return true
     })
@@ -199,6 +201,7 @@ export function TopologyPanel({
   return (
     <div
       ref={rootRef}
+      data-escort-handled=""
       className={cn(
         "relative z-0 h-[560px] w-full scroll-mt-14 overflow-hidden bg-[#efe6d8] dark:bg-[#1d1a17] md:h-[640px]",
         className

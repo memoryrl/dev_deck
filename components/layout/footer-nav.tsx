@@ -22,7 +22,10 @@ export function FooterNav({ columns }: { columns: FooterColumn[] }) {
   )
 
   return (
-    <nav className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fill,minmax(7.5rem,max-content))] justify-items-start gap-x-10 gap-y-8">
+    <nav
+      className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fill,minmax(7.5rem,max-content))] justify-items-start gap-x-10 gap-y-8"
+      data-escort-handled=""
+    >
       {columns.map((column) => (
         <div key={column.title}>
           <p className="text-sm font-semibold">{column.title}</p>
