@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent } from "react"
 import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
+import { EscortOverlay } from "@/components/landing/hero-topology/escort-overlay"
 import { AccountMenu } from "@/components/layout/account-menu"
 import { AuthSegment } from "@/components/layout/auth-segment"
 import { BrandMark } from "@/components/layout/brand-mark"
@@ -486,6 +487,9 @@ export function PublicHeaderNav({
         navNodes={nodes}
         adminMenus={adminMenus}
       />
+      {/* 랜딩 토폴로지 슬라이드가 화면에 없어도 메뉴 클릭 시 로봇 안내 연출을 띄우는 예비 안내자.
+          body로 포털되므로 헤더 안에 있어도 헤더 위 전체 화면을 덮는다. */}
+      <EscortOverlay navNodes={nodes} owner={owner} />
     </div>
   )
 }

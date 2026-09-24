@@ -1,7 +1,7 @@
 "use client"
 
 import type { MouseEvent as ReactMouseEvent } from "react"
-import type { TopologyModuleNode } from "@/lib/landing/topology"
+import type { TopologyModuleNode } from "@/lib/landing/topology-modules"
 
 // 헤더·푸터 내비게이션과 랜딩 토폴로지 패널을 잇는 아주 작은 버스.
 // 토폴로지 패널이 화면에 보이는 동안 핸들러를 등록해 두면, 사이트 어디의 메뉴 링크든
@@ -19,17 +19,28 @@ export type EscortRequest = {
 
 type EscortHandler = (request: EscortRequest) => boolean
 
-let handler: EscortHandler | null = null
+// primary: 랜딩 히어로의 토폴로지 패널(화면에 보일 때만 등록). fallback: 공개 셸 어디에나
+// 떠 있는 전체 화면 오버레이(escort-overlay.tsx) — 패널이 없거나 연출을 사양하면 대신 맡아
+// 토폴로지 방만 잠깐 띄우고 로봇이 안내한 뒤 이동한다.
+let primary: EscortHandler | null = null
+let fallback: EscortHandler | null = null
 
-export function registerEscortHandler(next: EscortHandler) {
-  handler = next
+export function registerEscortHandler(next: EscortHandler, options?: { fallback?: boolean }) {
+  if (options?.fallback) {
+    fallback = next
+    return () => {
+      if (fallback === next) fallback = null
+    }
+  }
+  primary = next
   return () => {
-    if (handler === next) handler = null
+    if (primary === next) primary = null
   }
 }
 
 export function requestEscort(request: EscortRequest): boolean {
-  return handler ? handler(request) : false
+  if (primary?.(request)) return true
+  return fallback ? fallback(request) : false
 }
 
 export function prefersReducedMotion() {
