@@ -304,7 +304,11 @@
     "placeholder": "Type a message",
     "send": "Send",
     "thinking": "Thinking…",
+    "thinkingEta": "About {{seconds}}s left",
+    "thinkingEtaSoon": "Almost there",
     "clear": "Clear chat",
+    "loadMore": "Load earlier messages",
+    "loadingHistory": "Loading earlier messages…",
     "disclaimer": "Answered by a local AI model (exaone/qwen), grounded only in what's public here. Replies are in Korean for now.",
     "memberOnly": "Only signed-in members can ask.",
     "loginToAsk": "Sign in to ask"

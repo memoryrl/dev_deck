@@ -40,6 +40,8 @@ export function LoginHistoryRow({
         <p className="min-w-0 text-[15px] leading-snug">
           <span className="text-muted-foreground">No. {number}</span>
           <span className="mx-2 text-foreground/20">|</span>
+          <span className="tabular-nums text-muted-foreground">{formatBoardDateTime(entry.created_at)}</span>
+          <span className="mx-2 text-foreground/20">|</span>
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-xs font-semibold",
@@ -78,8 +80,6 @@ export function LoginHistoryRow({
               {entry.ip_region}
             </>
           ) : null}
-          <span className="mx-1.5 text-foreground/20">|</span>
-          {formatBoardDateTime(entry.created_at)}
         </p>
       </div>
       {entry.user_agent || pageCount > 0 ? (

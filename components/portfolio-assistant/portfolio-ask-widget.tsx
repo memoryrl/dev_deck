@@ -3,45 +3,143 @@
 import { Bot, MessageCircle, RotateCcw, Send, User, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
-import { askPortfolio } from "@/lib/portfolio-assistant/actions"
+import { askPortfolio, loadPortfolioAskHistory } from "@/lib/portfolio-assistant/actions"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatBoardDateTime } from "@/lib/i18n/format"
+import type { AppLocale } from "@/lib/i18n/config"
 import { cn } from "@/lib/utils"
 
-type ChatMessage = { role: "user" | "assistant"; content: string; model?: string }
+type ChatMessage = { id: string; role: "user" | "assistant"; content: string; model?: string; at: string }
+type HistoryCursor = { createdAt: string; id: string }
+type HistoryCycle = { id: string; question: string; answer: string; model: string; createdAt: string }
+
+const INITIAL_CYCLES = 2
+const MORE_CYCLES = 4
+const ETA_KEY = "devdeck.portfolio-ask.eta-ms"
+const DEFAULT_ETA_MS = 15_000
+const MIN_ETA_MS = 4_000
+const MAX_ETA_MS = 60_000
+
+function cyclesToMessages(cycles: HistoryCycle[]): ChatMessage[] {
+  return cycles.flatMap((cycle) => [
+    { id: `${cycle.id}-q`, role: "user" as const, content: cycle.question, at: cycle.createdAt },
+    { id: `${cycle.id}-a`, role: "assistant" as const, content: cycle.answer, model: cycle.model, at: cycle.createdAt },
+  ])
+}
+
+function readEtaMs() {
+  if (typeof window === "undefined") return DEFAULT_ETA_MS
+  const raw = Number(window.localStorage.getItem(ETA_KEY))
+  if (!Number.isFinite(raw)) return DEFAULT_ETA_MS
+  return Math.min(MAX_ETA_MS, Math.max(MIN_ETA_MS, raw))
+}
+
+function rememberEtaMs(durationMs: number) {
+  if (typeof window === "undefined" || !Number.isFinite(durationMs) || durationMs < 400) return
+  const next = Math.round(readEtaMs() * 0.6 + durationMs * 0.4)
+  window.localStorage.setItem(ETA_KEY, String(Math.min(MAX_ETA_MS, Math.max(MIN_ETA_MS, next))))
+}
 
 export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const [etaMs, setEtaMs] = useState(DEFAULT_ETA_MS)
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState("")
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [historyReady, setHistoryReady] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [cursor, setCursor] = useState<HistoryCursor | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const listEndRef = useRef<HTMLDivElement>(null)
+  const seenIds = useRef(new Set<string>())
+  const pinToBottom = useRef(true)
 
   useEffect(() => {
-    if (open) listEndRef.current?.scrollIntoView({ block: "end" })
-  }, [open, messages, pending])
+    if (!open || !signedIn || historyReady || loadingHistory) return
+    void loadHistory(null)
+  }, [open, signedIn, historyReady, loadingHistory])
+
+  useEffect(() => {
+    if (open && !loadingHistory && pinToBottom.current) {
+      listEndRef.current?.scrollIntoView({ block: "end" })
+    }
+  }, [open, messages, pending, loadingHistory])
+
+  async function loadHistory(nextCursor: HistoryCursor | null) {
+    if (!signedIn || loadingHistory) return
+    const list = listRef.current
+    const previousHeight = list?.scrollHeight ?? 0
+    const previousTop = list?.scrollTop ?? 0
+    const prepend = nextCursor !== null
+    pinToBottom.current = !prepend
+
+    setLoadingHistory(true)
+    setError(null)
+    const result = await loadPortfolioAskHistory(nextCursor, prepend ? MORE_CYCLES : INITIAL_CYCLES)
+    setLoadingHistory(false)
+
+    if (!result.ok) {
+      setError(result.error)
+      setHistoryReady(true)
+      return
+    }
+
+    const fresh = result.cycles.filter((cycle) => {
+      if (seenIds.current.has(cycle.id)) return false
+      seenIds.current.add(cycle.id)
+      return true
+    })
+    const chronological = cyclesToMessages([...fresh].reverse())
+    setMessages((current) => (prepend ? [...chronological, ...current] : chronological))
+    setHasMore(result.hasMore)
+    setCursor(result.nextCursor)
+    setHistoryReady(true)
+
+    if (prepend && list) {
+      requestAnimationFrame(() => {
+        list.scrollTop = list.scrollHeight - previousHeight + previousTop
+      })
+    }
+  }
 
   async function send(content: string) {
     const text = content.trim()
     if (!text || pending || !signedIn) return
 
-    const next = [...messages, { role: "user" as const, content: text }]
+    pinToBottom.current = true
+    const askedAt = new Date().toISOString()
+    const userMessage: ChatMessage = { id: `local-${Date.now()}`, role: "user", content: text, at: askedAt }
+    const next = [...messages, userMessage]
     setMessages(next)
     setDraft("")
     setPending(true)
     setError(null)
+    setEtaMs(readEtaMs())
 
-    const result = await askPortfolio(next.map(({ role, content }) => ({ role, content })))
+    const result = await askPortfolio(next.map(({ role, content: body }) => ({ role, content: body })))
     setPending(false)
 
     if (!result.ok) {
       setError(result.error)
       return
     }
-    setMessages((current) => [...current, { role: "assistant", content: result.content, model: result.model }])
+    rememberEtaMs(result.durationMs)
+    setEtaMs(readEtaMs())
+    setMessages((current) => [
+      ...current,
+      {
+        id: `local-${Date.now()}-a`,
+        role: "assistant",
+        content: result.content,
+        model: result.model,
+        at: new Date().toISOString(),
+      },
+    ])
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -51,7 +149,17 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
     }
   }
 
+  function resetView() {
+    seenIds.current = new Set()
+    setMessages([])
+    setError(null)
+    setHasMore(false)
+    setCursor(null)
+    setHistoryReady(false)
+  }
+
   const samples = [t("portfolioAsk.sample1"), t("portfolioAsk.sample2"), t("portfolioAsk.sample3")]
+  const showGreeting = historyReady && messages.length === 0 && !loadingHistory
 
   return (
     <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
@@ -70,10 +178,7 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
                 className="size-8"
                 disabled={messages.length === 0}
                 aria-label={t("portfolioAsk.clear")}
-                onClick={() => {
-                  setMessages([])
-                  setError(null)
-                }}
+                onClick={resetView}
               >
                 <RotateCcw className="size-4" />
               </Button>
@@ -90,8 +195,27 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            {messages.length === 0 ? (
+          <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            {signedIn && (hasMore || (loadingHistory && historyReady)) ? (
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  disabled={loadingHistory || !cursor}
+                  onClick={() => void loadHistory(cursor)}
+                >
+                  {loadingHistory ? t("portfolioAsk.loadingHistory") : t("portfolioAsk.loadMore")}
+                </Button>
+              </div>
+            ) : null}
+
+            {signedIn && !historyReady && loadingHistory ? (
+              <p className="text-center text-xs text-muted-foreground">{t("portfolioAsk.loadingHistory")}</p>
+            ) : null}
+
+            {showGreeting ? (
               <div className="space-y-3">
                 <div className="flex items-start gap-2">
                   <BubbleIcon role="assistant" />
@@ -120,17 +244,28 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
                   </div>
                 )}
               </div>
-            ) : (
-              messages.map((message, index) => <ChatBubble key={index} message={message} />)
-            )}
-            {pending ? (
-              <div className="flex items-start gap-2">
-                <BubbleIcon role="assistant" />
-                <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-muted-foreground">
-                  {t("portfolioAsk.thinking")}
+            ) : null}
+
+            {!signedIn ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <BubbleIcon role="assistant" />
+                  <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-foreground">
+                    {t("portfolioAsk.memberOnly")}
+                  </div>
+                </div>
+                <div className="pl-9">
+                  <Button asChild size="sm" className="rounded-full">
+                    <Link href="/login">{t("portfolioAsk.loginToAsk")}</Link>
+                  </Button>
                 </div>
               </div>
             ) : null}
+
+            {messages.map((message) => (
+              <ChatBubble key={message.id} message={message} locale={locale} />
+            ))}
+            {pending ? <ThinkingBubble estimateMs={etaMs} thinking={t("portfolioAsk.thinking")} /> : null}
             <div ref={listEndRef} />
           </div>
 
@@ -189,18 +324,59 @@ function BubbleIcon({ role }: { role: ChatMessage["role"] }) {
   )
 }
 
-function ChatBubble({ message }: { message: ChatMessage }) {
+function ChatBubble({ message, locale }: { message: ChatMessage; locale: AppLocale }) {
   const isUser = message.role === "user"
   return (
     <div className={cn("flex items-start gap-2", isUser && "flex-row-reverse")}>
       <BubbleIcon role={message.role} />
-      <div
-        className={cn(
-          "max-w-[80%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
-          isUser ? "rounded-tr-sm bg-primary text-primary-foreground" : "rounded-tl-sm bg-muted text-foreground"
-        )}
-      >
-        {message.content}
+      <div className="max-w-[80%] min-w-0">
+        <div
+          className={cn(
+            "whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+            isUser ? "rounded-tr-sm bg-primary text-primary-foreground" : "rounded-tl-sm bg-muted text-foreground"
+          )}
+        >
+          {message.content}
+        </div>
+        <p
+          className={cn(
+            "mt-1 text-[11px] tabular-nums leading-snug text-muted-foreground",
+            isUser && "text-right"
+          )}
+        >
+          {formatBoardDateTime(message.at, locale)}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ThinkingBubble({ estimateMs, thinking }: { estimateMs: number; thinking: string }) {
+  const { t } = useI18n()
+  const startedAt = useRef(Date.now())
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 250)
+    return () => window.clearInterval(id)
+  }, [])
+
+  const elapsed = now - startedAt.current
+  const remainMs = Math.max(0, estimateMs - elapsed)
+  const remainSec = Math.ceil(remainMs / 1000)
+  const progress = Math.min(100, Math.round((elapsed / Math.max(estimateMs, 1)) * 100))
+
+  return (
+    <div className="flex items-start gap-2">
+      <BubbleIcon role="assistant" />
+      <div className="max-w-[80%] min-w-0 rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-muted-foreground">
+        <p>{thinking}</p>
+        <p className="mt-1 text-[11px] tabular-nums">
+          {remainSec > 0 ? t("portfolioAsk.thinkingEta", { seconds: remainSec }) : t("portfolioAsk.thinkingEtaSoon")}
+        </p>
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-foreground/10">
+          <div className="h-full bg-foreground/35 transition-[width] duration-200" style={{ width: `${progress}%` }} />
+        </div>
       </div>
     </div>
   )

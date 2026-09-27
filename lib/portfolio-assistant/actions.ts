@@ -2,6 +2,14 @@
 
 import { recordPortfolioAsk } from "@/lib/portfolio-assistant/admin"
 import { buildPortfolioBrief } from "@/lib/portfolio-assistant/context"
+import {
+  INITIAL_ASK_CYCLES,
+  MORE_ASK_CYCLES,
+  isAskHistoryCursor,
+  listMyPortfolioAskCycles,
+  type AskHistoryCursor,
+  type PortfolioAskCycle,
+} from "@/lib/portfolio-assistant/history"
 import { chatWithOllama, type OllamaChatMessage } from "@/lib/ollama/client"
 import { getAuthUser } from "@/lib/supabase/server"
 import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
@@ -15,7 +23,7 @@ const GENERAL_MODEL = "exaone3.5:2.4b"
 const CODE_MODEL = "qwen2.5-coder:3b"
 
 export type AskPortfolioResult =
-  | { ok: true; content: string; model: string }
+  | { ok: true; content: string; model: string; durationMs: number }
   | { ok: false; error: string; loginRequired?: boolean }
 
 function systemPrompt(brief: string) {
@@ -69,14 +77,16 @@ export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPo
     return { ok: false, error: "질문을 너무 자주 보냈습니다. 잠시 후 다시 시도해주세요." }
   }
 
-  if (!Array.isArray(messages) || messages.length === 0 || messages.length > HISTORY_MAX) {
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > 48) {
     return { ok: false, error: "대화 내용이 올바르지 않습니다." }
   }
+  messages = messages.slice(-HISTORY_MAX)
   for (const m of messages) {
     if (m.role !== "user" && m.role !== "assistant") {
       return { ok: false, error: "대화 내용이 올바르지 않습니다." }
     }
-    if (typeof m.content !== "string" || !m.content.trim() || m.content.length > CONTENT_MAX) {
+    const max = m.role === "assistant" ? 4_000 : CONTENT_MAX
+    if (typeof m.content !== "string" || !m.content.trim() || m.content.length > max) {
       return { ok: false, error: `메시지는 ${CONTENT_MAX}자를 넘을 수 없습니다.` }
     }
   }
@@ -100,5 +110,28 @@ export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPo
     answer: content,
     model,
   })
-  return { ok: true, content, model }
+  return { ok: true, content, model, durationMs: result.data.durationMs }
+}
+
+export type LoadPortfolioAskHistoryResult =
+  | { ok: true; cycles: PortfolioAskCycle[]; hasMore: boolean; nextCursor: AskHistoryCursor | null }
+  | { ok: false; error: string; loginRequired?: boolean }
+
+/** 회원 본인 대화. 첫 화면은 최근 2사이클, 더보기는 4사이클. */
+export async function loadPortfolioAskHistory(
+  cursor?: AskHistoryCursor | null,
+  limit?: number
+): Promise<LoadPortfolioAskHistoryResult> {
+  const user = await getAuthUser()
+  if (!user) {
+    return { ok: false, error: "로그인한 회원만 대화를 볼 수 있습니다.", loginRequired: true }
+  }
+  if (!(await checkRateLimitPersistent(`portfolio-ask-history:${user.id}`, 30, 60 * 1000))) {
+    return { ok: false, error: "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요." }
+  }
+
+  const size = limit === MORE_ASK_CYCLES ? MORE_ASK_CYCLES : INITIAL_ASK_CYCLES
+  const safeCursor = isAskHistoryCursor(cursor) ? cursor : null
+  const page = await listMyPortfolioAskCycles({ userId: user.id, limit: size, cursor: safeCursor })
+  return { ok: true, ...page }
 }
