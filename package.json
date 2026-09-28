@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/generate-oss-packages.mjs",
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "prebuild": "node scripts/generate-oss-packages.mjs",
     "build": "bash scripts/clean-appledouble.sh && next build",
     "start": "next start",
+    "preview": "npm run build && next start",
     "lint": "next lint",
     "clean:apple": "bash scripts/clean-appledouble.sh",
     "oss:generate": "node scripts/generate-oss-packages.mjs",

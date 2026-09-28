@@ -75,9 +75,16 @@ export async function updateSession(request: NextRequest) {
   let user = null
   let error = null
   try {
-    const result = await supabase.auth.getUser()
-    user = result.data.user
-    error = result.error
+    if (needsAuthCheck(path)) {
+      const result = await supabase.auth.getUser()
+      user = result.data.user
+      error = result.error
+    } else {
+      // 공개 경로는 리다이렉트 판단이 없어 검증된 user가 필요 없다(본문은 server.ts에서
+      // getUser로 따로 검증한다). getSession은 쿠키만 읽고 access token이 만료됐을 때만
+      // 리프레시 왕복을 하므로, 로그인 상태의 페이지 전환마다 Auth 서버를 기다리지 않는다.
+      error = (await supabase.auth.getSession()).error
+    }
   } catch (thrown) {
     error = thrown instanceof Error ? thrown : new Error(String(thrown))
   }
