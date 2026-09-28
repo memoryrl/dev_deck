@@ -5,9 +5,12 @@ import { Html, useAnimations, useGLTF } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { SkeletonUtils } from "three-stdlib"
 import {
+  Bone,
   Color,
+  Euler,
   MathUtils,
   MeshStandardMaterial,
+  Quaternion,
   Vector3,
   type Group,
   type Material,
@@ -106,18 +109,51 @@ function tintClone(material: Material, skin: RobotSkin): Material {
 // 스킨 계산(관절 가중치)은 그대로 두고 노드 자체의 위치만 원점으로 되돌린다.
 const FLOATING_MESH_NAMES = new Set(["Hand.L", "Hand.R"])
 
+const CLAP_BONE_NAMES = ["Shoulder.L", "Shoulder.R", "UpperArm.L", "UpperArm.R", "LowerArm.L", "LowerArm.R"] as const
+const _clapEuler = new Euler()
+const _clapQuat = new Quaternion()
+
+type ClapBone = { bone: Bone; bind: Quaternion }
+
+// GLTFLoader는 노드 이름에서 "."을 지운다(Shoulder.L → ShoulderL). 점을 빼고 비교해
+// 어느 쪽 표기로 로드돼도 원래 이름(CLAP_BONE_NAMES) 키로 찾는다.
+const stripDots = (name: string) => name.replace(/\./g, "")
+
+function findClapBones(root: Group) {
+  const want = new Map<string, string>(CLAP_BONE_NAMES.map((name) => [stripDots(name), name]))
+  const found: Record<string, ClapBone> = {}
+  root.traverse((obj) => {
+    if (!(obj as Bone).isBone) return
+    const key = want.get(stripDots(obj.name))
+    if (!key || found[key]) return
+    found[key] = { bone: obj as Bone, bind: (obj as Bone).quaternion.clone() }
+  })
+  return found
+}
+
+function applyBoneDelta(entry: ClapBone | undefined, x: number, y: number, z: number) {
+  if (!entry) return
+  entry.bone.quaternion.copy(entry.bind).multiply(_clapQuat.setFromEuler(_clapEuler.set(x, y, z)))
+}
+
 export function RobotModel({
   skin,
   clip,
   timeScale = 1,
+  clap = false,
+  clapPhase = 0,
 }: {
   skin: RobotSkin
   /** 재생할 애니메이션 클립 이름 — 바뀌면 이전 클립에서 크로스페이드한다 */
   clip: string
   timeScale?: number
+  /** idle 클립 위에 팔 뼈를 덮어 가슴 앞에서 박수치게 한다 */
+  clap?: boolean
+  clapPhase?: number
 }) {
   const { scene, animations } = useGLTF(MODEL_URL)
   const clonedScene = useMemo(() => SkeletonUtils.clone(scene) as Group, [scene])
+  const clapBones = useMemo(() => findClapBones(clonedScene), [clonedScene])
   const { actions } = useAnimations(animations, clonedScene)
 
   useEffect(() => {
@@ -148,6 +184,22 @@ export function RobotModel({
     }
   }, [actions, clip, timeScale])
 
+  // useAnimations의 mixer 갱신이 같은 컴포넌트에서 먼저 구독돼 먼저 돈다 → idle이 팔을 쓴 뒤
+  // 바인드 포즈 기준으로 가슴 앞 박수를 덮어쓴다. priority를 0보다 크게 주면 R3F가 자동
+  // 렌더링을 멈추므로(수동 gl.render 필요) 기본 우선순위와 구독 순서에 맡긴다.
+  useFrame(({ clock }) => {
+    if (!clap) return
+    const beat = Math.sin(clock.elapsedTime * 13 + clapPhase)
+    const close = (beat + 1) * 0.5
+    const inward = 0.42 + close * 0.55
+    applyBoneDelta(clapBones["Shoulder.L"], 0.12, 0, 0.22)
+    applyBoneDelta(clapBones["Shoulder.R"], 0.12, 0, -0.22)
+    applyBoneDelta(clapBones["UpperArm.L"], 1.05, 0.18, inward)
+    applyBoneDelta(clapBones["UpperArm.R"], 1.05, -0.18, -inward)
+    applyBoneDelta(clapBones["LowerArm.L"], 1.35 + close * 0.18, 0.08, 0.12)
+    applyBoneDelta(clapBones["LowerArm.R"], 1.35 + close * 0.18, -0.08, -0.12)
+  })
+
   return (
     <group scale={MODEL_SCALE} rotation={[0, MODEL_FACING_OFFSET, 0]}>
       <primitive object={clonedScene} />
@@ -160,6 +212,8 @@ export function TopologyRobot({
   active,
   hovered = false,
   showSpeech = true,
+  clap = false,
+  clapPhase = 0,
   guideTitle,
   guideDescription,
 }: {
@@ -167,6 +221,8 @@ export function TopologyRobot({
   active: boolean
   hovered?: boolean
   showSpeech?: boolean
+  clap?: boolean
+  clapPhase?: number
   guideTitle: string
   guideDescription: string
 }) {
@@ -203,7 +259,12 @@ export function TopologyRobot({
       {active || hovered ? <RobotHighlight color={highlight} soft={hovered && !active} /> : null}
       {active ? <pointLight color={highlight} intensity={1.4} distance={2.4} position={[0, 0.7, 0.2]} /> : null}
 
-      <RobotModel skin={skin} clip={active ? GREET_CLIP : IDLE_CLIP} />
+      <RobotModel
+        skin={skin}
+        clip={active ? GREET_CLIP : IDLE_CLIP}
+        clap={clap}
+        clapPhase={clapPhase}
+      />
 
       {active && showSpeech ? <RobotSpeech title={guideTitle} detail={guideDescription} /> : null}
     </group>

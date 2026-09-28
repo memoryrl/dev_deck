@@ -107,34 +107,6 @@ function RankBadge({ rank, title, thumbnailUrl }: { rank: number; title: string;
   )
 }
 
-function ClappingHands({ phase }: { phase: number }) {
-  const left = useRef<THREE.Group>(null)
-  const right = useRef<THREE.Group>(null)
-
-  useFrame(({ clock }) => {
-    const swing = Math.sin(clock.elapsedTime * 11 + phase) * 0.42
-    if (left.current) left.current.rotation.z = 0.55 + swing
-    if (right.current) right.current.rotation.z = -0.55 - swing
-  })
-
-  return (
-    <group position={[0, 0.72, -0.18]}>
-      <group ref={left} position={[-0.2, 0, 0]}>
-        <mesh>
-          <boxGeometry args={[0.07, 0.11, 0.035]} />
-          <meshStandardMaterial color="#e8dfd2" roughness={0.6} />
-        </mesh>
-      </group>
-      <group ref={right} position={[0.2, 0, 0]}>
-        <mesh>
-          <boxGeometry args={[0.07, 0.11, 0.035]} />
-          <meshStandardMaterial color="#e8dfd2" roughness={0.6} />
-        </mesh>
-      </group>
-    </group>
-  )
-}
-
 function CelebrateHop({ children, strength }: { children: ReactNode; strength: number }) {
   const ref = useRef<THREE.Group>(null)
   useFrame(({ clock }) => {
@@ -221,10 +193,12 @@ function RankedRobot({
         active={celebrate}
         hovered={false}
         showSpeech={false}
+        clap={!medalRank}
+        clapPhase={entry.rank * 0.73}
         guideTitle={`${entry.rank}. ${entry.title}`}
         guideDescription={entry.statLabel}
       />
-      {medalRank ? <Medal rank={medalRank} /> : <ClappingHands phase={entry.rank} />}
+      {medalRank ? <Medal rank={medalRank} /> : null}
       <RankBadge rank={entry.rank} title={entry.title} thumbnailUrl={entry.thumbnailUrl} />
     </group>
   )
