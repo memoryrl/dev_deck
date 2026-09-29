@@ -53,10 +53,14 @@ export async function listCareerPostsPage({
   page,
   q = "",
   publicOnly = false,
+  sort = "created_at",
 }: {
   page: number
   q?: string
   publicOnly?: boolean
+  /** "period"는 등록일이 아니라 근무·활동 기간(시작일 기준, 동률이면 종료일) 내림차순 —
+   *  회사 연혁처럼 최신이 위, 과거가 아래로 가는 /work 타임라인 전용 정렬. */
+  sort?: "created_at" | "period"
 }): Promise<PagedResult<CareerPost>> {
   if (!isSupabaseConfigured()) return emptyPage(page)
   if (publicOnly && !(await canViewSystemBoard("career"))) return emptyPage(page)
@@ -66,7 +70,13 @@ export async function listCareerPostsPage({
     let query = supabase
       .from("career_posts")
       .select(CAREER_LIST_SELECT, { count: "exact" })
-      .order("created_at", { ascending: false })
+    query =
+      sort === "period"
+        ? query
+            .order("period_start", { ascending: false, nullsFirst: false })
+            .order("period_end", { ascending: false, nullsFirst: false })
+            .order("created_at", { ascending: false })
+        : query.order("created_at", { ascending: false })
     if (publicOnly) query = query.eq("is_public", true)
     if (needle) query = query.ilike("title", ilikeContains(needle))
     const { data, error, count } = await query.range(from, to)

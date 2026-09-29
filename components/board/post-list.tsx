@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { RefreshCw } from "lucide-react"
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { BulletinList } from "@/components/board/bulletin-list"
 import type { PostListRow } from "@/components/board/types"
+import { ListPager } from "@/components/layout/list-pager"
 import { Button } from "@/components/ui/button"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Input } from "@/components/ui/input"
@@ -38,7 +39,7 @@ export async function PostList({
   pathname?: string
   searchQuery?: string
   extraParams?: Record<string, string | number | undefined>
-  layout?: "list" | "cards" | "feed"
+  layout?: "list" | "cards" | "feed" | "timeline"
   endAction?: React.ReactNode
   composer?: React.ReactNode
 }) {
@@ -94,7 +95,111 @@ export async function PostList({
         </p>
       ) : null}
 
-      {layout === "feed" ? (
+      {layout === "timeline" ? (
+        rows.length === 0 ? (
+          <EmptyPlaceholder className="mt-4">
+            {searchQuery.trim() ? t("list.emptySearch") : emptyText}
+          </EmptyPlaceholder>
+        ) : (
+          <div className={cn(displayCount || searchable ? "mt-6" : null)}>
+            <ol className="relative flex flex-col gap-8">
+              {/* 세로 타임라인 축 — 모바일은 왼쪽, sm 이상은 가운데 */}
+              <div
+                aria-hidden
+                className="absolute bottom-2 left-2 top-2 w-px bg-border sm:left-1/2 sm:-translate-x-1/2"
+              />
+              {rows.map((item, index) => {
+                const author = item.author?.trim() || authorName
+                const excerpt = item.excerpt?.trim()
+                const dateLabel = item.periodLabel?.trim() || formatBoardDateTime(item.createdAt, locale)
+                const year = item.periodYear?.trim()
+                // 카드가 놓인 쪽마다 배지·점·화살표를 사이트 팔레트의 두 브랜드 톤(Ink / Gold)으로 번갈아 칠한다.
+                const onRight = index % 2 === 1
+                const Arrow = onRight ? ChevronRight : ChevronLeft
+                const badgeTone = onRight
+                  ? "bg-[hsl(var(--lux-champagne))] text-[hsl(var(--lux-espresso))]"
+                  : "bg-[hsl(var(--foreground))] text-[hsl(var(--background))]"
+                const accentDot = onRight ? "bg-[hsl(var(--lux-cognac))]" : "bg-[hsl(var(--foreground))]"
+                const accentLine = onRight ? "bg-[hsl(var(--lux-cognac)/0.5)]" : "bg-[hsl(var(--foreground)/0.35)]"
+                const accentText = onRight ? "text-[hsl(var(--lux-cognac))]" : "text-[hsl(var(--foreground))]"
+                return (
+                  <li key={`${item.href}-${index}`} className="relative sm:grid sm:grid-cols-2 sm:gap-x-12">
+                    {/* 타임라인 점 — 모바일 왼쪽 축 / 데스크톱 가운데 축, 둘 다 위치만 다르고 하나만 보인다 */}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute left-2 top-8 z-10 size-3 -translate-x-1/2 rounded-full ring-4 ring-background sm:left-1/2",
+                        accentDot
+                      )}
+                    />
+                    {/* 점에서 카드 쪽으로 뻗는 연결선 + 화살표 — 데스크톱에서 카드가 놓인 쪽으로만 그린다 */}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute left-1/2 top-8 hidden h-px w-6 sm:block",
+                        onRight ? "translate-x-0" : "-translate-x-full",
+                        accentLine
+                      )}
+                    />
+                    <Arrow
+                      aria-hidden
+                      className={cn(
+                        "absolute top-8 hidden size-3.5 -translate-y-1/2 sm:block",
+                        onRight ? "left-1/2 translate-x-[calc(-50%+1.5rem)]" : "left-1/2 translate-x-[calc(-50%-1.5rem)]",
+                        accentText
+                      )}
+                    />
+                    <div className={cn("pl-8 sm:pl-0", onRight ? "sm:col-start-2" : "sm:col-start-1")}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "group flex items-center gap-4 rounded-2xl border bg-card p-4 transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]",
+                          onRight && "sm:flex-row-reverse"
+                        )}
+                      >
+                        {/* 회사 연혁판 큰 연도 배지 — Ink(왼쪽 카드) / Gold(오른쪽 카드) 번갈아 */}
+                        <span
+                          className={cn(
+                            "flex size-16 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold tabular-nums shadow-[0_10px_24px_-12px_hsl(var(--foreground)/0.45)]",
+                            badgeTone
+                          )}
+                        >
+                          {year ?? "—"}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={cn("block font-display text-xs font-bold tracking-wide", accentText)}>
+                            {dateLabel}
+                          </span>
+                          <span className="mt-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="truncate">{author}</span>
+                            {item.meta ? (
+                              <>
+                                <span className="text-foreground/20">·</span>
+                                <span className="truncate">{item.meta}</span>
+                              </>
+                            ) : null}
+                          </span>
+                          <span className="mt-1.5 block font-display text-lg font-bold leading-snug tracking-tight group-hover:underline">
+                            {item.title}
+                          </span>
+                          {excerpt ? (
+                            <span className="mt-2 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">
+                              {excerpt}
+                            </span>
+                          ) : null}
+                        </span>
+                      </Link>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+            {paged && pathname ? (
+              <ListPager pathname={pathname} result={paged} extraParams={extra} className="mt-8" />
+            ) : null}
+          </div>
+        )
+      ) : layout === "feed" ? (
         rows.length === 0 ? (
           <EmptyPlaceholder className="mt-4">
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}

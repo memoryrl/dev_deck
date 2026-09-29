@@ -9,6 +9,7 @@ import { canWriteSystemBoard } from "@/lib/boards/access"
 import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
+import { formatPeriod } from "@/lib/i18n/format"
 
 export default async function WorkBoardPage(
   props: {
@@ -67,11 +68,13 @@ async function WorkPostList({
   endAction?: ReactNode
   composer?: ReactNode
 }) {
-  const posts = await listCareerPostsPage({ page, q, publicOnly: !includePrivate })
+  const { t } = await getT()
+  // created_at(등록순)이 아니라 근무·활동 기간 기준 — 회사 연혁처럼 최신이 위, 과거가 아래로 온다.
+  const posts = await listCareerPostsPage({ page, q, publicOnly: !includePrivate, sort: "period" })
   return (
     <PostList
       searchable
-      layout="feed"
+      layout="timeline"
       pathname="/work"
       searchQuery={q}
       paged={posts}
@@ -85,6 +88,8 @@ async function WorkPostList({
         author: post.company,
         meta: [post.post_type, post.is_public ? null : "비공개"].filter(Boolean).join(" · ") || null,
         excerpt: post.excerpt,
+        periodLabel: formatPeriod(post.period_start, post.period_end, t("date.present")),
+        periodYear: (post.period_start ?? post.created_at).slice(0, 4),
       }))}
     />
   )
