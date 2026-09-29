@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { askPortfolio, loadPortfolioAskHistory } from "@/lib/portfolio-assistant/actions"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { Button } from "@/components/ui/button"
+import { Markdown } from "@/components/ui/markdown"
 import { Textarea } from "@/components/ui/textarea"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import type { AppLocale } from "@/lib/i18n/config"
@@ -332,11 +333,14 @@ function ChatBubble({ message, locale }: { message: ChatMessage; locale: AppLoca
       <div className="max-w-[80%] min-w-0">
         <div
           className={cn(
-            "whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
-            isUser ? "rounded-tr-sm bg-primary text-primary-foreground" : "rounded-tl-sm bg-muted text-foreground"
+            "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+            isUser
+              ? "whitespace-pre-wrap rounded-tr-sm bg-primary text-primary-foreground"
+              : "rounded-tl-sm bg-muted text-foreground"
           )}
         >
-          {message.content}
+          {/* 사용자가 실제로 입력한 텍스트는 그대로, AI 답변만 마크다운(굵게·목록 등)을 그려 준다 */}
+          {isUser ? message.content : <Markdown content={message.content} className="chat-markdown" />}
         </div>
         <p
           className={cn(
