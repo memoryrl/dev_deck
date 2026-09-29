@@ -14,7 +14,7 @@ import type { CareerPost } from "@/types/career"
 
 export function CareerForm({ post, returnTo, deleteTo }: { post?: CareerPost; returnTo?: string; deleteTo?: string }) {
   const router = useRouter()
-  const [isPublic, setIsPublic] = useState(post?.is_public ?? false)
+  const [isPublic, setIsPublic] = useState(post?.is_public ?? true)
   const [error, setError] = useState<string | null>(null)
 
   async function onSubmit(formData: FormData) {
