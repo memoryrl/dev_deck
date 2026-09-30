@@ -51,7 +51,7 @@ async function DashboardContent() {
           <TrendingUp className="size-5" />
           {t("admin.dashboard.visitorStats")}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <StatCard
             label={t("admin.dashboard.today")}
             value={stats.totalVisitsToday}
@@ -82,7 +82,7 @@ async function DashboardContent() {
           <Activity className="size-5" />
           {t("admin.dashboard.contentStatus")}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             label={t("admin.dashboard.posts")}
             value={stats.totalPosts}
@@ -116,7 +116,7 @@ async function DashboardContent() {
           <Users className="size-5" />
           {t("admin.dashboard.memberStatus")}
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <StatCard
             label={t("admin.dashboard.members")}
             value={stats.totalProfiles}
@@ -188,14 +188,14 @@ function StatCard({
   bgColor?: string
 }) {
   const content = (
-    <div className={`rounded-xl border bg-white p-5 transition-colors dark:bg-card ${href ? "hover:border-primary/50" : ""}`}>
-      <div className="flex items-center gap-4">
-        <div className={`flex size-12 items-center justify-center rounded-xl ${bgColor}`}>
+    <div className={`rounded-xl border bg-white p-3 transition-colors sm:p-5 dark:bg-card ${href ? "hover:border-primary/50" : ""}`}>
+      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <div className={`flex size-10 sm:size-12 items-center justify-center rounded-xl ${bgColor}`}>
           <Icon className={`size-6 ${color}`} />
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="font-display text-2xl font-bold">{value.toLocaleString()}</p>
+        <div className="min-w-0">
+          <p className="truncate text-xs text-muted-foreground sm:text-sm">{label}</p>
+          <p className="font-display text-xl font-bold sm:text-2xl">{value.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -238,7 +238,7 @@ function StatsSkeleton() {
     <div className="space-y-8">
       <section>
         <Skeleton className="mb-4 h-7 w-32" />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
@@ -246,7 +246,7 @@ function StatsSkeleton() {
       </section>
       <section>
         <Skeleton className="mb-4 h-7 w-32" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}

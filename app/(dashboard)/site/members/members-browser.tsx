@@ -113,7 +113,7 @@ export function MembersBrowser({ members }: { members: MemberListEntry[] }) {
             </div>
           </div>
 
-          <dl className="mt-6 grid gap-x-6 gap-y-4 border-t pt-5 text-sm sm:grid-cols-2">
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t pt-5 text-sm">
             <Field label={t("admin.members.fieldName")} value={selected.full_name} />
             <Field label={t("admin.members.fieldUsername")} value={selected.username && `@${selected.username}`} />
             <Field label={t("admin.members.fieldEmail")} value={selected.email} />

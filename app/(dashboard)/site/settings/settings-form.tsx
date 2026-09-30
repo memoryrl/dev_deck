@@ -48,9 +48,9 @@ export function SiteSettingsForm({
 
   return (
     <form action={onSubmit} className="space-y-8">
-      <section className="rounded-xl border bg-white p-6 dark:bg-card">
+      <section className="rounded-xl border bg-white p-4 dark:bg-card sm:p-6">
         <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.basicInfo")}</h2>
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="siteName">{t("admin.settings.siteName")}</Label>
             <Input
@@ -61,6 +61,15 @@ export function SiteSettingsForm({
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="footerText">{t("admin.settings.footerText")}</Label>
+            <Input
+              id="footerText"
+              name="footerText"
+              defaultValue={settings.footerText}
+              placeholder="© 2024 DevDeck"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="siteDescription">{t("admin.settings.siteDescription")}</Label>
             <Textarea
               id="siteDescription"
@@ -73,22 +82,13 @@ export function SiteSettingsForm({
               {t("admin.settings.siteDescriptionHint")}
             </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="footerText">{t("admin.settings.footerText")}</Label>
-            <Input
-              id="footerText"
-              name="footerText"
-              defaultValue={settings.footerText}
-              placeholder="© 2024 DevDeck"
-            />
-          </div>
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-6 dark:bg-card">
+      <section className="rounded-xl border bg-white p-4 dark:bg-card sm:p-6">
         <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.seo")}</h2>
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="siteKeywords">{t("admin.settings.keywords")}</Label>
             <Input
               id="siteKeywords"
@@ -129,7 +129,7 @@ export function SiteSettingsForm({
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-6 dark:bg-card">
+      <section className="rounded-xl border bg-white p-4 dark:bg-card sm:p-6">
         <h2 className="mb-6 font-display text-lg font-bold">{t("admin.settings.advanced")}</h2>
         <div className="space-y-6">
           <div className="space-y-3">

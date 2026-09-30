@@ -94,7 +94,7 @@ async function SystemStatusContent() {
       </div>
 
       {/* 서비스별 상태 */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <StatusCard
           title={t("admin.system.supabaseAuth")}
           icon={Server}
@@ -251,7 +251,7 @@ function StatusCard({
   const config = statusConfig[status]
 
   return (
-    <div className={`rounded-xl border p-5 ${config.bgColor} ${config.borderColor}`}>
+    <div className={`rounded-xl border p-3 sm:p-5 ${config.bgColor} ${config.borderColor}`}>
       <div className="mb-3 flex items-center gap-3">
         <Icon className={`size-6 ${config.iconColor}`} />
         <h3 className="font-semibold">{title}</h3>
@@ -277,7 +277,7 @@ function SystemStatusSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-32 rounded-xl" />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Skeleton className="h-32 rounded-xl" />
         <Skeleton className="h-32 rounded-xl" />
       </div>
