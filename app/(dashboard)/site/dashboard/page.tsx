@@ -5,9 +5,7 @@ import {
   MessageSquare,
   Sparkles,
   Users,
-  Eye,
   Upload,
-  TrendingUp,
   Activity,
   Clock,
 } from "lucide-react"
@@ -15,6 +13,9 @@ import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ContentDonut, MonthlyBarChart, VisitAreaChart } from "@/components/dashboard/dashboard-charts"
+import { DashboardHero } from "@/components/dashboard/dashboard-hero"
+import { getVisitStats } from "@/lib/auth/login-history"
 import { requireOwner } from "@/lib/auth/owner"
 import { getDashboardStats, getRecentActivity, type RecentActivity } from "@/lib/site/dashboard-stats"
 import { formatBoardDateTime } from "@/lib/i18n/format"
@@ -37,44 +38,38 @@ export default async function DashboardHomePage() {
 }
 
 async function DashboardContent() {
-  const [stats, activities] = await Promise.all([
+  const [stats, activities, dailyVisits, monthlyVisits] = await Promise.all([
     getDashboardStats(),
     getRecentActivity(8),
+    getVisitStats("daily"),
+    getVisitStats("monthly"),
   ])
   const { t, locale } = await getT()
+  const towerItems = [
+    { label: t("admin.dashboard.posts"), value: stats.totalPosts },
+    { label: t("admin.dashboard.comments"), value: stats.totalComments },
+    { label: t("admin.dashboard.prompts"), value: stats.totalPrompts },
+    { label: t("admin.dashboard.uploads"), value: stats.totalUploads },
+    { label: t("admin.dashboard.members"), value: stats.totalProfiles },
+  ]
 
   return (
     <div className="space-y-8">
-      {/* 방문자 통계 */}
-      <section>
-        <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
-          <TrendingUp className="size-5" />
-          {t("admin.dashboard.visitorStats")}
-        </h2>
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          <StatCard
-            label={t("admin.dashboard.today")}
-            value={stats.totalVisitsToday}
-            icon={Eye}
-            color="text-green-600"
-            bgColor="bg-green-50 dark:bg-green-950/30"
-          />
-          <StatCard
-            label={t("admin.dashboard.week")}
-            value={stats.totalVisitsWeek}
-            icon={Eye}
-            color="text-blue-600"
-            bgColor="bg-blue-50 dark:bg-blue-950/30"
-          />
-          <StatCard
-            label={t("admin.dashboard.month")}
-            value={stats.totalVisitsMonth}
-            icon={Eye}
-            color="text-purple-600"
-            bgColor="bg-purple-50 dark:bg-purple-950/30"
-          />
-        </div>
+      {/* 3D 개요 + 차트 */}
+      <DashboardHero
+        title={t("admin.dashboard.visitorStats")}
+        kpis={[
+          { label: t("admin.dashboard.today"), value: stats.totalVisitsToday },
+          { label: t("admin.dashboard.week"), value: stats.totalVisitsWeek },
+          { label: t("admin.dashboard.month"), value: stats.totalVisitsMonth },
+        ]}
+        towers={towerItems}
+      />
+      <section className="grid gap-4 lg:grid-cols-3">
+        <VisitAreaChart className="lg:col-span-2" title="일별 방문 추이" subtitle="최근 30일" data={dailyVisits} unit="건" />
+        <ContentDonut title={t("admin.dashboard.contentStatus")} items={towerItems} totalLabel="total" />
       </section>
+      <MonthlyBarChart title="월별 방문" subtitle="최근 12개월" data={monthlyVisits} unit="건" />
 
       {/* 콘텐츠 통계 */}
       <section>
@@ -236,22 +231,11 @@ async function ActivityItem({ activity, locale }: { activity: RecentActivity; lo
 function StatsSkeleton() {
   return (
     <div className="space-y-8">
-      <section>
-        <Skeleton className="mb-4 h-7 w-32" />
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
-          ))}
-        </div>
-      </section>
-      <section>
-        <Skeleton className="mb-4 h-7 w-32" />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
-          ))}
-        </div>
-      </section>
+      <Skeleton className="h-96 rounded-3xl" />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
+        <Skeleton className="h-80 rounded-2xl" />
+      </div>
     </div>
   )
 }

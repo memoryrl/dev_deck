@@ -84,6 +84,8 @@ export function escortLinkClick(event: ReactMouseEvent<HTMLElement>, request: Es
   if (requestEscort(request)) event.preventDefault()
 }
 
+const ADMIN_PATH = /^\/(site|promptkit|career|steam)(\/|$)/
+
 function pathOf(href: string) {
   return href.split(/[?#]/)[0] || "/"
 }
@@ -131,6 +133,11 @@ export function resolveEscortModule(
     }
   }
   if (best && bestScore >= 0) return best
+
+  // 관리자 화면(/site·PromptKit·CareerLog·Steam 관리)은 책상 목록(MAX 개수)에 다 못 담기므로,
+  // 헤더 메뉴 어디에도 안 걸리면 관리자 로봇(팀장 좌석)이 안내한다.
+  const lead = seated.find((module) => module.isLead)
+  if (lead && ADMIN_PATH.test(target)) return lead
 
   const byLabel = seated.find(
     (module) => module.label === request.groupLabel || module.label === request.label

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-21",
+  "generatedAt": "2026-10-02",
   "frontend": [
     {
       "name": "@base-ui/react",
@@ -42,6 +42,11 @@
       "license": "MIT"
     },
     {
+      "name": "@types/aos",
+      "version": "3.0.8",
+      "license": "MIT"
+    },
+    {
       "name": "@uppy/core",
       "version": "6.0.1",
       "license": "MIT"
@@ -64,6 +69,11 @@
     {
       "name": "@uppy/tus",
       "version": "6.0.0",
+      "license": "MIT"
+    },
+    {
+      "name": "aos",
+      "version": "2.3.4",
       "license": "MIT"
     },
     {

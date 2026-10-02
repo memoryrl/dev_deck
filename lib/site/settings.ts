@@ -16,6 +16,10 @@ export type SiteSettings = {
   googleAnalyticsId: string
   noticePopupMode: NoticePopupMode
   maintenanceMode: boolean
+  /** ThemeConfig JSON — lib/site/theme-config.ts */
+  themeConfig: string
+  /** 소유자 로그인 시 모든 화면에 테마 원격 제어기 레이어를 띄울지 */
+  themeRemoteVisible: boolean
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -27,6 +31,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   googleAnalyticsId: "",
   noticePopupMode: DEFAULT_NOTICE_POPUP_MODE,
   maintenanceMode: false,
+  themeConfig: "",
+  themeRemoteVisible: false,
 }
 
 function formatDbError(error: {
@@ -53,6 +59,8 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   const { data, error } = await supabase
     .from("site_settings")
     .select("key, value")
+    // 테마 이력은 관리자 테마 화면에서만 읽는다 — 모든 요청의 레이아웃 조회에 싣지 않는다.
+    .neq("key", "themeHistory")
 
   if (error || !data) return DEFAULT_SETTINGS
 

@@ -69,6 +69,7 @@ export const DEFAULT_ADMIN_MENU_TREE: AdminMenuSeed[] = [
     children: [
       { label: "공통영역", labelKey: "nav.designSystemCommon", href: "/site/design-system/common", icon: "Palette", sortOrder: 0 },
       { label: "화면영역", labelKey: "nav.designSystemScreens", href: "/site/design-system/screens", icon: "LayoutTemplate", sortOrder: 10 },
+      { label: "테마 관리", labelKey: "nav.theme", href: "/site/theme", icon: "Palette", sortOrder: 20 },
     ],
   },
 ]

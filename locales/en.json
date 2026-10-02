@@ -9,6 +9,14 @@
     "light": "Light mode",
     "dark": "Dark mode"
   },
+  "bannerMeeting": {
+    "leaderTag": "{{name}} lead",
+    "meetingLead": "{{name}} team standup!",
+    "meetingMember": "{{name}} update!",
+    "meetingGeneric1": "Great idea!",
+    "meetingGeneric2": "I'll take it!",
+    "meetingGeneric3": "Let's go team!"
+  },
   "common": {
     "search": "Search",
     "searchPlaceholder": "Enter a search term",
@@ -78,6 +86,7 @@
     "designSystem": "Design System",
     "designSystemCommon": "Common",
     "designSystemScreens": "Screens",
+    "theme": "Theme",
     "group": {
       "content": "Content",
       "community": "Community",

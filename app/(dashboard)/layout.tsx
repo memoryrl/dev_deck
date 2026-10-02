@@ -1,4 +1,5 @@
 import { Suspense, cache } from "react"
+import { DashboardEscort } from "@/components/layout/dashboard-escort"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { DashboardHeader } from "@/components/layout/dashboard-header"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -61,6 +62,9 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-muted/40">
       <Suspense fallback={<SidebarFallback />}>
         <DashboardSidebar />
+      </Suspense>
+      <Suspense fallback={null}>
+        <DashboardEscort />
       </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">
         <Suspense fallback={<DashboardHeaderFallback />}>

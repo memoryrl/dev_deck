@@ -78,7 +78,7 @@ export async function PublicFooter() {
       : fallbackColumns(t, owner)
   return (
     <footer className="dark border-t border-border bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-5 py-14">
+      <div className="theme-w-footer mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xs shrink-0 space-y-4">
             <Link href="/">

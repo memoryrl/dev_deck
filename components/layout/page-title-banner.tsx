@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
+import { ThemedBanner } from "@/components/layout/banners/themed-banner"
+import { bannerTeamForRequest } from "@/lib/menus/banner-team"
+import { THEME_BANNER_IMAGES } from "@/lib/site/theme-config"
 import { menuBreadcrumbForRequest, type BreadcrumbItem } from "@/lib/menus/breadcrumb"
-import { cn } from "@/lib/utils"
 
 export type { BreadcrumbItem }
 
@@ -48,49 +48,10 @@ export async function PageTitleBanner({
   const art = pickArt(seed ?? title)
   const crumbs = await menuBreadcrumbForRequest(breadcrumb, title)
   const lede = description?.trim() || null
+  const team = await bannerTeamForRequest(title)
+  // 스타일 2 "랜덤" 배경 — 화면을 열 때마다(서버 렌더 때) 하나 뽑아 내려보낸다. 클라이언트에서 뽑으면 하이드레이션이 어긋난다.
+  const imageKeys = Object.keys(THEME_BANNER_IMAGES)
+  const randomImage = imageKeys[Math.floor(Math.random() * imageKeys.length)]
 
-  return (
-    <div className={cn("relative overflow-hidden rounded-3xl border bg-muted/30 px-6 py-8 md:px-10 md:py-10", className)}>
-      <div aria-hidden className={cn("absolute inset-0", art)} />
-      {/* 어떤 그라디언트 조합이 걸려도 브레드크럼·제목이 읽히도록 아래→위 스크림 */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/15" />
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          {crumbs.length > 0 ? (
-            <nav
-              aria-label="breadcrumb"
-              className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"
-            >
-              {crumbs.map((item, index) => {
-                const current = !item.href && index === crumbs.length - 1
-                return (
-                  <span key={`${item.label}-${index}`} className="flex items-center gap-1.5">
-                    {index > 0 ? <ChevronRight className="size-3 opacity-50" aria-hidden /> : null}
-                    {item.href ? (
-                      <Link href={item.href} className="rounded transition-colors hover:text-foreground">
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span className={current ? "text-foreground" : undefined}>{item.label}</span>
-                    )}
-                  </span>
-                )
-              })}
-            </nav>
-          ) : null}
-          <h1
-            className={cn(
-              "font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl",
-              crumbs.length > 0 ? "mt-3" : null
-            )}
-          >
-            {title}
-          </h1>
-          <div className="mt-4 h-1 w-10 rounded-full bg-[hsl(var(--lux-cognac))]" aria-hidden />
-          {lede ? <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">{lede}</p> : null}
-        </div>
-        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
-      </div>
-    </div>
-  )
+  return <ThemedBanner title={title} lede={lede} crumbs={crumbs} actions={actions} art={art} team={team} randomImage={randomImage} className={className} />
 }

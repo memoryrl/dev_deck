@@ -10,10 +10,14 @@ import { HashScrollFix } from "@/components/layout/hash-scroll-fix"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { VisitTracker } from "@/components/layout/visit-tracker"
+import { ThemeRemoteLayer } from "@/components/theme/theme-remote-layer"
+import { ThemeConfigProvider } from "@/components/theme/theme-config-provider"
 import { LayerDialogHost } from "@/components/ui/layer-dialog"
 import { getT } from "@/lib/i18n/dictionary"
 import { isAnalyticsLocalHost, parseGaMeasurementId } from "@/lib/site/analytics"
 import { getSiteSettings } from "@/lib/site/settings"
+import { canShowThemeRemote } from "@/lib/site/theme"
+import { parseTheme } from "@/lib/site/theme-config"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -49,12 +53,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const settings = await getSiteSettings()
   const headerList = await headers()
   const nonce = headerList.get("x-nonce") ?? undefined
+  const theme = parseTheme(settings.themeConfig)
+  const showThemeRemote = await canShowThemeRemote(settings.themeRemoteVisible)
   const gaId = parseGaMeasurementId(settings.googleAnalyticsId)
   const loadGa = Boolean(gaId) && !isAnalyticsLocalHost(headerList.get("host"))
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", inter.variable, publicSans.variable)}>
-        <ThemeProvider nonce={nonce}>
+        <ThemeProvider nonce={nonce} defaultTheme={theme.colorMode}>
+          <ThemeConfigProvider initial={theme} nonce={nonce}>
           <I18nProvider locale={locale} dictionary={dictionary}>
             <a href="#main-content" className="skip-link">
               {t("common.skipToContent")}
@@ -64,12 +71,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Suspense>
             {children}
             <AosInit />
+            {showThemeRemote ? <ThemeRemoteLayer /> : null}
             <ScrollToTop />
             <VisitTracker />
             <HashScrollFix />
             <LayerDialogHost />
             {loadGa && gaId ? <GoogleAnalytics measurementId={gaId} nonce={nonce} /> : null}
           </I18nProvider>
+          </ThemeConfigProvider>
         </ThemeProvider>
       </body>
     </html>

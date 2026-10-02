@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useThemeConfig } from "@/components/theme/theme-config-provider"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { HeroVisual } from "@/components/landing/hero-visual"
 import { TopologyPanel } from "@/components/landing/hero-topology/topology-panel"
@@ -46,6 +47,8 @@ export function HeroSection({
   children: ReactNode
 }) {
   const { t } = useI18n()
+  // 테마 설정에서 3D 토폴로지 슬라이드를 끄면 클래식 히어로만 보여준다(캐러셀 조작도 숨김).
+  const topologyEnabled = useThemeConfig().config.heroTopology
   const [slide, setSlide] = useState<Slide>(0)
   const [visitedTopology, setVisitedTopology] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
@@ -73,6 +76,10 @@ export function HeroSection({
   // 마지막으로 보던 슬라이드 복원 — 이제 모바일에서도 같은 캐러셀을 쓰므로
   // 화면 크기와 무관하게 한 번만 복원한다(예전엔 데스크톱 전용이었다).
   useEffect(() => {
+    if (!topologyEnabled) {
+      setSlide(0)
+      return
+    }
     try {
       if (window.localStorage.getItem(STORAGE_KEY) === "topology") {
         setSlide(1)
@@ -81,7 +88,7 @@ export function HeroSection({
     } catch {
       // localStorage 접근 불가(프라이빗 모드 등) — 기본값(클래식) 유지
     }
-  }, [])
+  }, [topologyEnabled])
 
   function commit(next: Slide) {
     setSlide(next)
@@ -94,6 +101,7 @@ export function HeroSection({
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!topologyEnabled) return
     const target = event.target as HTMLElement
     if (target.closest("a, button, canvas, .topology-dock")) return
     drag.current = {
@@ -214,6 +222,8 @@ export function HeroSection({
         </div>
       </div>
 
+      {topologyEnabled ? (
+        <>
       <button
         type="button"
         onClick={() => commit(0)}
@@ -250,6 +260,8 @@ export function HeroSection({
           />
         ))}
       </div>
+        </>
+      ) : null}
     </div>
   )
 }

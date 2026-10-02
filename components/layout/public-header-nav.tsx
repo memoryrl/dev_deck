@@ -279,7 +279,7 @@ export function PublicHeaderNav({
         )}
       >
         <PhotoSkin src={photo} scene={scene} />
-        <div className="relative z-10 mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
+        <div className="theme-w-header relative z-10 mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
           <Link href="/" onClick={() => setOpen(null)}>
             <BrandMark subtitle={t("landing.kicker")} />
           </Link>
@@ -386,7 +386,7 @@ export function PublicHeaderNav({
             role="region"
             aria-label={activeNode.label}
           >
-            <div className="mx-auto max-w-6xl px-5 pb-8 pt-2">
+            <div className="theme-w-header mx-auto max-w-6xl px-5 pb-8 pt-2">
               <div className="grid overflow-hidden rounded-2xl bg-background/70 ring-1 ring-foreground/10 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.65fr)]">
                 <MegaHighlight
                   href={highlightHref}

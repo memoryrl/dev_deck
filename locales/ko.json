@@ -9,6 +9,14 @@
     "light": "라이트 모드",
     "dark": "다크 모드"
   },
+  "bannerMeeting": {
+    "leaderTag": "{{name}} 팀장",
+    "meetingLead": "{{name}} 팀 회의 시작!",
+    "meetingMember": "{{name}} 보고드려요!",
+    "meetingGeneric1": "좋은 생각이에요!",
+    "meetingGeneric2": "제가 해볼게요!",
+    "meetingGeneric3": "오늘도 화이팅!"
+  },
   "common": {
     "search": "검색",
     "searchPlaceholder": "검색어를 입력하세요",
@@ -78,6 +86,7 @@
     "designSystem": "디자인 시스템",
     "designSystemCommon": "공통영역",
     "designSystemScreens": "화면영역",
+    "theme": "테마 관리",
     "group": {
       "content": "콘텐츠",
       "community": "커뮤니티",

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { ChevronUp } from "lucide-react"
+import { useThemeConfig } from "@/components/theme/theme-config-provider"
 import { useI18n } from "@/components/i18n/i18n-provider"
 import { NOTICE_POPUP_PATH } from "@/lib/boards/notice-popup-window"
 import { cn } from "@/lib/utils"
@@ -13,6 +14,7 @@ export function ScrollToTop() {
   const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const { t } = useI18n()
+  const { config } = useThemeConfig()
 
   useEffect(() => {
     if (pathname.startsWith(NOTICE_POPUP_PATH)) {
@@ -25,7 +27,7 @@ export function ScrollToTop() {
     return () => window.removeEventListener("scroll", sync)
   }, [pathname])
 
-  if (pathname.startsWith(NOTICE_POPUP_PATH)) return null
+  if (!config.scrollTopEnabled || pathname.startsWith(NOTICE_POPUP_PATH)) return null
 
   return (
     <button
