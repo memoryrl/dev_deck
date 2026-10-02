@@ -755,6 +755,51 @@
   animation: topology-leave-veil-in 0.32s ease-out both;
 }
 
+/* 커리어 타임라인 — 가운데 축에서 카드가 좌우로 펼쳐진다 (index별 stagger) */
+@keyframes timeline-card-spread {
+  from {
+    opacity: 0;
+    transform: translateX(var(--spread-from, 0)) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes timeline-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.timeline-card {
+  animation: timeline-card-spread 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 120ms);
+  --spread-from: 0;
+}
+
+@media (min-width: 640px) {
+  .timeline-card-left { --spread-from: 40%; }
+  .timeline-card-right { --spread-from: -40%; }
+}
+
+.timeline-fade {
+  animation: timeline-fade-in 0.35s ease-out both;
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+
+.timeline-item:not([data-visible]) .timeline-card,
+.timeline-item:not([data-visible]) .timeline-fade {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-card,
+  .timeline-fade {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
     animation: none;

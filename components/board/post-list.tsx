@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { TimelineItem } from "@/components/board/timeline-item"
 import { BulletinList } from "@/components/board/bulletin-list"
 import type { PostListRow } from "@/components/board/types"
 import { ListPager } from "@/components/layout/list-pager"
@@ -123,33 +124,45 @@ export async function PostList({
                 const accentLine = onRight ? "bg-[hsl(var(--lux-cognac)/0.5)]" : "bg-[hsl(var(--foreground)/0.35)]"
                 const accentText = onRight ? "text-[hsl(var(--lux-cognac))]" : "text-[hsl(var(--foreground))]"
                 return (
-                  <li key={`${item.href}-${index}`} className="relative sm:grid sm:grid-cols-2 sm:gap-x-12">
+                  <TimelineItem
+                    key={`${item.href}-${index}`}
+                    index={index}
+                    className="timeline-item relative sm:grid sm:grid-cols-2 sm:gap-x-12"
+                  >
                     {/* 타임라인 점 — 모바일 왼쪽 축 / 데스크톱 가운데 축, 둘 다 위치만 다르고 하나만 보인다 */}
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute left-2 top-8 z-10 size-3 -translate-x-1/2 rounded-full ring-4 ring-background sm:left-1/2",
+                        "timeline-fade absolute left-2 top-8 z-10 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 ring-background sm:left-1/2",
                         accentDot
                       )}
                     />
-                    {/* 점에서 카드 쪽으로 뻗는 연결선 + 화살표 — 데스크톱에서 카드가 놓인 쪽으로만 그린다 */}
+                    {/* 점에서 카드 쪽으로 뻗는 연결선 + 화살표 — 데스크톱에서 카드가 놓인 쪽으로만 그린다.
+                        화살표는 gap-x-12(3rem)의 절반인 1.5rem 안쪽에 두고, 카드보다 위에 쌓아 가장자리에 가리지 않는다. */}
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute left-1/2 top-8 hidden h-px w-6 sm:block",
-                        onRight ? "translate-x-0" : "-translate-x-full",
+                        "timeline-fade absolute left-1/2 top-8 z-10 hidden h-px w-[calc(1.5rem-0.875rem-2px)] -translate-y-1/2 sm:block",
+                        onRight ? "" : "-translate-x-full",
                         accentLine
                       )}
                     />
                     <Arrow
                       aria-hidden
                       className={cn(
-                        "absolute top-8 hidden size-3.5 -translate-y-1/2 sm:block",
-                        onRight ? "left-1/2 translate-x-[calc(-50%+1.5rem)]" : "left-1/2 translate-x-[calc(-50%-1.5rem)]",
+                        "timeline-fade absolute top-8 z-20 hidden size-3.5 -translate-y-1/2 sm:block",
+                        onRight
+                          ? "left-[calc(50%+1.5rem-2px)] -translate-x-full"
+                          : "left-[calc(50%-1.5rem+2px)]",
                         accentText
                       )}
                     />
-                    <div className={cn("pl-8 sm:pl-0", onRight ? "sm:col-start-2" : "sm:col-start-1")}>
+                    <div
+                      className={cn(
+                        "timeline-card relative z-0 pl-8 sm:pl-0",
+                        onRight ? "timeline-card-right sm:col-start-2" : "timeline-card-left sm:col-start-1"
+                      )}
+                    >
                       <Link
                         href={item.href}
                         className={cn(
@@ -167,17 +180,19 @@ export async function PostList({
                           {year ?? "—"}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className={cn("block font-display text-xs font-bold tracking-wide", accentText)}>
-                            {dateLabel}
-                          </span>
-                          <span className="mt-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            <span className="truncate">{author}</span>
-                            {item.meta ? (
-                              <>
-                                <span className="text-foreground/20">·</span>
-                                <span className="truncate">{item.meta}</span>
-                              </>
-                            ) : null}
+                          <span className="flex items-center justify-between gap-3">
+                            <span className={cn("shrink-0 font-display text-xs font-bold tracking-wide", accentText)}>
+                              {dateLabel}
+                            </span>
+                            <span className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              <span className="truncate">{author}</span>
+                              {item.meta ? (
+                                <>
+                                  <span className="text-foreground/20">|</span>
+                                  <span className="truncate">{item.meta}</span>
+                                </>
+                              ) : null}
+                            </span>
                           </span>
                           <span className="mt-1.5 block font-display text-lg font-bold leading-snug tracking-tight group-hover:underline">
                             {item.title}
@@ -190,7 +205,7 @@ export async function PostList({
                         </span>
                       </Link>
                     </div>
-                  </li>
+                  </TimelineItem>
                 )
               })}
             </ol>
