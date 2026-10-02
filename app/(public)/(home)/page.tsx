@@ -26,7 +26,7 @@ export default function HomePage() {
   // 폴백·본 히어로가 같은 시작 테마를 쓰도록 요청당 한 번만 고른다.
   const sceneIndex = pickHeroSceneIndex()
   return (
-    <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+    <main id="main-content" tabIndex={-1} data-aos-skip className="flex-1 focus:outline-none">
       <section className="relative">
         {/* 데이터가 필요한 스위치+토폴로지는 별도 Suspense로 감싸 히어로 카피는
             즉시 페인트되게 한다. 폴백은 실제 클래식 히어로와 동일한 마크업이라

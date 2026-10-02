@@ -4,6 +4,7 @@ import { headers } from "next/headers"
 import { Suspense } from "react"
 import { I18nProvider } from "@/components/i18n/i18n-provider"
 import { LanguageRouteSync } from "@/components/i18n/language-route-sync"
+import { AosInit } from "@/components/layout/aos-init"
 import { GoogleAnalytics } from "@/components/layout/google-analytics"
 import { HashScrollFix } from "@/components/layout/hash-scroll-fix"
 import { ScrollToTop } from "@/components/layout/scroll-to-top"
@@ -62,6 +63,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <LanguageRouteSync />
             </Suspense>
             {children}
+            <AosInit />
             <ScrollToTop />
             <VisitTracker />
             <HashScrollFix />
