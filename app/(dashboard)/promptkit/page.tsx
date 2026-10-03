@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { PromptForm } from "./prompt-form"
 import { PostList } from "@/components/board/post-list"
 import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
@@ -11,12 +13,13 @@ import { isSupabaseConfigured } from "@/lib/utils"
 
 export default async function PromptKitPage(
   props: {
-    searchParams?: Promise<{ page?: string; q?: string }>
+    searchParams?: Promise<{ page?: string; q?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -29,9 +32,14 @@ export default async function PromptKitPage(
           <PromptForm />
         </WriteForm>
       </WritePanel>
-      <Suspense fallback={<ListSkeleton />}>
-        <PromptKitList page={page} q={q} />
-      </Suspense>
+      <DateViewTabs basePath="/promptkit" view={view} />
+      {view === "calendar" ? (
+        <DatedCalendar source="prompts" emptyHint="이 날짜에 만든 프롬프트가 없습니다." />
+      ) : (
+        <Suspense fallback={<ListSkeleton />}>
+          <PromptKitList page={page} q={q} />
+        </Suspense>
+      )}
     </div>
   )
 }
@@ -44,6 +52,7 @@ async function PromptKitList({ page, q }: { page: number; q: string }) {
       searchable
       pathname="/promptkit"
       searchQuery={q}
+      extraParams={{ view: "list" }}
       paged={prompts}
       empty="첫 프롬프트를 저장하세요."
       items={prompts.rows.map((prompt) => ({

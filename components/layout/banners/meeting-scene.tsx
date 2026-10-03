@@ -1,7 +1,8 @@
 "use client"
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { useFrame, useThree } from "@react-three/fiber"
+import { Canvas } from "@/components/three/canvas"
 import { ContactShadows, Html, OrbitControls } from "@react-three/drei"
 import { CanvasTexture, SRGBColorSpace, type Mesh } from "three"
 import { IDLE_CLIP, GREET_CLIP, RobotModel, skinFor } from "@/components/landing/hero-topology/topology-robot"

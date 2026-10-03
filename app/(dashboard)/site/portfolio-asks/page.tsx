@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
 import { ListPager } from "@/components/layout/list-pager"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
@@ -13,12 +15,13 @@ import { listPortfolioAsks } from "@/lib/portfolio-assistant/admin"
 import { formatBoardDateTime } from "@/lib/utils"
 
 export default async function PortfolioAsksPage(props: {
-  searchParams?: Promise<{ page?: string; q?: string }>
+  searchParams?: Promise<{ page?: string; q?: string; view?: string }>
 }) {
   const searchParams = await props.searchParams
   const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -27,7 +30,14 @@ export default async function PortfolioAsksPage(props: {
         description="회원이 안내 챗에 묻고 로컬 모델이 답한 내용을 시간순으로 봅니다. 방문객 질문은 받지 않습니다."
       />
 
+      <DateViewTabs basePath="/site/portfolio-asks" view={view} />
+
+      {view === "calendar" ? (
+        <DatedCalendar source="portfolioAsks" emptyHint="이 날짜에 들어온 질문이 없습니다." />
+      ) : (
+        <>
       <form action="/site/portfolio-asks" className="flex flex-wrap items-center gap-2">
+        <input type="hidden" name="view" value="list" />
         <Input
           name="q"
           defaultValue={q}
@@ -39,7 +49,7 @@ export default async function PortfolioAsksPage(props: {
           {t("common.search")}
         </Button>
         <Button asChild variant="outline" size="icon" className="size-10 shrink-0 rounded-full">
-          <Link href="/site/portfolio-asks" aria-label={t("common.searchReset")}>
+          <Link href="/site/portfolio-asks?view=list" aria-label={t("common.searchReset")}>
             <RefreshCw />
           </Link>
         </Button>
@@ -48,6 +58,8 @@ export default async function PortfolioAsksPage(props: {
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <AskList page={page} q={q} />
       </Suspense>
+        </>
+      )}
     </div>
   )
 }
@@ -97,7 +109,7 @@ async function AskList({ page, q }: { page: number; q: string }) {
               </li>
             ))}
           </ul>
-          <ListPager pathname="/site/portfolio-asks" result={result} extraParams={{ q: q || undefined }} />
+          <ListPager pathname="/site/portfolio-asks" result={result} extraParams={{ q: q || undefined, view: "list" }} />
         </>
       )}
     </div>

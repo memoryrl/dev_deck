@@ -34,9 +34,6 @@ export default async function PublicPromptPage(
   return (
     <PublicContainer as="article">
       <ArticleReader>
-        <Suspense fallback={<PagerSkeleton />}>
-          <NeighborsPager prompt={prompt} />
-        </Suspense>
         <Suspense fallback={<PromptArticle prompt={prompt} />}>
           <OwnerAwarePrompt prompt={prompt} />
         </Suspense>
@@ -63,8 +60,10 @@ function PromptArticle({ prompt, canShare = false }: { prompt: Prompt; canShare?
             <CopyButton text={plainTextFromContent(prompt.content) || prompt.content} />
           </>
         }
-        className="mt-6"
       />
+      <Suspense fallback={<PagerSkeleton className="mt-6" />}>
+        <NeighborsPager prompt={prompt} className="mb-0 mt-6" />
+      </Suspense>
       <div className="mt-5 flex flex-wrap gap-2">
         <Badge>{prompt.category}</Badge>
         {(prompt.tags ?? []).map((tag) => (
@@ -91,7 +90,7 @@ async function ResultPreviewSection({ html }: { html: string }) {
   return <ResultPreview html={html} embed={embed} />
 }
 
-async function NeighborsPager({ prompt, placement }: { prompt: Prompt; placement?: "bottom" }) {
+async function NeighborsPager({ prompt, placement, className }: { prompt: Prompt; placement?: "bottom"; className?: string }) {
   const allPrompts = await listPublicPrompts()
   const neighbors = findNeighbors(
     allPrompts,
@@ -100,7 +99,7 @@ async function NeighborsPager({ prompt, placement }: { prompt: Prompt; placement
     (item) => `/p/${item.id}`,
     (item) => item.title
   )
-  return <PostPager placement={placement} listHref="/b/prompts" {...neighbors} />
+  return <PostPager placement={placement} className={className} listHref="/b/prompts" {...neighbors} />
 }
 
 // 본문 컴포넌트를 fallback과 결과에서 각각 새로 만든다. 같은 JSX 객체를 폴백과

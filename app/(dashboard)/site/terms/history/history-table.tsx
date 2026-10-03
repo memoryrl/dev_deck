@@ -85,7 +85,7 @@ export async function TermsHistoryTable({
           </tbody>
         </table>
       </div>
-      <ListPager pathname={TERMS_HISTORY_PATH} result={result} extraParams={{ doc: filter ?? undefined }} />
+      <ListPager pathname={TERMS_HISTORY_PATH} result={result} extraParams={{ doc: filter ?? undefined, view: "list" }} />
     </div>
   )
 }

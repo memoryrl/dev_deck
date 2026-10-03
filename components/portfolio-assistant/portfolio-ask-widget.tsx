@@ -163,7 +163,7 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
   const showGreeting = historyReady && messages.length === 0 && !loadingHistory
 
   return (
-    <div className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
+    <div className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4.25rem))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
       {open ? (
         <div className="mb-3 flex h-[min(32rem,70dvh)] w-[min(23rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-3xl border bg-card shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)]">
           <div className="flex items-start justify-between gap-2 border-b px-4 py-3.5">

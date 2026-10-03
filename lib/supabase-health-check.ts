@@ -162,3 +162,19 @@ export function isHealthLogStale(checkedAt: string | null | undefined): boolean 
   if (!checkedAt) return true
   return Date.now() - new Date(checkedAt).getTime() > HEALTH_LOG_STALE_MS
 }
+
+/** 최근 정기 헬스체크 기록(최신순) — 응답시간 추이·가동률·신호등 판정에 쓴다 */
+export async function getHealthHistory(limit = 30): Promise<HealthLogRow[]> {
+  const admin = createServiceRoleClient()
+  if (!admin) return []
+  const { data, error } = await admin
+    .from("supabase_health_checks")
+    .select("id, checked_at, ok, duration_ms, auth_ok, auth_status, db_ok, error_message")
+    .order("checked_at", { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.error("getHealthHistory error:", error.message)
+    return []
+  }
+  return data ?? []
+}

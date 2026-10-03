@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
+import { LoginHistoryScheduler } from "@/app/(dashboard)/site/login-history/login-history-scheduler"
 import { LoginHistoryRow } from "@/app/(dashboard)/site/login-history/login-history-row"
 import { VisitStatsChart } from "@/app/(dashboard)/site/login-history/visit-stats-chart"
 import { ListPager } from "@/components/layout/list-pager"
@@ -42,7 +43,7 @@ function isSearchField(value: string | undefined): value is LoginHistorySearchFi
 
 export default async function LoginHistoryPage(
   props: {
-    searchParams?: Promise<{ page?: string; type?: string; q?: string; field?: string }>
+    searchParams?: Promise<{ page?: string; type?: string; q?: string; field?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
@@ -51,6 +52,8 @@ export default async function LoginHistoryPage(
   const q = parseSearchQuery(searchParams?.q)
   const activeType = isEventType(searchParams?.type) ? searchParams.type : undefined
   const field = isSearchField(searchParams?.field) ? searchParams.field : "email"
+  // 상단 탭: 캘린더(기본) / 전체목록
+  const view = searchParams?.view === "list" ? "list" : "calendar"
 
   return (
     <div className="w-full space-y-8">
@@ -63,7 +66,31 @@ export default async function LoginHistoryPage(
         <VisitStatsChartWrapper />
       </Suspense>
 
+      <nav role="tablist" aria-label="이력 보기 방식" className="flex gap-1 border-b">
+        {([
+          { id: "calendar", label: "캘린더", href: "/site/login-history" },
+          { id: "list", label: "전체목록", href: "/site/login-history?view=list" },
+        ] as const).map((tab) => (
+          <Link
+            key={tab.id}
+            href={tab.href}
+            role="tab"
+            aria-selected={view === tab.id}
+            className={`-mb-px border-b-2 px-5 py-2.5 text-sm font-semibold transition-colors ${
+              view === tab.id ? "border-[hsl(var(--lux-champagne))] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
+
+      {view === "calendar" ? (
+        <LoginHistoryScheduler />
+      ) : (
+        <>
       <form action="/site/login-history" className="flex flex-wrap items-center gap-2">
+        <input type="hidden" name="view" value="list" />
         <CustomSelect
           name="type"
           defaultValue={activeType ?? "all"}
@@ -91,7 +118,7 @@ export default async function LoginHistoryPage(
           {t("common.search")}
         </Button>
         <Button asChild variant="outline" size="icon" className="size-10 shrink-0 rounded-full">
-          <Link href="/site/login-history" aria-label={t("common.searchReset")}>
+          <Link href="/site/login-history?view=list" aria-label={t("common.searchReset")}>
             <RefreshCw />
           </Link>
         </Button>
@@ -100,6 +127,8 @@ export default async function LoginHistoryPage(
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <LoginHistoryList page={page} q={q} activeType={activeType} field={field} />
       </Suspense>
+        </>
+      )}
     </div>
   )
 }
@@ -147,7 +176,7 @@ async function LoginHistoryList({
           <ListPager
             pathname="/site/login-history"
             result={history}
-            extraParams={{ ...extra, q: q || undefined }}
+            extraParams={{ ...extra, q: q || undefined, view: "list" }}
           />
         </>
       )}

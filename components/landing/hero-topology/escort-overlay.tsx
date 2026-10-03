@@ -39,6 +39,9 @@ const TopologyScene = dynamic(() => loadScene().then((mod) => mod.TopologyScene)
   loading: () => <SceneLoading />,
 })
 
+// 문을 나간 뒤 베일 화면에 띄우는 "서류 더미를 뒤지는 로봇" 장면 — 베일이 뜰 때만 불러온다
+const EscortSearch = dynamic(() => import("@/components/landing/hero-topology/escort-search"), { ssr: false })
+
 function SceneLoading() {
   const { t } = useI18n()
   return (
@@ -235,6 +238,9 @@ export function EscortOverlay({
 
               {leaving ? (
                 <div className="topology-leave-veil" role="status" aria-live="polite">
+                  <div aria-hidden className="topology-leave-search">
+                    <EscortSearch skinIndex={Math.max(escort.data.modules.findIndex((module) => module.id === escort.moduleId), 0)} />
+                  </div>
                   <p className="topology-leave-veil-text">{t("landing.escortLeaving", { label: escort.label })}</p>
                 </div>
               ) : null}

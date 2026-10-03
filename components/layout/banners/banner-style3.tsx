@@ -31,8 +31,10 @@ export function BannerStyle3({ title, lede, crumbs, actions, image, team, admin,
   }, [])
 
   return (
-    // 스타일 2와 같은 플랫한 전체 폭. 위 여백은 부모 패딩(공개 py-12, 관리자 py-8)을 음수 마진으로 지운다.
-    <div data-aos-skip className={cn("relative overflow-hidden border-y", admin ? "-mx-5 -mt-8" : "ml-[calc(50%-50vw)] w-screen -mt-12", className)}>
+    // 바깥 래퍼가 배너 + (배너 밖) 제어 버튼 줄을 묶는다. 위 여백은 부모 패딩(공개 py-12, 관리자 py-8)을 음수 마진으로 지운다.
+    <div data-aos-skip className={cn(admin ? "-mt-8" : "-mt-12", className)}>
+    {/* 스타일 2와 같은 플랫한 전체 폭 */}
+    <div className={cn("relative overflow-hidden border-y", admin ? "-mx-5" : "ml-[calc(50%-50vw)] w-screen")}>
       {/* 스타일 2와 같은 배경 이미지(랜덤/고정은 테마 설정) + 어두운 스크림 — 위에 흰 글자와 3D 장면을 올린다 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={image} alt="" aria-hidden className="absolute inset-0 size-full object-cover" />
@@ -49,7 +51,6 @@ export function BannerStyle3({ title, lede, crumbs, actions, image, team, admin,
           <h1 style={delay(100)} className={cn("banner-enter-left font-display text-3xl font-extrabold tracking-tight md:text-5xl", crumbs.length > 0 ? "mt-2 md:mt-4" : null)}>{title}</h1>
           <div style={delay(200)} className="banner-enter-left mt-3 h-1 w-12 rounded-full bg-[hsl(var(--lux-champagne))] md:mt-5" aria-hidden />
           {lede ? <p style={delay(300)} className="banner-enter-left mt-3 max-w-[58%] text-sm leading-relaxed text-white/80 md:mt-5 md:max-w-md md:text-base">{lede}</p> : null}
-          {actions ? <div style={delay(400)} className="banner-enter-left pointer-events-auto mt-3 flex max-w-[58%] flex-wrap items-center gap-2 text-foreground md:mt-5 md:max-w-none">{actions}</div> : null}
         </div>
         {/* 모바일: 배너 우측 하단. md+: 글 옆 열, 아래 끝까지 내리고 위·옆만 배경에 녹인다. */}
         <div
@@ -60,6 +61,9 @@ export function BannerStyle3({ title, lede, crumbs, actions, image, team, admin,
           <MeetingScene team={team} active={visible} />
         </div>
       </div>
+    </div>
+    {/* 제어 버튼은 배너 밖 오른쪽 아래 — 이미지 위에 얹지 않아 항상 또렷하다 */}
+    {actions ? <div className="mt-4 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null}
     </div>
   )
 }

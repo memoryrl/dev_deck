@@ -40,7 +40,7 @@ export const DEFAULT_ADMIN_MENU_TREE: AdminMenuSeed[] = [
       { label: "게시판", labelKey: "nav.boards", href: "/site/boards", icon: "LayoutList", sortOrder: 0 },
       { label: "댓글", labelKey: "nav.comments", href: "/site/comments", icon: "MessageSquare", sortOrder: 10 },
       { label: "메뉴", labelKey: "nav.menus", href: "/site/menus", icon: "Menu", sortOrder: 20 },
-      { label: "업로드", labelKey: "nav.uploads", href: "/site/uploads", icon: "Upload", sortOrder: 30 },
+      { label: "파일 관리", labelKey: "nav.uploads", href: "/site/uploads", icon: "Upload", sortOrder: 30 },
     ],
   },
   {

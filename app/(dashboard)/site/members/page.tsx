@@ -1,6 +1,8 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { RefreshCw } from "lucide-react"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListPager } from "@/components/layout/list-pager"
 import { ListSkeleton } from "@/components/layout/skeletons"
@@ -16,13 +18,14 @@ import { MembersBrowser } from "./members-browser"
 
 export default async function MembersPage(
   props: {
-    searchParams?: Promise<{ page?: string; q?: string }>
+    searchParams?: Promise<{ page?: string; q?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
   const { t } = await getT()
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -35,7 +38,14 @@ export default async function MembersPage(
         <MemberStatsChartWrapper />
       </Suspense>
 
+      <DateViewTabs basePath="/site/members" view={view} />
+
+      {view === "calendar" ? (
+        <DatedCalendar source="members" emptyHint="이 날짜에 가입·탈퇴한 회원이 없습니다." />
+      ) : (
+        <>
       <form action="/site/members" className="flex flex-wrap items-center gap-2">
+        <input type="hidden" name="view" value="list" />
         <Input
           name="q"
           defaultValue={q}
@@ -47,7 +57,7 @@ export default async function MembersPage(
           {t("common.search")}
         </Button>
         <Button asChild variant="outline" size="icon" className="size-10 shrink-0 rounded-full">
-          <Link href="/site/members" aria-label={t("common.searchReset")}>
+          <Link href="/site/members?view=list" aria-label={t("common.searchReset")}>
             <RefreshCw />
           </Link>
         </Button>
@@ -56,6 +66,8 @@ export default async function MembersPage(
       <Suspense fallback={<ListSkeleton withSearch={false} />}>
         <MemberList page={page} q={q} />
       </Suspense>
+        </>
+      )}
     </div>
   )
 }
@@ -83,7 +95,7 @@ async function MemberList({ page, q }: { page: number; q: string }) {
           <ListPager
             pathname="/site/members"
             result={result}
-            extraParams={{ q: q || undefined }}
+            extraParams={{ q: q || undefined, view: "list" }}
           />
         </>
       )}

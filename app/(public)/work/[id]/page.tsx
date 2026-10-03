@@ -30,9 +30,6 @@ export default async function PublicCareerPage(
   return (
     <PublicContainer as="article">
       <ArticleReader>
-        <Suspense fallback={<PagerSkeleton />}>
-          <NeighborsPager post={post} />
-        </Suspense>
         <Suspense fallback={<CareerArticle post={post} />}>
           <OwnerAwareCareer post={post} />
         </Suspense>
@@ -53,9 +50,11 @@ async function CareerArticle({ post, canShare = false }: { post: CareerPost; can
     <>
       <PageTitleBanner
         title={post.title}
-        className="mt-6"
         actions={canShare ? <ShareButton targetType="career" targetId={post.id} /> : undefined}
       />
+      <Suspense fallback={<PagerSkeleton className="mt-6" />}>
+        <NeighborsPager post={post} className="mb-0 mt-6" />
+      </Suspense>
       <p className="mt-4 text-sm text-muted-foreground">
         {[post.company, post.role, formatPeriod(post.period_start, post.period_end, t("date.present"))]
           .filter(Boolean)
@@ -74,7 +73,7 @@ async function CareerArticle({ post, canShare = false }: { post: CareerPost; can
   )
 }
 
-async function NeighborsPager({ post, placement }: { post: CareerPost; placement?: "bottom" }) {
+async function NeighborsPager({ post, placement, className }: { post: CareerPost; placement?: "bottom"; className?: string }) {
   const allPosts = await listPublicCareerPosts()
   const neighbors = findNeighbors(
     allPosts,
@@ -83,7 +82,7 @@ async function NeighborsPager({ post, placement }: { post: CareerPost; placement
     (item) => `/work/${item.id}`,
     (item) => item.title
   )
-  return <PostPager placement={placement} listHref="/work" {...neighbors} />
+  return <PostPager placement={placement} className={className} listHref="/work" {...neighbors} />
 }
 
 async function OwnerAwareCareer({ post }: { post: CareerPost }) {

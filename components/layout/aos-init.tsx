@@ -41,23 +41,69 @@ const delayStep = (ms: number) => String(Math.round(ms / 50) * 50)
 // ponytail: React 내부 키 이름에 기대는 방식 — 깨지면 pathname 변경 후 고정 지연 태깅으로 대체.
 const isHydrated = (el: HTMLElement) => Object.keys(el).some((key) => key.startsWith("__reactFiber$"))
 
-/** 아직 하이드레이션 전이라 건너뛴 블록이 있으면 true(호출자가 다시 시도한다) */
-function tagBlocks(animation: string, stagger: number): boolean {
-  const main = document.getElementById("main-content")
-  if (!main || main.closest("[data-aos-skip]")) return false
+// 글 상세 본문(RichContent variant="article") — CKEditor로 쓴 HTML이 dangerouslySetInnerHTML로 들어 있다.
+const ARTICLE_BODY = ".rich-content.prose-article"
+// 이미지류는 로딩 중 높이가 바뀌어 줄바꿈이 흔들리므로 이동 없이 페이드만 준다.
+const MEDIA = "img, figure, picture, iframe, video"
+
+/**
+ * 블록이 글 본문을 품고 있으면 블록 전체를 한 덩어리로 띄우지 않는다(본문 안쪽이 따로 움직이므로 이중 애니메이션이 된다).
+ * 대신 본문을 품지 않은 형제(제목·메타 등)만 각자 태깅 대상으로 돌려준다.
+ */
+function targetsOf(block: HTMLElement): HTMLElement[] {
+  if (!block.querySelector(ARTICLE_BODY) && !block.matches(ARTICLE_BODY)) return [block]
+  if (block.matches(ARTICLE_BODY)) return []
+  return Array.from(block.children).flatMap((child) => (child instanceof HTMLElement ? targetsOf(child) : []))
+}
+
+/**
+ * 글 본문의 직계 자식(문단·제목·표·이미지 등)을 각자 화면에 들어올 때 나타나게 한다.
+ * dangerouslySetInnerHTML 내용도 React는 하이드레이션 때 서버가 준 HTML 문자열과 비교한다 — 그 전에 안쪽 DOM에
+ * 속성을 달면 "서버 HTML과 다르다"는 불일치가 나므로, 본문 요소 자체가 하이드레이션된 뒤에만 태깅한다.
+ * 아직이면 true를 돌려줘 호출자가 다시 시도한다.
+ */
+function tagArticleBodies(animation: string, onImageLoad: () => void): boolean {
   let pending = false
-  blocksOf(main).forEach((el, i) => {
-    if (el.hasAttribute("data-aos") && !el.hasAttribute("data-aos-auto")) return
-    if (el.closest("[data-aos-skip]")) return
-    if (!isHydrated(el)) {
+  document.querySelectorAll<HTMLElement>(`#main-content ${ARTICLE_BODY}`).forEach((body) => {
+    if (body.closest("[data-aos-skip]")) return
+    if (!isHydrated(body)) {
       pending = true
       return
     }
-    el.setAttribute("data-aos", animation)
-    el.setAttribute("data-aos-auto", "")
-    el.setAttribute("data-aos-delay", delayStep(Math.min(i, 5) * stagger))
+    for (const el of Array.from(body.children)) {
+      if (!(el instanceof HTMLElement) || el.hasAttribute("data-aos")) continue
+      el.setAttribute("data-aos", el.matches(MEDIA) || el.querySelector(MEDIA) ? "fade" : animation)
+      el.setAttribute("data-aos-auto", "")
+    }
+    // 이미지가 늦게 로드되면 아래 요소들의 위치가 밀리므로, 로드되는 대로 AOS 위치를 다시 계산한다.
+    body.querySelectorAll("img").forEach((img) => {
+      if (!img.complete) img.addEventListener("load", onImageLoad, { once: true })
+    })
   })
   return pending
+}
+
+/** 아직 하이드레이션 전이라 건너뛴 블록이 있으면 true(호출자가 다시 시도한다) */
+function tagBlocks(animation: string, stagger: number, onImageLoad: () => void): boolean {
+  const main = document.getElementById("main-content")
+  if (!main || main.closest("[data-aos-skip]")) return false
+  let pending = false
+  let index = 0
+  blocksOf(main).forEach((block) => {
+    for (const el of targetsOf(block)) {
+      if (el.hasAttribute("data-aos") && !el.hasAttribute("data-aos-auto")) continue
+      if (el.closest("[data-aos-skip]")) continue
+      if (!isHydrated(el)) {
+        pending = true
+        continue
+      }
+      el.setAttribute("data-aos", animation)
+      el.setAttribute("data-aos-auto", "")
+      el.setAttribute("data-aos-delay", delayStep(Math.min(index, 5) * stagger))
+      index += 1
+    }
+  })
+  return tagArticleBodies(animation, onImageLoad) || pending
 }
 
 export function AosInit() {
@@ -81,7 +127,7 @@ export function AosInit() {
     let retryTimer = 0
     const sync = () => {
       if (isOff(aosOnMobile)) return
-      const pending = tagBlocks(aosAnimation, aosStagger)
+      const pending = tagBlocks(aosAnimation, aosStagger, () => AOS.refresh())
       AOS.refreshHard()
       window.clearTimeout(retryTimer)
       if (pending && retries++ < MAX_RETRY) retryTimer = window.setTimeout(sync, 150)

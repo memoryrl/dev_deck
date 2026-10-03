@@ -3,6 +3,8 @@ import Link from "next/link"
 import { CommentAdminActions, ProfanityDeleteButton } from "@/app/(dashboard)/site/comments/admin-actions"
 import { ProfanityWordsPanel } from "@/app/(dashboard)/site/comments/profanity-words-panel"
 import { ProfanityWordForm } from "@/app/(dashboard)/site/comments/word-form"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { ListPager } from "@/components/layout/list-pager"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
@@ -16,12 +18,13 @@ import { formatBoardDateTime, isSupabaseConfigured } from "@/lib/utils"
 
 export default async function SiteCommentsPage(
   props: {
-    searchParams?: Promise<{ page?: string; words?: string }>
+    searchParams?: Promise<{ page?: string; words?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
   const commentPage = parseListPage(searchParams?.page)
   const wordPage = parseListPage(searchParams?.words)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -30,12 +33,20 @@ export default async function SiteCommentsPage(
         description="모든 게시글·게임 상세 댓글을 조회하고 숨기거나 삭제합니다. 욕설 단어는 저장 시 자동 치환됩니다."
       />
 
-      <Suspense fallback={<ListSkeleton withSearch={false} />}>
-        <ProfanityWordsSection wordPage={wordPage} commentPage={commentPage} />
-      </Suspense>
-      <Suspense fallback={<ListSkeleton withSearch={false} />}>
-        <CommentsSection commentPage={commentPage} wordPage={wordPage} />
-      </Suspense>
+      <DateViewTabs basePath="/site/comments" view={view} />
+
+      {view === "calendar" ? (
+        <DatedCalendar source="comments" emptyHint="이 날짜에 등록된 댓글이 없습니다." />
+      ) : (
+        <>
+          <Suspense fallback={<ListSkeleton withSearch={false} />}>
+            <ProfanityWordsSection wordPage={wordPage} commentPage={commentPage} />
+          </Suspense>
+          <Suspense fallback={<ListSkeleton withSearch={false} />}>
+            <CommentsSection commentPage={commentPage} wordPage={wordPage} />
+          </Suspense>
+        </>
+      )}
     </div>
   )
 }
@@ -66,7 +77,7 @@ async function ProfanityWordsSection({ wordPage, commentPage }: { wordPage: numb
             pathname="/site/comments"
             param="words"
             result={words}
-            extraParams={{ page: commentPage }}
+            extraParams={{ page: commentPage, view: "list" }}
           />
         </>
       )}
@@ -147,7 +158,7 @@ async function CommentsSection({ commentPage, wordPage }: { commentPage: number;
             pathname="/site/comments"
             param="page"
             result={comments}
-            extraParams={{ words: wordPage }}
+            extraParams={{ words: wordPage, view: "list" }}
           />
         </>
       )}

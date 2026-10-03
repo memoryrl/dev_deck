@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 
 function scrollToHash() {
   const hash = window.location.hash
@@ -18,6 +19,19 @@ function scrollToHash() {
 // 이미 홈에 있는 상태에서 해시만 바뀌는 경우(페이지 이동이 없어 컴포넌트가
 // 리마운트되지 않는 경우)를 위해 hashchange도 같이 듣는다.
 export function HashScrollFix() {
+  const pathname = usePathname()
+  const first = useRef(true)
+
+  // 화면 전환 시 새 페이지의 첫 요소가 이미 보이면 Next가 스크롤을 올리지 않아 이전 위치가 남는다.
+  // 첫 마운트(새로고침 복원)와 해시 이동은 건드리지 않는다.
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    if (!window.location.hash) window.scrollTo(0, 0)
+  }, [pathname])
+
   useEffect(() => {
     let observer: MutationObserver | null = null
     let timeout: number | null = null

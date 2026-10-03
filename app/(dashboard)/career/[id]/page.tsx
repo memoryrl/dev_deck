@@ -18,15 +18,15 @@ export default async function CareerDetailPage(
   const params = await props.params;
   return (
     <div className="w-full">
-      <Suspense fallback={<PagerSkeleton />}>
-        <NeighborsPager id={params.id} />
-      </Suspense>
       <PageTitleBanner
         title="글 수정"
         breadcrumb={[{ label: "글 수정" }]}
         actions={<ShareButton targetType="career" targetId={params.id} />}
-        className="mb-6 mt-6"
+        className="mt-6"
       />
+      <Suspense fallback={<PagerSkeleton className="mb-6 mt-6" />}>
+        <NeighborsPager id={params.id} className="mb-6 mt-6" />
+      </Suspense>
       <Suspense fallback={<EditorFormSkeleton />}>
         <CareerFormSection id={params.id} />
       </Suspense>
@@ -37,8 +37,8 @@ export default async function CareerDetailPage(
   )
 }
 
-async function NeighborsPager({ id, placement }: { id: string; placement?: "bottom" }) {
-  if (!isSupabaseConfigured()) return <PostPager listHref="/career" placement={placement} />
+async function NeighborsPager({ id, placement, className }: { id: string; placement?: "bottom"; className?: string }) {
+  if (!isSupabaseConfigured()) return <PostPager className={className} listHref="/career" placement={placement} />
   const supabase = await createClient()
   const { data: rows } = await supabase.from("career_posts").select("id, title").order("created_at", { ascending: false })
   const neighbors = findNeighbors(
@@ -48,7 +48,7 @@ async function NeighborsPager({ id, placement }: { id: string; placement?: "bott
     (item) => `/career/${item.id}`,
     (item) => item.title
   )
-  return <PostPager listHref="/career" placement={placement} {...neighbors} />
+  return <PostPager className={className} listHref="/career" placement={placement} {...neighbors} />
 }
 
 async function CareerFormSection({ id }: { id: string }) {

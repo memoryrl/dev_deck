@@ -257,3 +257,62 @@ export async function getVisitStats(period: VisitStatsPeriod): Promise<VisitStat
 
   return result
 }
+
+// ── 캘린더(스케줄러) 화면용 ─────────────────────────────────────────────
+// 날짜 경계는 사이트 운영 기준(한국 시간)으로 자른다 — 서버가 UTC로 돌아도 달력의 "오늘"이 어긋나지 않게.
+const KST = "Asia/Seoul"
+const KST_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: KST }) // YYYY-MM-DD
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+const dayStart = (date: string) => new Date(`${date}T00:00:00+09:00`).toISOString()
+
+export const isDateKey = (value: string) => DATE_RE.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00+09:00`))
+export const kstDateKey = (value: string | Date) => KST_DAY.format(typeof value === "string" ? new Date(value) : value)
+
+export type DailyCount = { date: string; login: number; visit: number }
+
+// 같은 날 기록을 한 줄로 묶어 센다. Supabase는 한 번에 1000행까지만 주므로 쪽을 넘기며 읽는다.
+// ponytail: 상한 30,000행 — 이 이상이면 SQL 집계(RPC)로 옮긴다.
+export async function getLoginHistoryDailyCounts(from: string, to: string): Promise<DailyCount[]> {
+  if (!isSupabaseConfigured() || !isDateKey(from) || !isDateKey(to)) return []
+  const supabase = await createClient()
+  const counts = new Map<string, DailyCount>()
+  const PAGE = 1000
+  for (let offset = 0; offset < 30 * PAGE; offset += PAGE) {
+    const { data, error } = await supabase
+      .from("login_history")
+      .select("created_at, event_type")
+      .gte("created_at", dayStart(from))
+      .lt("created_at", dayStart(to))
+      .order("created_at", { ascending: true })
+      .range(offset, offset + PAGE - 1)
+    if (error) return []
+    const rows = (data as { created_at: string; event_type: LoginHistoryEventType }[]) ?? []
+    for (const row of rows) {
+      const date = kstDateKey(row.created_at)
+      const entry = counts.get(date) ?? { date, login: 0, visit: 0 }
+      if (row.event_type === "login") entry.login += 1
+      else entry.visit += 1
+      counts.set(date, entry)
+    }
+    if (rows.length < PAGE) break
+  }
+  return [...counts.values()].sort((a, b) => a.date.localeCompare(b.date))
+}
+
+// 선택한 하루의 이력(최신순). 하루 상한 300건 — 넘으면 "전체목록" 탭의 검색을 쓴다.
+export const DAY_LIST_LIMIT = 300
+export async function listLoginHistoryByDate(date: string): Promise<LoginHistoryEntry[]> {
+  if (!isSupabaseConfigured() || !isDateKey(date)) return []
+  const supabase = await createClient()
+  const next = new Date(new Date(dayStart(date)).getTime() + 24 * 60 * 60 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from("login_history")
+    .select("*")
+    .gte("created_at", dayStart(date))
+    .lt("created_at", next)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(DAY_LIST_LIMIT)
+  if (error) return []
+  return (data as LoginHistoryEntry[]) ?? []
+}

@@ -9,6 +9,8 @@ import {
   Activity,
   Clock,
 } from "lucide-react"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView, type DateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -22,8 +24,9 @@ import { formatBoardDateTime } from "@/lib/i18n/format"
 import type { AppLocale } from "@/lib/i18n/config"
 import { getT } from "@/lib/i18n/dictionary"
 
-export default async function DashboardHomePage() {
+export default async function DashboardHomePage({ searchParams }: { searchParams?: Promise<{ view?: string }> }) {
   await requireOwner()
+  const view = parseDateView((await searchParams)?.view)
   const { t } = await getT()
 
   return (
@@ -31,13 +34,13 @@ export default async function DashboardHomePage() {
       <PageTitleBanner title={t("admin.dashboard.title")} />
 
       <Suspense fallback={<StatsSkeleton />}>
-        <DashboardContent />
+        <DashboardContent view={view} />
       </Suspense>
     </div>
   )
 }
 
-async function DashboardContent() {
+async function DashboardContent({ view }: { view: DateView }) {
   const [stats, activities, dailyVisits, monthlyVisits] = await Promise.all([
     getDashboardStats(),
     getRecentActivity(8),
@@ -122,7 +125,7 @@ async function DashboardContent() {
       </section>
 
       {/* 최근 활동 */}
-      <section>
+      <section id="recent-activity" className="scroll-mt-20">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold">
             <Clock className="size-5" />
@@ -132,17 +135,22 @@ async function DashboardContent() {
             <Link href="/site/login-history">{t("admin.dashboard.viewAll")}</Link>
           </Button>
         </div>
-        {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("common.empty")}</p>
-        ) : (
-          <div className="rounded-xl border bg-white dark:bg-card">
-            <ul className="divide-y">
-              {activities.map((activity) => (
-                <ActivityItem key={activity.id} activity={activity} locale={locale} />
-              ))}
-            </ul>
-          </div>
-        )}
+        <DateViewTabs basePath="/site/dashboard" view={view} hash="recent-activity" />
+        <div className="mt-4">
+          {view === "calendar" ? (
+            <DatedCalendar source="activity" emptyHint="이 날짜의 활동이 없습니다." />
+          ) : activities.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("common.empty")}</p>
+          ) : (
+            <div className="rounded-xl border bg-white dark:bg-card">
+              <ul className="divide-y">
+                {activities.map((activity) => (
+                  <ActivityItem key={activity.id} activity={activity} locale={locale} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* 빠른 링크 */}

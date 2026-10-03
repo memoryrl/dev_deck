@@ -3,6 +3,8 @@ import Link from "next/link"
 import { CareerForm } from "./career-form"
 import { PostList } from "@/components/board/post-list"
 import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
@@ -13,12 +15,13 @@ import { isSupabaseConfigured } from "@/lib/utils"
 
 export default async function CareerPage(
   props: {
-    searchParams?: Promise<{ page?: string; q?: string }>
+    searchParams?: Promise<{ page?: string; q?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
   const page = parseListPage(searchParams?.page)
   const q = parseSearchQuery(searchParams?.q)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -38,9 +41,14 @@ export default async function CareerPage(
           <CareerForm />
         </WriteForm>
       </WritePanel>
-      <Suspense fallback={<ListSkeleton />}>
-        <CareerPostList page={page} q={q} />
-      </Suspense>
+      <DateViewTabs basePath="/career" view={view} />
+      {view === "calendar" ? (
+        <DatedCalendar source="career" emptyHint="이 날짜에 쓴 커리어 글이 없습니다." />
+      ) : (
+        <Suspense fallback={<ListSkeleton />}>
+          <CareerPostList page={page} q={q} />
+        </Suspense>
+      )}
     </div>
   )
 }
@@ -53,6 +61,7 @@ async function CareerPostList({ page, q }: { page: number; q: string }) {
       searchable
       pathname="/career"
       searchQuery={q}
+      extraParams={{ view: "list" }}
       paged={posts}
       empty="참여했던 프로젝트를 글로 남겨 보세요."
       items={posts.rows.map((post) => ({

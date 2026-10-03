@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useRef } from "react"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { useFrame } from "@react-three/fiber"
+import { Canvas } from "@/components/three/canvas"
 import { Html, OrbitControls, RoundedBox, Sparkles } from "@react-three/drei"
 import type { Group } from "three"
 

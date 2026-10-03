@@ -11,10 +11,13 @@ export function LoginHistoryRow({
   entry,
   number,
   pageCount,
+  compact = false,
 }: {
   entry: LoginHistoryEntry
   number: number
   pageCount: number
+  /** 좁은 패널용 — 뷰포트 폭(md:)이 아니라 이 항목이 놓인 폭이 좁을 때 세로로 쌓는다 */
+  compact?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [pages, setPages] = useState<PageViewEntry[] | null>(null)
@@ -36,25 +39,25 @@ export function LoginHistoryRow({
 
   return (
     <li className="flex flex-col gap-1.5 px-4 py-4 sm:px-5">
-      <div className="flex flex-col gap-1.5 md:flex-row md:items-baseline md:justify-between md:gap-4">
-        <p className="min-w-0 text-[15px] leading-snug">
-          <span className="text-muted-foreground">No. {number}</span>
-          <span className="mx-2 text-foreground/20">|</span>
-          <span className="tabular-nums text-muted-foreground">{formatBoardDateTime(entry.created_at)}</span>
-          <span className="mx-2 text-foreground/20">|</span>
+      <div className={cn("flex flex-col gap-1.5", !compact && "md:flex-row md:items-baseline md:justify-between md:gap-4")}>
+        <p className={cn("min-w-0 text-[15px] leading-snug", compact && "flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm")}>
+          <span className="whitespace-nowrap text-muted-foreground">No. {number}</span>
+          <span className={cn("mx-2 text-foreground/20", compact && "hidden")}>|</span>
+          <span className="whitespace-nowrap tabular-nums text-muted-foreground">{formatBoardDateTime(entry.created_at)}</span>
+          <span className={cn("mx-2 text-foreground/20", compact && "hidden")}>|</span>
           <span
             className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-semibold",
+              "whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold",
               entry.event_type === "login" ? "bg-foreground/10 text-foreground" : "bg-muted text-muted-foreground"
             )}
           >
             {entry.event_type === "login" ? "로그인" : "접속"}
           </span>
-          <span className="mx-2 text-foreground/20">|</span>
+          <span className={cn("mx-2 text-foreground/20", compact && "hidden")}>|</span>
           <span
             title={audience.hint}
             className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-semibold",
+              "whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold",
               audience.kind === "user" && "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
               audience.kind === "vercel" && "bg-amber-500/15 text-amber-800 dark:text-amber-300",
               audience.kind === "bot" && "bg-orange-500/15 text-orange-800 dark:text-orange-300",
@@ -63,16 +66,16 @@ export function LoginHistoryRow({
           >
             {audience.label}
           </span>
-          <span className="mx-2 text-foreground/20">|</span>
-          <span className="font-semibold text-foreground">{isMember ? (entry.email ?? "(이메일 없음)") : "비회원"}</span>
+          <span className={cn("mx-2 text-foreground/20", compact && "hidden")}>|</span>
+          <span className="min-w-0 break-all font-semibold text-foreground">{isMember ? (entry.email ?? "(이메일 없음)") : "비회원"}</span>
           {entry.provider ? (
             <>
-              <span className="mx-2 text-foreground/20">|</span>
+              <span className={cn("mx-2 text-foreground/20", compact && "hidden")}>|</span>
               <span>{entry.provider}</span>
             </>
           ) : null}
         </p>
-        <p className="shrink-0 text-xs text-muted-foreground md:text-right">
+        <p className={cn("shrink-0 text-xs text-muted-foreground", !compact && "md:text-right")}>
           IP {entry.ip_address || "-"}
           {entry.ip_region ? (
             <>

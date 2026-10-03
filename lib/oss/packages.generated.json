@@ -12,6 +12,31 @@
       "license": "GPL-2.0-or-later"
     },
     {
+      "name": "@fullcalendar/core",
+      "version": "6.1.21",
+      "license": "MIT"
+    },
+    {
+      "name": "@fullcalendar/daygrid",
+      "version": "6.1.21",
+      "license": "MIT"
+    },
+    {
+      "name": "@fullcalendar/interaction",
+      "version": "6.1.21",
+      "license": "MIT"
+    },
+    {
+      "name": "@fullcalendar/multimonth",
+      "version": "6.1.21",
+      "license": "MIT"
+    },
+    {
+      "name": "@fullcalendar/react",
+      "version": "6.1.21",
+      "license": "MIT"
+    },
+    {
       "name": "@radix-ui/react-label",
       "version": "2.1.15",
       "license": "MIT"

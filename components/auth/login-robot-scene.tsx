@@ -9,7 +9,8 @@ import {
   useState,
   type MutableRefObject,
 } from "react"
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
+import { Canvas } from "@/components/three/canvas"
 import { useGLTF } from "@react-three/drei"
 import { SkeletonUtils } from "three-stdlib"
 import {

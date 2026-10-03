@@ -715,10 +715,19 @@
   inset: 0;
   z-index: 90;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   background: hsl(var(--background));
   animation: topology-leave-veil-in 0.42s ease-out both;
+}
+
+/* 나갔던 로봇이 양쪽 서류 더미를 뒤지는 장면(안내 문구 위) */
+.topology-leave-search {
+  width: min(94vw, 760px);
+  height: min(46vh, 380px);
+  animation: topology-leave-veil-text 0.5s ease-out 0.1s both;
 }
 
 .topology-leave-veil-text {
@@ -934,4 +943,110 @@
 }
 .theme-w-footer {
   max-width: var(--container-max-footer, var(--container-max, 72rem));
+}
+
+/* 공용 스케줄러(components/schedule) — FullCalendar를 사이트 토큰에 맞춘다. 일 빨강·토 파랑은 kware_aew 위젯 기본 스타일과 같다. */
+.schedule-calendar .fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: hsl(var(--muted));
+  --fc-today-bg-color: hsl(var(--lux-champagne) / 0.16);
+  --fc-button-bg-color: hsl(var(--card));
+  --fc-button-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--foreground));
+  --fc-button-hover-bg-color: hsl(var(--muted));
+  --fc-button-hover-border-color: hsl(var(--border));
+  --fc-button-active-bg-color: hsl(var(--foreground));
+  --fc-button-active-border-color: hsl(var(--foreground));
+  --fc-event-border-color: transparent;
+  font-size: 0.875rem;
+}
+.schedule-calendar .fc .fc-toolbar-title {
+  font-family: var(--font-public-sans), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.schedule-calendar .fc .fc-button {
+  border-radius: 9999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+.schedule-calendar .fc .fc-button-active,
+.schedule-calendar .fc .fc-button-primary:not(:disabled).fc-button-active {
+  color: hsl(var(--background));
+}
+.schedule-calendar .fc .fc-button-group > .fc-button:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.schedule-calendar .fc .fc-button-group > .fc-button:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.schedule-calendar .fc-theme-standard .fc-scrollgrid {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.schedule-calendar .fc .fc-daygrid-day.sched-sun .fc-daygrid-day-number,
+.schedule-calendar .fc .fc-col-header-cell.fc-day-sun a {
+  color: #dc2626;
+}
+.schedule-calendar .fc .fc-daygrid-day.sched-sat .fc-daygrid-day-number,
+.schedule-calendar .fc .fc-col-header-cell.fc-day-sat a {
+  color: #2563eb;
+}
+.schedule-calendar .fc .fc-daygrid-day {
+  cursor: pointer;
+}
+.schedule-calendar .fc .fc-daygrid-day.sched-selected {
+  box-shadow: inset 0 0 0 2px hsl(var(--foreground));
+}
+.schedule-calendar .fc .sched-ev-strong {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-weight: 600;
+}
+/* "접속" 칩 — 배경(샴페인 톤)과 같은 계열이라 묻히던 것을 더 진한 색·테두리·굵은 글씨로 구분한다. */
+.schedule-calendar .fc .sched-ev-soft {
+  background: hsl(var(--lux-champagne) / 0.6);
+  color: hsl(var(--lux-espresso));
+  border: 1px solid hsl(var(--lux-cognac) / 0.45);
+  font-weight: 600;
+}
+.dark .schedule-calendar .fc .sched-ev-soft {
+  background: hsl(var(--lux-champagne) / 0.35);
+  color: hsl(var(--foreground));
+}
+.schedule-calendar .fc .fc-day-other .fc-daygrid-day-events {
+  opacity: 0.75;
+}
+.schedule-calendar .fc .fc-event {
+  cursor: pointer;
+  padding: 0 0.35rem;
+}
+.schedule-calendar .fc a {
+  color: inherit;
+  text-decoration: none;
+}
+/* 캘린더 폭이 좁아져도(패널을 넓히거나 모바일) 툴바가 넘치지 않게 줄바꿈한다. */
+.schedule-calendar .fc {
+  max-width: 100%;
+}
+.schedule-calendar .fc .fc-toolbar {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.schedule-calendar .fc .fc-toolbar-title {
+  font-size: 1rem;
+}
+.schedule-calendar .fc .fc-event {
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+.schedule-calendar .fc .fc-daygrid-day-number {
+  padding: 0.2rem 0.35rem;
+  font-size: 0.8rem;
 }

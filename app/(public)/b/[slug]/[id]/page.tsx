@@ -50,9 +50,11 @@ export default async function PublicBoardPostPage(
     <>
       <PageTitleBanner
         title={post.title}
-        className="mt-6"
         actions={canShare ? <ShareButton targetType="board_post" targetId={post.id} /> : undefined}
       />
+      <Suspense fallback={<PagerSkeleton className="mt-6" />}>
+        <NeighborsPager board={board} post={post} listHref={listHref} className="mb-0 mt-6" />
+      </Suspense>
       <div className="mt-8">
         <RichContent content={post.content} variant="article" />
       </div>
@@ -62,9 +64,6 @@ export default async function PublicBoardPostPage(
   return (
     <PublicContainer as="article">
       <ArticleReader>
-        <Suspense fallback={<PagerSkeleton />}>
-          <NeighborsPager board={board} post={post} listHref={listHref} />
-        </Suspense>
         {isOwner && board.slug === NOTICE_BOARD_SLUG ? (
           <div className="mt-4 flex justify-end">
             <NoticePopupToggle postId={post.id} enabled={Boolean(post.is_popup)} />
@@ -107,11 +106,13 @@ async function NeighborsPager({
   post,
   listHref,
   placement,
+  className,
 }: {
   board: Board
   post: BoardPost
   listHref: string
   placement?: "bottom"
+  className?: string
 }) {
   const posts = await listBoardPosts(board.id)
   const neighbors = findNeighbors(
@@ -121,5 +122,5 @@ async function NeighborsPager({
     (item) => `${listHref}/${item.id}`,
     (item) => item.title
   )
-  return <PostPager placement={placement} listHref={listHref} {...neighbors} />
+  return <PostPager placement={placement} className={className} listHref={listHref} {...neighbors} />
 }

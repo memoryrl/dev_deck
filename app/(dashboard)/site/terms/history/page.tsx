@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { TERMS_HISTORY_PATH, TermsHistoryTable } from "@/app/(dashboard)/site/terms/history/history-table"
+import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
@@ -14,7 +16,7 @@ import type { TermsSlug } from "@/types/terms"
 
 export default async function TermsHistoryPage(
   props: {
-    searchParams?: Promise<{ doc?: string; page?: string }>
+    searchParams?: Promise<{ doc?: string; page?: string; view?: string }>
   }
 ) {
   const searchParams = await props.searchParams;
@@ -22,6 +24,7 @@ export default async function TermsHistoryPage(
   const docParam = searchParams?.doc
   const filter: TermsSlug | null = isTermsSlug(docParam) ? docParam : null
   const page = parseListPage(searchParams?.page)
+  const view = parseDateView(searchParams?.view)
 
   return (
     <div className="w-full space-y-8">
@@ -39,11 +42,19 @@ export default async function TermsHistoryPage(
         }
       />
 
-      <FilterTabs active={filter} />
+      <DateViewTabs basePath={TERMS_HISTORY_PATH} view={view} />
 
-      <Suspense key={`${filter ?? "all"}-${page}`} fallback={<ListSkeleton withSearch={false} />}>
-        <HistoryList filter={filter} page={page} />
-      </Suspense>
+      {view === "calendar" ? (
+        <DatedCalendar source="terms" emptyHint="이 날짜에 수정한 약관이 없습니다." />
+      ) : (
+        <>
+          <FilterTabs active={filter} />
+
+          <Suspense key={`${filter ?? "all"}-${page}`} fallback={<ListSkeleton withSearch={false} />}>
+            <HistoryList filter={filter} page={page} />
+          </Suspense>
+        </>
+      )}
     </div>
   )
 }
@@ -59,7 +70,7 @@ async function FilterTabs({ active }: { active: TermsSlug | null }) {
       {items.map((item) => (
         <Link
           key={item.slug ?? "all"}
-          href={item.slug ? `${TERMS_HISTORY_PATH}?doc=${item.slug}` : TERMS_HISTORY_PATH}
+          href={item.slug ? `${TERMS_HISTORY_PATH}?view=list&doc=${item.slug}` : `${TERMS_HISTORY_PATH}?view=list`}
           aria-current={active === item.slug ? "page" : undefined}
           className={cn(
             "rounded-full px-4 py-1.5 transition-colors",

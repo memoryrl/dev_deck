@@ -18,15 +18,15 @@ export default async function PromptDetailPage(
   const params = await props.params;
   return (
     <div className="w-full">
-      <Suspense fallback={<PagerSkeleton />}>
-        <NeighborsPager id={params.id} />
-      </Suspense>
       <PageTitleBanner
         title="프롬프트 수정"
         breadcrumb={[{ label: "프롬프트 수정" }]}
         actions={<ShareButton targetType="prompt" targetId={params.id} />}
-        className="mb-6 mt-6"
+        className="mt-6"
       />
+      <Suspense fallback={<PagerSkeleton className="mb-6 mt-6" />}>
+        <NeighborsPager id={params.id} className="mb-6 mt-6" />
+      </Suspense>
       <Suspense fallback={<EditorFormSkeleton />}>
         <PromptFormSection id={params.id} />
       </Suspense>
@@ -37,8 +37,8 @@ export default async function PromptDetailPage(
   )
 }
 
-async function NeighborsPager({ id, placement }: { id: string; placement?: "bottom" }) {
-  if (!isSupabaseConfigured()) return <PostPager listHref="/promptkit" placement={placement} />
+async function NeighborsPager({ id, placement, className }: { id: string; placement?: "bottom"; className?: string }) {
+  if (!isSupabaseConfigured()) return <PostPager className={className} listHref="/promptkit" placement={placement} />
   const supabase = await createClient()
   const { data: rows } = await supabase.from("prompts").select("id, title").order("created_at", { ascending: false })
   const neighbors = findNeighbors(
@@ -48,7 +48,7 @@ async function NeighborsPager({ id, placement }: { id: string; placement?: "bott
     (item) => `/promptkit/${item.id}`,
     (item) => item.title
   )
-  return <PostPager listHref="/promptkit" placement={placement} {...neighbors} />
+  return <PostPager className={className} listHref="/promptkit" placement={placement} {...neighbors} />
 }
 
 async function PromptFormSection({ id }: { id: string }) {

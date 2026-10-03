@@ -28,7 +28,7 @@ export function ThemeRemoteSwitch({ initial }: { initial: boolean }) {
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-full border bg-background/80 py-2 pl-4 pr-3 backdrop-blur">
+    <div className="flex items-center gap-3 rounded-full border bg-card py-2 pl-4 pr-3 shadow-sm">
       <Label htmlFor="theme-remote" className="flex cursor-pointer items-center gap-1.5 text-sm">
         <Palette className="size-4" />
         테마 원격 제어기
