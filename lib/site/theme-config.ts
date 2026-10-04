@@ -19,6 +19,12 @@ export const THEME_DISPLAY_FONTS = {
 } as const
 export type ThemeDisplayFont = keyof typeof THEME_DISPLAY_FONTS
 
+export const THEME_HERO_TRANSITIONS = {
+  slide: "좌우 전환 (기본) · 좌우 버튼·드래그",
+  scroll: "세로 스크롤 전환 · 내리면 사무실로 바뀜",
+} as const
+export type ThemeHeroTransition = keyof typeof THEME_HERO_TRANSITIONS
+
 export const THEME_COLOR_MODES = { light: "라이트", dark: "다크", system: "시스템 설정 따라가기" } as const
 export type ThemeColorMode = keyof typeof THEME_COLOR_MODES
 
@@ -113,6 +119,7 @@ export type ThemeConfig = {
   aosOnMobile: boolean
   marqueeSeconds: number
   heroTopology: boolean
+  heroTransition: ThemeHeroTransition
   dashboard3d: boolean
 }
 
@@ -140,6 +147,7 @@ export const DEFAULT_THEME: ThemeConfig = {
   aosOnMobile: false,
   marqueeSeconds: 36,
   heroTopology: true,
+  heroTransition: "slide",
   dashboard3d: true,
 }
 
@@ -193,6 +201,7 @@ export function sanitizeTheme(raw: unknown): ThemeConfig {
     aosOnMobile: bool(src.aosOnMobile, d.aosOnMobile),
     marqueeSeconds: clamp(src.marqueeSeconds, THEME_LIMITS.marqueeSeconds, d.marqueeSeconds),
     heroTopology: bool(src.heroTopology, d.heroTopology),
+    heroTransition: pick(src.heroTransition, THEME_HERO_TRANSITIONS, d.heroTransition),
     dashboard3d: bool(src.dashboard3d, d.dashboard3d),
   }
 }

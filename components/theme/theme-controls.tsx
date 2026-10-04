@@ -15,6 +15,7 @@ import {
   THEME_BUTTON_SHAPES,
   THEME_COLOR_MODES,
   THEME_DISPLAY_FONTS,
+  THEME_HERO_TRANSITIONS,
   THEME_FONT_SCALES,
   THEME_FONTS,
   THEME_LIMITS,
@@ -205,6 +206,7 @@ export function ThemeControls() {
             {item("home", "홈 화면 영역", (
               <>
                 <ToggleRow label="3D 토폴로지 히어로" hint="끄면 클래식 히어로만 보이고 3D 슬라이드·조작이 사라집니다." checked={config.heroTopology} onChange={(v) => set("heroTopology", v)} />
+                {config.heroTopology ? <ChoiceGroup label="히어로 ↔ 토폴로지 전환 방식" name="heroTransition" value={config.heroTransition} options={THEME_HERO_TRANSITIONS} onChange={(v) => set("heroTransition", v)} /> : null}
                 <RangeField label="마키 한 바퀴 시간" value={config.marqueeSeconds} display={`${config.marqueeSeconds}초`} {...THEME_LIMITS.marqueeSeconds} onChange={(v) => set("marqueeSeconds", v)} />
               </>
             ))}

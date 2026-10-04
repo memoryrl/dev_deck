@@ -19,6 +19,9 @@ const STORAGE_KEY = "devdeck:landing-hero-view"
 const DESKTOP_QUERY = "(min-width: 768px)"
 const DRAG_START_PX = 8
 const DRAG_COMMIT_RATIO = 0.18
+// 스크롤 전환: 히어로가 헤더 아래에 붙은 채(sticky) 이 거리만큼 스크롤하는 동안 사무실로 넘어간다.
+const STICKY_TOP_PX = 56
+const SCROLL_HOLD = 0.1 // 앞뒤로 이만큼은 전환 없이 머문다
 
 type Slide = 0 | 1
 
@@ -48,13 +51,17 @@ export function HeroSection({
 }) {
   const { t } = useI18n()
   // 테마 설정에서 3D 토폴로지 슬라이드를 끄면 클래식 히어로만 보여준다(캐러셀 조작도 숨김).
-  const topologyEnabled = useThemeConfig().config.heroTopology
+  const { heroTopology: topologyEnabled, heroTransition } = useThemeConfig().config
+  const scrollMode = topologyEnabled && heroTransition === "scroll"
   const [slide, setSlide] = useState<Slide>(0)
   const [visitedTopology, setVisitedTopology] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
+  const [scrollProgress, setScrollProgress] = useState(0)
 
+  const runwayRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{
     startX: number
@@ -80,6 +87,7 @@ export function HeroSection({
       setSlide(0)
       return
     }
+    if (scrollMode) return
     try {
       if (window.localStorage.getItem(STORAGE_KEY) === "topology") {
         setSlide(1)
@@ -88,7 +96,38 @@ export function HeroSection({
     } catch {
       // localStorage 접근 불가(프라이빗 모드 등) — 기본값(클래식) 유지
     }
-  }, [topologyEnabled])
+  }, [topologyEnabled, scrollMode])
+
+  // 스크롤 전환 — 러너웨이(바깥 박스)가 헤더 아래에 닿은 뒤 지나간 거리 비율을 0~1로 만든다.
+  useEffect(() => {
+    if (!scrollMode) {
+      setScrollProgress(0)
+      return
+    }
+    let frame = 0
+    const sync = () => {
+      frame = 0
+      const box = runwayRef.current
+      if (!box) return
+      const rect = box.getBoundingClientRect()
+      const distance = rect.height - (heroRef.current?.clientHeight ?? 0)
+      const raw = distance > 0 ? (STICKY_TOP_PX - rect.top) / distance : 0
+      const progress = Math.min(1, Math.max(0, (raw - SCROLL_HOLD) / (1 - 2 * SCROLL_HOLD)))
+      setScrollProgress((prev) => (Math.abs(prev - progress) < 0.002 ? prev : progress))
+      if (progress > 0) setVisitedTopology(true)
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(sync)
+    }
+    sync()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", onScroll)
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onScroll)
+    }
+  }, [scrollMode])
 
   function commit(next: Slide) {
     setSlide(next)
@@ -101,7 +140,7 @@ export function HeroSection({
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!topologyEnabled) return
+    if (!topologyEnabled || scrollMode) return
     const target = event.target as HTMLElement
     if (target.closest("a, button, canvas, .topology-dock")) return
     drag.current = {
@@ -162,15 +201,17 @@ export function HeroSection({
 
   const width = trackRef.current?.clientWidth || 1
   const dragPercent = (dragOffset / width) * 100
-  const translatePercent = -slide * 100 + dragPercent
-  const topologyProgress = Math.min(1, Math.max(0, slide - dragPercent / 100))
+  const activeSlide: Slide = scrollMode ? (scrollProgress > 0.5 ? 1 : 0) : slide
+  const translatePercent = scrollMode ? -scrollProgress * 100 : -slide * 100 + dragPercent
+  const topologyProgress = scrollMode ? scrollProgress : Math.min(1, Math.max(0, slide - dragPercent / 100))
   const veilStyle = {
     opacity: topologyProgress,
     transition: isDragging ? "none" : "opacity 0.35s ease-out",
   } as const
 
-  return (
+  const hero = (
     <div
+      ref={heroRef}
       className={cn(
         "relative h-[560px] touch-pan-y overflow-x-clip md:h-[640px]",
         isDragging && "select-none [&_*]:cursor-grabbing"
@@ -183,7 +224,7 @@ export function HeroSection({
       <div className="absolute inset-0 overflow-hidden">
         <div
           ref={trackRef}
-          className={cn("flex h-full w-full", !isDragging && "transition-transform duration-350 ease-out")}
+          className={cn("flex h-full w-full", !isDragging && !scrollMode && "transition-transform duration-350 ease-out")}
           style={{ transform: `translateX(${translatePercent}%)` }}
         >
           <div className="relative h-full w-full shrink-0">
@@ -196,7 +237,7 @@ export function HeroSection({
                 data={topology}
                 className="h-full"
                 panPixels={isDesktop ? 100 : 0}
-                active={slide === 1}
+                active={activeSlide === 1}
               />
             ) : (
               <div className="h-full bg-[#efe6d8] dark:bg-[#1d1a17]" />
@@ -214,7 +255,7 @@ export function HeroSection({
         <div
           className={cn(
             "group relative w-fit max-w-2xl origin-top-left transition-transform duration-350 ease-out",
-            slide === 1 && "is-topology scale-[0.55] md:scale-[0.62]"
+            activeSlide === 1 && "is-topology scale-[0.55] md:scale-[0.62]"
           )}
         >
           <div aria-hidden className="hero-copy-veil" style={veilStyle} />
@@ -222,7 +263,7 @@ export function HeroSection({
         </div>
       </div>
 
-      {topologyEnabled ? (
+      {topologyEnabled && !scrollMode ? (
         <>
       <button
         type="button"
@@ -262,6 +303,14 @@ export function HeroSection({
       </div>
         </>
       ) : null}
+    </div>
+  )
+
+  if (!scrollMode) return hero
+  // 바깥 박스가 스크롤 거리를 만들고, 안쪽 히어로는 그 동안 헤더 아래에 고정된다.
+  return (
+    <div ref={runwayRef} className="relative h-[calc(560px+80vh)] md:h-[calc(640px+80vh)]">
+      <div className="sticky top-14">{hero}</div>
     </div>
   )
 }
