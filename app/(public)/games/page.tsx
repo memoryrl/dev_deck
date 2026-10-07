@@ -27,7 +27,8 @@ export default async function PublicGamesPage(
     <PublicContainer>
       <PageTitleBanner title={t("games.title")} description={t("games.lede")} />
       <div className="mt-8">
-        <Suspense fallback={<SteamLibrarySkeleton />}>
+        {/* key: 정렬·페이지가 바뀌면 Suspense를 새로 열어 스켈레톤을 다시 보여준다 */}
+        <Suspense key={`${searchParams?.page ?? 1}-${searchParams?.sort ?? ""}`} fallback={<SteamLibrarySkeleton />}>
           <GamesLibrary page={parseListPage(searchParams?.page)} sort={parseSteamLibrarySort(searchParams?.sort)} />
         </Suspense>
       </div>

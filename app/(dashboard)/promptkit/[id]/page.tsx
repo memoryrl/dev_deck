@@ -9,6 +9,9 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { Prompt } from "@/types/prompt"
 import { ShareButton } from "@/components/share/share-button"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "프롬프트 수정 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function PromptDetailPage(
   props: {

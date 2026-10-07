@@ -1,5 +1,8 @@
 import type { Metadata } from "next"
 import { plainTextFromContent } from "@/lib/content"
+import { getSiteSettings } from "@/lib/site/settings"
+import { getT } from "@/lib/i18n/dictionary"
+import { resolveHttpError } from "@/lib/http-errors"
 
 export const SITE_NAME = "DevDeck"
 
@@ -18,7 +21,7 @@ export function excerpt(content: string | null | undefined, max = 160) {
 }
 
 /** 상세·목록 페이지 공통 메타 — 탭 제목, canonical, OG/Twitter(이미지가 없으면 app/opengraph-image). */
-export function pageMeta({
+export async function pageMeta({
   title,
   description,
   path,
@@ -30,18 +33,28 @@ export function pageMeta({
   path: string
   image?: string | null
   noindex?: boolean
-}): Metadata {
-  const full = `${title} · ${SITE_NAME}`
-  const desc = description?.trim() || undefined
-  const cover = image ?? `${siteUrl()}/opengraph-image`
+}): Promise<Metadata> {
+  // 사이트 설정(이름·소셜 이미지)을 따른다. 설정 이미지가 없으면 app/opengraph-image가 기본 이미지.
+  const settings = await getSiteSettings()
+  const name = settings.siteName.trim() || SITE_NAME
+  const full = `${title} · ${name}`
+  const desc = description?.trim() || settings.siteDescription.trim() || undefined
+  const cover = image ?? (settings.socialImage.trim() || `${siteUrl()}/opengraph-image`)
   const images = [{ url: cover }]
   return {
     title: full,
     description: desc,
     alternates: { canonical: path },
     robots: noindex ? { index: false, follow: false } : undefined,
-    openGraph: { title: full, description: desc, url: path, siteName: SITE_NAME, type: "article", images },
+    openGraph: { title: full, description: desc, url: path, siteName: name, type: "article", images },
     twitter: { card: "summary_large_image", title: full, description: desc, images: [cover] },
   }
 }
 
+
+/** 페이지가 notFound()로 끝나는 경우 — 탭 제목도 404 페이지와 똑같이 맞춘다(안 그러면 "DevDeck"만 남는다). */
+export async function notFoundMeta(): Promise<Metadata> {
+  const { locale } = await getT()
+  const error = resolveHttpError(404, locale)
+  return { title: `404 · ${error.title} · ${SITE_NAME}`, description: error.lede, robots: { index: false, follow: false } }
+}

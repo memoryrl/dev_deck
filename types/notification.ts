@@ -11,6 +11,8 @@ export type NotificationItem = {
   actorName: string | null
   subject: string | null
   linkUrl: string | null
+  /** 링크가 가리키는 글이 이미 삭제됐으면 true — 클릭해도 이동하지 않고 "삭제된 글"로 보여준다 */
+  linkMissing?: boolean
   readAt: string | null
   createdAt: string
 }

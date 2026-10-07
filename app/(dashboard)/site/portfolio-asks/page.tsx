@@ -13,6 +13,9 @@ import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { listPortfolioAsks } from "@/lib/portfolio-assistant/admin"
 import { formatBoardDateTime } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "포트폴리오 질문 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function PortfolioAsksPage(props: {
   searchParams?: Promise<{ page?: string; q?: string; view?: string }>

@@ -20,13 +20,14 @@ import { listPromptsPage, withPromptThumbnails } from "@/lib/prompts/public"
 import { listGameReviewsPage } from "@/lib/steam/reviews"
 import { getT } from "@/lib/i18n/dictionary"
 import type { Board } from "@/types/board"
-import { pageMeta } from "@/lib/seo"
+import { notFoundMeta, pageMeta } from "@/lib/seo"
 import type { Metadata } from "next"
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await props.params
   const board = await getBoardBySlug(slug)
-  if (!board || !board.is_active || board.view_role !== "visitor") return { robots: { index: false, follow: false } }
+  if (!board || !board.is_active) return notFoundMeta()
+  if (board.view_role !== "visitor") return { robots: { index: false, follow: false } }
   return pageMeta({ title: board.name, description: board.description, path: `/b/${slug}` })
 }
 
@@ -82,7 +83,7 @@ export default async function PublicBoardPage(
                 하세요.
               </p>
             ) : null}
-            <Suspense fallback={<ListSkeleton />}>
+            <Suspense key={`${page}-${q}`} fallback={<ListSkeleton />}>
               <BoardPostList board={board} page={page} q={q} />
             </Suspense>
           </>

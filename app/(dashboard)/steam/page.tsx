@@ -10,6 +10,9 @@ import type { GameReview, SteamGamesResponse } from "@/types/steam"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { SteamLibrarySkeleton } from "@/components/layout/skeletons"
 import { SteamLibrary } from "./steam-library"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "Steam Tracker 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SteamPage(
   props: {
@@ -20,7 +23,8 @@ export default async function SteamPage(
   return (
     <div className="w-full">
       <PageTitleBanner title="Steam Tracker" className="mb-6" />
-      <Suspense fallback={<SteamLibrarySkeleton />}>
+      {/* key: 정렬·페이지가 바뀌면 Suspense를 새로 열어 스켈레톤을 다시 보여준다(안 그러면 응답이 올 때까지 화면이 그대로다) */}
+      <Suspense key={`${searchParams?.page ?? 1}-${searchParams?.sort ?? ""}`} fallback={<SteamLibrarySkeleton />}>
         <SteamLibraryBody
           page={parseListPage(searchParams?.page)}
           sort={parseSteamLibrarySort(searchParams?.sort)}

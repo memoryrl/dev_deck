@@ -1,3 +1,4 @@
+import { isOwnerEmail } from "@/lib/auth/roles"
 import { VISIT_WINDOW_MS } from "@/lib/auth/visit-window"
 import { emptyPage, fetchPagedRows, ilikeContains, LIST_PAGE_SIZE, type PagedResult } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
@@ -98,6 +99,8 @@ export async function findRecentSessionId({
   return (data[0] as { id: string }).id
 }
 
+const withOwnerFlag = (rows: LoginHistoryEntry[]) => rows.map((row) => ({ ...row, is_owner: isOwnerEmail(row.email) }))
+
 export async function listLoginHistory({
   page = 1,
   eventType,
@@ -132,7 +135,7 @@ export async function listLoginHistory({
       if (byTime !== 0) return byTime
       return b.id.localeCompare(a.id)
     })
-    return { rows, total: count ?? 0 }
+    return { rows: withOwnerFlag(rows), total: count ?? 0 }
   })
 }
 
@@ -314,5 +317,5 @@ export async function listLoginHistoryByDate(date: string): Promise<LoginHistory
     .order("id", { ascending: false })
     .limit(DAY_LIST_LIMIT)
   if (error) return []
-  return (data as LoginHistoryEntry[]) ?? []
+  return withOwnerFlag((data as LoginHistoryEntry[]) ?? [])
 }

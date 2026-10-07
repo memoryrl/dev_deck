@@ -14,6 +14,9 @@ import { getBoardById, listBoardPostsPage } from "@/lib/boards/public"
 import { isSystemBoard, kindLabel, listModuleEntriesPage, systemDashboardHref } from "@/lib/boards/system"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "게시판 글 목록 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteBoardDetailPage(
   props: {

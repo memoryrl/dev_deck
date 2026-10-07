@@ -1,3 +1,4 @@
+import { formatKstDate, formatKstDateTime } from "@/lib/datetime"
 import { DEFAULT_LOCALE, type AppLocale } from "@/lib/i18n/config"
 import { t, type Messages } from "@/lib/i18n/t"
 
@@ -13,24 +14,14 @@ export function formatBoardDateTime(
   if (!iso) return "-"
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso.slice(0, 10)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  const hours = String(date.getHours()).padStart(2, "0")
-  const minutes = String(date.getMinutes()).padStart(2, "0")
-  const seconds = String(date.getSeconds()).padStart(2, "0")
-  const weekday = WEEKDAYS[locale][date.getDay()]
-  return `${year}-${month}-${day} (${weekday}) ${hours}:${minutes}:${seconds}`
+  return formatKstDateTime(date, WEEKDAYS[locale])
 }
 
 export function formatBoardDate(iso: string | null | undefined) {
   if (!iso) return "-"
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso.slice(0, 10).replace(/-/g, ".")
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}.${month}.${day}`
+  return formatKstDate(date)
 }
 
 export function formatLastPlayed(iso: string | null, messages: Messages) {
@@ -43,9 +34,7 @@ export function formatLastPlayed(iso: string | null, messages: Messages) {
   if (days === 1) return t(messages, "steam.yesterday")
   if (days < 7) return t(messages, "steam.daysAgo", { count: days })
   if (days < 30) return t(messages, "steam.weeksAgo", { count: Math.floor(days / 7) })
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${date.getFullYear()}.${month}.${day}`
+  return formatKstDate(date)
 }
 
 export function formatPeriod(

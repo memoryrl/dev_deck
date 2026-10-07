@@ -11,7 +11,7 @@ import { extOf, formatBytes, isPreviewable, KIND_META, kindOf, type ManagedFile 
 // kware_aew 첨부파일 탐색기와 같은 구성: 좌측 파일 트리 / 우측 상단 파일 정보 카드 /
 // 그 아래 [미리보기·텍스트 보기 탭 | AI 어시스턴트]. 선택한 파일은 주소(?fileId=)에도 남겨 새로고침·공유 때 복원된다.
 const TEXT_LIMIT = 200_000
-const DATE_FMT = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" })
+const DATE_FMT = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "medium", timeStyle: "short" })
 type Tab = "preview" | "text"
 type TextState = { status: "idle" | "loading" | "done" | "error"; text: string; truncated: boolean }
 

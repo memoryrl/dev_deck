@@ -98,7 +98,9 @@ export function TopologyPanel({
   // 참고) 서버 렌더링을 거치지 않는다 — localStorage를 초기값에서 바로 읽어도 안전하다.
   // 처음 방문(키 없음)이면 카드를 펼친 채로 시작하고, 이미 본 적 있으면 접힌 아이콘으로
   // 시작한다 — 완전히 사라지는 게 아니라 언제든 아이콘을 눌러 다시 펼칠 수 있다.
+  // 좁은 화면(<640px)에서는 펼친 카드가 H1·설명을 가리므로 처음부터 접힌 아이콘으로 시작한다.
   const [introOpen, setIntroOpen] = useState(() => {
+    if (window.innerWidth < 640) return false
     try {
       return window.localStorage.getItem(INTRO_STORAGE_KEY) !== "1"
     } catch {

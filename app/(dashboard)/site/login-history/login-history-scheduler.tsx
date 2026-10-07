@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { PanelCloseButton, SplitPanel } from "@/components/schedule/split-panel"
 import type { ScheduleEvent, ScheduleRange } from "@/components/schedule/schedule-calendar"
 import { ScheduleCalendarLazy } from "@/components/schedule/schedule-calendar-lazy"
@@ -96,9 +96,13 @@ export function LoginHistoryScheduler() {
           !selected ? (
             <p className="p-6 text-center text-sm text-muted-foreground">캘린더에서 날짜를 누르면 그날의 로그인·접속 이력이 여기에 표시됩니다.</p>
           ) : loadingDay ? (
-            <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              불러오는 중…
+            <div className="space-y-3 p-4" role="status" aria-label="불러오는 중">
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+              ))}
             </div>
           ) : (
             <>

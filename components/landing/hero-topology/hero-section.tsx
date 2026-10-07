@@ -286,12 +286,14 @@ export function HeroSection({
       >
         <ChevronRight className="size-5" />
       </button>
-      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center gap-2">
+      {/* 점은 화살표와 같은 동작이라 보조기기에는 한 번만 읽히게 숨긴다(마우스·터치용) */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center gap-2">
         {([0, 1] as const).map((index) => (
           <button
             key={index}
             type="button"
             onClick={() => commit(index)}
+            tabIndex={-1}
             aria-label={index === 0 ? t("landing.classic") : t("landing.topology")}
             aria-current={slide === index}
             className={cn(

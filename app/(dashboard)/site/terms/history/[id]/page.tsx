@@ -9,8 +9,11 @@ import { requireOwner } from "@/lib/auth/owner"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import { getAdjacentTermsRevisions, getTermsDocuments, getTermsRevision } from "@/lib/terms/documents"
+import type { Metadata } from "next"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export const metadata: Metadata = { title: "약관 이력 상세 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function TermsRevisionPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

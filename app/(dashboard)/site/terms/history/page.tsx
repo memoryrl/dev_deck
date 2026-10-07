@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { TERMS_HISTORY_PATH, TermsHistoryTable } from "@/app/(dashboard)/site/terms/history/history-table"
-import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DatedCalendarServer as DatedCalendar } from "@/components/schedule/dated-calendar-server"
 import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
@@ -13,6 +13,9 @@ import { parseListPage } from "@/lib/pagination"
 import { getTermsDocuments, isTermsSlug, listTermsRevisions, TERMS_SLUGS } from "@/lib/terms/documents"
 import { cn } from "@/lib/utils"
 import type { TermsSlug } from "@/types/terms"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "약관 이력 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function TermsHistoryPage(
   props: {

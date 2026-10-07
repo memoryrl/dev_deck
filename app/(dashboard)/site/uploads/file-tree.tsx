@@ -1,4 +1,5 @@
 "use client"
+import { kstParts } from "@/lib/datetime"
 
 import { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight, Folder, FolderOpen, Search, X } from "lucide-react"
@@ -9,8 +10,8 @@ import { KIND_META, kindOf, type ManagedFile } from "./file-types"
 type TreeNode = { key: string; label: string; count: number; children: TreeNode[]; files: ManagedFile[] }
 
 const monthKey = (iso: string) => {
-  const d = new Date(iso)
-  return { year: String(d.getFullYear()), month: String(d.getMonth() + 1).padStart(2, "0") }
+  const { year, month } = kstParts(new Date(iso))
+  return { year, month }
 }
 
 function buildTree(files: ManagedFile[]): TreeNode[] {

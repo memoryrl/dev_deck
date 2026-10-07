@@ -21,13 +21,13 @@ import { resolveResultEmbed } from "@/lib/embeds/result-preview"
 import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
 import type { Prompt } from "@/types/prompt"
 import { ShareButton } from "@/components/share/share-button"
-import { excerpt, pageMeta } from "@/lib/seo"
+import { excerpt, notFoundMeta, pageMeta } from "@/lib/seo"
 import type { Metadata } from "next"
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await props.params
   const prompt = await getPublicPromptById(id)
-  if (!prompt) return {}
+  if (!prompt) return notFoundMeta()
   return pageMeta({ title: prompt.title, description: excerpt(prompt.content), path: `/p/${id}` })
 }
 
@@ -75,9 +75,14 @@ function PromptArticle({ prompt, canShare = false }: { prompt: Prompt; canShare?
       </Suspense>
       <div className="mt-5 flex flex-wrap gap-2">
         <Badge>{prompt.category}</Badge>
-        {(prompt.tags ?? []).map((tag) => (
-          <Badge key={tag}>{tag}</Badge>
-        ))}
+        {/* 카테고리는 채운 배지, 태그는 #윤곽 배지로 구분하고 카테고리와 같은 태그는 뺀다 */}
+        {(prompt.tags ?? [])
+          .filter((tag) => tag.trim().toLowerCase() !== prompt.category.trim().toLowerCase())
+          .map((tag) => (
+            <Badge key={tag} variant="outline">
+              #{tag}
+            </Badge>
+          ))}
       </div>
       <section className="mt-8">
         <p className="text-sm font-semibold text-muted-foreground">예상 결과물</p>

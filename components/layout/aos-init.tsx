@@ -12,8 +12,9 @@ import { useThemeConfig } from "@/components/theme/theme-config-provider"
 //  - 켜기/끄기·애니메이션 종류·지속 시간은 테마 설정(useThemeConfig)을 따른다.
 function blocksOf(main: HTMLElement) {
   let node: HTMLElement = main
-  while (node.children.length === 1 && node.firstElementChild instanceof HTMLDivElement) {
-    node = node.firstElementChild
+  // 공개 상세 페이지는 <main> 안에 <article> 한 겹이 더 있다 — div와 같이 벗겨 낸다.
+  while (node.children.length === 1 && (node.firstElementChild instanceof HTMLDivElement || node.firstElementChild?.tagName === "ARTICLE")) {
+    node = node.firstElementChild as HTMLElement
   }
   return Array.from(node.children).filter((el): el is HTMLElement => el instanceof HTMLElement)
 }

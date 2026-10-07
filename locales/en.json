@@ -89,7 +89,7 @@
     "theme": "Theme",
     "group": {
       "content": "Content",
-      "community": "Community",
+      "community": "Community admin",
       "ops": "Operations",
       "design": "Design System",
       "other": "Other"
@@ -870,6 +870,7 @@
   },
   "notifications": {
     "title": "Notifications",
+    "deleted": "This post has been deleted",
     "bellAria": "Notifications",
     "bellAriaUnread": "Notifications, {{count}} unread",
     "panelAria": "Notification list",

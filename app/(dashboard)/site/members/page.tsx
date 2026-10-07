@@ -15,6 +15,9 @@ import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { MemberStatsChart } from "./member-stats-chart"
 import { MembersBrowser } from "./members-browser"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "회원 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function MembersPage(
   props: {

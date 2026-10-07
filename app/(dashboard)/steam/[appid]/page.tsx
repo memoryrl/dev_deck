@@ -10,9 +10,12 @@ import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
 import { ReviewForm } from "./review-form"
 import { ShareButton } from "@/components/share/share-button"
+import type { Metadata } from "next"
 
 // games/[appid]/page.tsx와 같은 이유로 섹션별 Suspense — 외부 Steam API 호출
 // (fetchGamePageData)이 느려도 이웃글·리뷰 폼은 먼저 보인다.
+export const metadata: Metadata = { title: "게임 상세 관리 · DevDeck", robots: { index: false, follow: false } }
+
 export default async function SteamDetailPage(
   props: {
     params: Promise<{ appid: string }>

@@ -101,6 +101,7 @@ export function NotificationPanel({
       onUnreadChange(Math.max(0, unreadCount - 1))
     }
     onClose()
+    if (item.linkMissing) return
     // 사이트 안의 경로만 연다. DB 값이 바뀌어도 외부 주소(https://…, //…, javascript:)로 이동하지 않게 한다.
     if (item.linkUrl && item.linkUrl.startsWith("/") && !item.linkUrl.startsWith("//")) router.push(item.linkUrl)
   }
@@ -231,7 +232,7 @@ export function NotificationPanel({
                           ) : null}
                         </span>
                         <span className={cn("mt-0.5 line-clamp-2 block text-[13px] leading-relaxed", unread ? "text-foreground/85" : "text-muted-foreground")}>
-                          {notificationBody(item, t)}
+                          {item.linkMissing ? t("notifications.deleted") : notificationBody(item, t)}
                         </span>
                         <span className="mt-1.5 block text-[11px] tabular-nums text-muted-foreground">
                           {relativeTime(item.createdAt, t, locale)}

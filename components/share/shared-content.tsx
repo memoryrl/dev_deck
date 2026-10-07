@@ -63,9 +63,13 @@ async function Body({ target }: { target: SharedTarget }) {
         <>
           <div className="flex flex-wrap gap-2">
             <Badge>{target.category}</Badge>
-            {target.tags.map((tag) => (
-              <Badge key={tag}>{tag}</Badge>
-            ))}
+            {target.tags
+              .filter((tag) => tag.trim().toLowerCase() !== target.category.trim().toLowerCase())
+              .map((tag) => (
+                <Badge key={tag} variant="outline">
+                  #{tag}
+                </Badge>
+              ))}
           </div>
           {target.resultHtml.trim() ? (
             <section className="mt-8">

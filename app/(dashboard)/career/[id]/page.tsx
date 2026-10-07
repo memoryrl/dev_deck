@@ -9,6 +9,9 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerPost } from "@/types/career"
 import { ShareButton } from "@/components/share/share-button"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "커리어 글 수정 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function CareerDetailPage(
   props: {

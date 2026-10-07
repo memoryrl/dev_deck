@@ -7,11 +7,14 @@ import { ThemeHistory } from "./theme-history"
 import { ThemeHistoryScheduler } from "./theme-history-scheduler"
 import { getSiteSettings } from "@/lib/site/settings"
 import { ThemeRemoteSwitch } from "./theme-remote-switch"
+import type { Metadata } from "next"
 
 const TABS = [
   { id: "calendar", label: "캘린더", href: "/site/theme" },
   { id: "list", label: "전체목록", href: "/site/theme?view=list" },
 ] as const
+
+export const metadata: Metadata = { title: "테마 설정 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteThemePage({ searchParams }: { searchParams?: Promise<{ view?: string }> }) {
   await requireOwner()

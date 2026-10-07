@@ -11,7 +11,7 @@ import type { ThemeHistoryEntry } from "@/lib/site/theme"
 import { saveThemeConfig } from "./actions"
 
 export const fmt = (iso: string) =>
-  new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso))
+  new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "medium", timeStyle: "short" }).format(new Date(iso))
 
 /** 이력 목록(복원 버튼 포함) — 전체목록 탭과 캘린더 우측 패널이 같이 쓴다. compact: 좁은 패널용 세로 배치 */
 export function ThemeHistoryItems({ entries, currentId, compact = false }: { entries: ThemeHistoryEntry[]; currentId: string | null; compact?: boolean }) {

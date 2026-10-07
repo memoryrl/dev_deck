@@ -16,7 +16,7 @@ import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
 import { getPublicGameReview } from "@/lib/steam/reviews"
 import { ShareButton } from "@/components/share/share-button"
-import { excerpt, pageMeta } from "@/lib/seo"
+import { excerpt, notFoundMeta, pageMeta } from "@/lib/seo"
 import type { Metadata } from "next"
 
 // 화면 뼈대(컨테이너·문서 흐름)는 즉시 스트리밍하고, 각 구간은 각자 데이터가 준비되는
@@ -27,7 +27,7 @@ import type { Metadata } from "next"
 export async function generateMetadata(props: { params: Promise<{ appid: string }> }): Promise<Metadata> {
   const { appid } = await props.params
   const appId = Number(appid)
-  if (!Number.isInteger(appId)) return {}
+  if (!Number.isInteger(appId)) return notFoundMeta()
   const { game, catalog } = await fetchGamePageData(appId)
   const name = game?.name ?? catalog?.name
   if (!name) return {}

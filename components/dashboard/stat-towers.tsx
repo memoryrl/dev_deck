@@ -16,8 +16,8 @@ function Tower({ item, index, count, max }: { item: TowerItem; index: number; co
   // 값이 0이어도 바닥 받침은 보이게 최소 높이를 둔다. 제곱근 스케일로 큰 값이 작은 값을 지우지 않게.
   const height = 0.35 + 2.4 * Math.sqrt(item.value / max)
   const angle = (index / count) * Math.PI * 2
-  const x = Math.cos(angle) * 2.5
-  const z = Math.sin(angle) * 2.5
+  const x = Math.cos(angle) * 3
+  const z = Math.sin(angle) * 3
 
   useFrame(({ clock }, dt) => {
     const g = grow.current
@@ -35,7 +35,8 @@ function Tower({ item, index, count, max }: { item: TowerItem; index: number; co
           <meshStandardMaterial color={COLORS[index % COLORS.length]} metalness={0.55} roughness={0.28} />
         </RoundedBox>
       </group>
-      <Html position={[0, height + 0.55, 0]} center distanceFactor={9} zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
+      {/* 자동 회전 중 화면에서 이웃 막대가 겹쳐 보이는 순간이 있어, 라벨 높이를 번갈아 달리해 서로 가리지 않게 한다 */}
+      <Html position={[0, height + 0.55 + (index % 2) * 0.7, 0]} center distanceFactor={9} zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
         <div className="whitespace-nowrap text-center font-display leading-tight text-white drop-shadow">
           <div className="text-lg font-bold tabular-nums">{item.value.toLocaleString()}</div>
           <div className="text-[10px] uppercase tracking-widest text-white/70">{item.label}</div>
@@ -57,11 +58,11 @@ function Stage({ items }: { items: TowerItem[] }) {
       ))}
       {/* 바닥 링 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <ringGeometry args={[1.4, 3.6, 96]} />
+        <ringGeometry args={[1.6, 4.1, 96]} />
         <meshBasicMaterial color="#d8b98a" transparent opacity={0.08} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <ringGeometry args={[3.55, 3.6, 96]} />
+        <ringGeometry args={[4.05, 4.1, 96]} />
         <meshBasicMaterial color="#d8b98a" transparent opacity={0.5} />
       </mesh>
       {/* 중앙 보석 */}
@@ -76,7 +77,7 @@ function Stage({ items }: { items: TowerItem[] }) {
 
 export default function StatTowers({ items }: { items: TowerItem[] }) {
   return (
-    <Canvas dpr={[1, 1.5]} camera={{ position: [0, 4.2, 8.2], fov: 38 }} gl={{ alpha: true, antialias: true }}>
+    <Canvas dpr={[1, 1.5]} camera={{ position: [0, 4.6, 9.6], fov: 38 }} gl={{ alpha: true, antialias: true }}>
       <Stage items={items} />
       <OrbitControls
         enableZoom={false}

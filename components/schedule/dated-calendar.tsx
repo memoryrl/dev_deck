@@ -1,12 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Loader2 } from "lucide-react"
 import { PanelCloseButton, SplitPanel } from "@/components/schedule/split-panel"
 import type { ScheduleEvent, ScheduleRange } from "@/components/schedule/schedule-calendar"
 import { ScheduleCalendarLazy } from "@/components/schedule/schedule-calendar-lazy"
 import { fetchCalendarCounts, fetchCalendarDay } from "@/lib/calendar/actions"
+import { Skeleton } from "@/components/ui/skeleton"
 import { kstDateKey } from "@/lib/calendar/kst"
 import type { CalendarCount, CalendarDayItem } from "@/lib/calendar/sources"
 
@@ -32,11 +32,26 @@ function ItemTitle({ item }: { item: CalendarDayItem }) {
   )
 }
 
-export function DatedCalendar({ source, storageKey, emptyHint = "이 날짜의 기록이 없습니다." }: { source: string; storageKey?: string; emptyHint?: string }) {
+export function DatedCalendar({
+  source,
+  storageKey,
+  emptyHint = "이 날짜의 기록이 없습니다.",
+  initialDate = null,
+  initialItems,
+}: {
+  source: string
+  storageKey?: string
+  emptyHint?: string
+  /** 서버가 미리 가져온 "오늘"(KST)과 그날의 목록 — 있으면 첫 진입에 "불러오는 중"이 뜨지 않는다 */
+  initialDate?: string | null
+  initialItems?: CalendarDayItem[]
+}) {
   const [range, setRange] = useState<ScheduleRange | null>(null)
   const [counts, setCounts] = useState<CalendarCount[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
-  const [items, setItems] = useState<CalendarDayItem[]>([])
+  const [selected, setSelected] = useState<string | null>(initialDate)
+  const [items, setItems] = useState<CalendarDayItem[]>(initialItems ?? [])
+  // 서버가 준 첫 날짜는 다시 가져오지 않는다.
+  const prefetched = useRef(initialDate !== null && initialItems !== undefined ? initialDate : null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,8 +61,10 @@ export function DatedCalendar({ source, storageKey, emptyHint = "이 날짜의 �
     []
   )
 
-  // 처음엔 오늘을 선택한다(서버 렌더와 어긋나지 않게 마운트 후에).
-  useEffect(() => setSelected(kstDateKey(new Date())), [])
+  // 서버가 날짜를 안 준 경우에만 마운트 후 오늘을 선택한다(서버 렌더와 어긋나지 않게).
+  useEffect(() => {
+    if (initialDate === null) setSelected(kstDateKey(new Date()))
+  }, [initialDate])
 
   useEffect(() => {
     if (!range) return
@@ -62,6 +79,10 @@ export function DatedCalendar({ source, storageKey, emptyHint = "이 날짜의 �
 
   useEffect(() => {
     if (!selected) return
+    if (prefetched.current === selected) {
+      prefetched.current = null
+      return
+    }
     let cancelled = false
     setLoading(true)
     fetchCalendarDay(source, selected)
@@ -94,9 +115,13 @@ export function DatedCalendar({ source, storageKey, emptyHint = "이 날짜의 �
           !selected ? (
             <p className="p-6 text-center text-sm text-muted-foreground">캘린더에서 날짜를 누르면 그날의 상세 정보가 여기에 표시됩니다.</p>
           ) : loading ? (
-            <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              불러오는 중…
+            <div className="space-y-3 p-4" role="status" aria-label="불러오는 중">
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+              ))}
             </div>
           ) : items.length === 0 ? (
             <p className="p-6 text-center text-sm text-muted-foreground">{emptyHint}</p>

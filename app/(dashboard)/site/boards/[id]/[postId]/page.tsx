@@ -8,6 +8,9 @@ import { getBoardById, getBoardPost, listBoardPosts } from "@/lib/boards/public"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import { ensureProfile } from "@/lib/supabase/server"
 import { ShareButton } from "@/components/share/share-button"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "게시판 글 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteBoardPostPage(
   props: {

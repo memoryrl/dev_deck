@@ -9,6 +9,9 @@ import { roleLabel } from "@/lib/access"
 import { listBoards } from "@/lib/boards/public"
 import { ensureSystemBoards, isSystemBoard, kindLabel } from "@/lib/boards/system"
 import { ensureProfile } from "@/lib/supabase/server"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "게시판 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default function SiteBoardsPage() {
   return (

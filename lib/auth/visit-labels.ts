@@ -72,6 +72,8 @@ export function classifyVisit(entry: {
   user_agent: string | null
   ip_address: string
   ip_region: string | null
+  user_id?: string | null
+  is_owner?: boolean
 }): VisitAudience {
   const ua = entry.user_agent ?? ""
   const region = entry.ip_region ?? ""
@@ -103,9 +105,8 @@ export function classifyVisit(entry: {
     }
   }
 
-  return {
-    kind: "user",
-    label: "외부 사용자",
-    hint: "브라우저로 들어온 실제 방문으로 보입니다.",
-  }
+  // 실제 사람 방문은 회원 구분으로 라벨을 단다: 관리자 > 회원 > 비회원.
+  if (entry.is_owner) return { kind: "user", label: "관리자", hint: "사이트 관리자(소유자) 계정의 접속입니다." }
+  if (entry.user_id) return { kind: "user", label: "회원", hint: "로그인한 회원의 접속입니다." }
+  return { kind: "user", label: "비회원", hint: "로그인하지 않은 방문자로, 브라우저로 들어온 실제 방문으로 보입니다." }
 }

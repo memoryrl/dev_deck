@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
-import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DatedCalendarServer as DatedCalendar } from "@/components/schedule/dated-calendar-server"
 import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { ListSkeleton } from "@/components/layout/skeletons"
 import { requireOwner } from "@/lib/auth/owner"
@@ -8,6 +8,9 @@ import { getT } from "@/lib/i18n/dictionary"
 import { listShareLinksForAdmin } from "@/lib/share/service"
 import { isSupabaseConfigured } from "@/lib/utils"
 import { SharesTable } from "./shares-table"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "공유 링크 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SharesPage({ searchParams }: { searchParams?: Promise<{ view?: string }> }) {
   const { t } = await getT()

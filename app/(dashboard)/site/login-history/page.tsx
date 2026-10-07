@@ -20,6 +20,7 @@ import { getT } from "@/lib/i18n/dictionary"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
 import type { LoginHistoryEventType } from "@/types/login-history"
+import type { Metadata } from "next"
 
 const TYPE_OPTIONS: { value: LoginHistoryEventType | "all"; label: string }[] = [
   { value: "all", label: "전체" },
@@ -40,6 +41,8 @@ function isEventType(value: string | undefined): value is LoginHistoryEventType 
 function isSearchField(value: string | undefined): value is LoginHistorySearchField {
   return value === "email" || value === "ip" || value === "region"
 }
+
+export const metadata: Metadata = { title: "접속 이력 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function LoginHistoryPage(
   props: {

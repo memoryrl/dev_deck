@@ -20,14 +20,15 @@ import { isSystemBoard } from "@/lib/boards/system"
 import { findNeighbors } from "@/lib/posts/neighbors"
 import type { Board, BoardPost } from "@/types/board"
 import { ShareButton } from "@/components/share/share-button"
-import { excerpt, pageMeta } from "@/lib/seo"
+import { excerpt, notFoundMeta, pageMeta } from "@/lib/seo"
 import type { Metadata } from "next"
 
 export async function generateMetadata(props: { params: Promise<{ slug: string; id: string }> }): Promise<Metadata> {
   const { slug, id } = await props.params
   const [board, post] = await Promise.all([getBoardBySlug(slug), getBoardPost(id)])
   // 비공개 게시판 글은 제목·요약을 탭/미리보기에 흘리지 않는다.
-  if (!board || !post || post.board_id !== board.id || board.view_role !== "visitor") return { robots: { index: false, follow: false } }
+  if (!board || !board.is_active || !post || post.board_id !== board.id) return notFoundMeta()
+  if (board.view_role !== "visitor") return { robots: { index: false, follow: false } }
   return pageMeta({ title: post.title, description: excerpt(post.content), path: `/b/${slug}/${id}` })
 }
 

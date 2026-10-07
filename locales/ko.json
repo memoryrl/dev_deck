@@ -89,7 +89,7 @@
     "theme": "테마 관리",
     "group": {
       "content": "콘텐츠",
-      "community": "커뮤니티",
+      "community": "커뮤니티 관리",
       "ops": "운영",
       "design": "디자인 시스템",
       "other": "기타"
@@ -870,6 +870,7 @@
   },
   "notifications": {
     "title": "알림",
+    "deleted": "삭제된 글입니다",
     "bellAria": "알림",
     "bellAriaUnread": "알림, 읽지 않은 알림 {{count}}건",
     "panelAria": "알림 목록",

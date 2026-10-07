@@ -9,7 +9,7 @@ import {
   Activity,
   Clock,
 } from "lucide-react"
-import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DatedCalendarServer as DatedCalendar } from "@/components/schedule/dated-calendar-server"
 import { DateViewTabs, parseDateView, type DateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -23,6 +23,9 @@ import { getDashboardStats, getRecentActivity, type RecentActivity } from "@/lib
 import { formatBoardDateTime } from "@/lib/i18n/format"
 import type { AppLocale } from "@/lib/i18n/config"
 import { getT } from "@/lib/i18n/dictionary"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "대시보드 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function DashboardHomePage({ searchParams }: { searchParams?: Promise<{ view?: string }> }) {
   await requireOwner()

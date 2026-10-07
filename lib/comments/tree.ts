@@ -14,7 +14,8 @@ export function nestComments(rows: Comment[]): CommentNode[] {
     }
   }
   function sortTree(list: CommentNode[]) {
-    list.sort((a, b) => a.created_at.localeCompare(b.created_at))
+    // 문자열 비교는 "+00:00"/"Z", 소수점 자릿수가 다르면 시간순이 어긋난다 — 실제 시각으로 비교한다.
+    list.sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || a.id.localeCompare(b.id))
     list.forEach((item) => sortTree(item.children))
   }
   sortTree(roots)

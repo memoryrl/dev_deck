@@ -3,7 +3,7 @@ import Link from "next/link"
 import { CommentAdminActions, ProfanityDeleteButton } from "@/app/(dashboard)/site/comments/admin-actions"
 import { ProfanityWordsPanel } from "@/app/(dashboard)/site/comments/profanity-words-panel"
 import { ProfanityWordForm } from "@/app/(dashboard)/site/comments/word-form"
-import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DatedCalendarServer as DatedCalendar } from "@/components/schedule/dated-calendar-server"
 import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { ListPager } from "@/components/layout/list-pager"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
@@ -15,6 +15,9 @@ import { parseListPage } from "@/lib/pagination"
 import { createClient } from "@/lib/supabase/server"
 import { ensureProfile } from "@/lib/supabase/server"
 import { formatBoardDateTime, isSupabaseConfigured } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "댓글 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteCommentsPage(
   props: {

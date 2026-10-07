@@ -5,6 +5,9 @@ import { createClient, ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { CareerSkill } from "@/types/career"
 import { SkillManager } from "./skill-manager"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "스킬 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default function CareerSkillsPage() {
   return (

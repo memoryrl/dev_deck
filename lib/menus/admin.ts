@@ -31,7 +31,7 @@ export const DEFAULT_ADMIN_MENU_TREE: AdminMenuSeed[] = [
     ],
   },
   {
-    label: "커뮤니티",
+    label: "커뮤니티 관리",
     labelKey: "nav.group.community",
     href: null,
     icon: "LayoutList",

@@ -12,6 +12,9 @@ import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "커리어 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function CareerPage(
   props: {

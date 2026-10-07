@@ -43,13 +43,20 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT()
-  const description = t("meta.description")
+  // 사이트 설정(/site/settings)의 이름·설명·키워드·소셜 이미지를 그대로 쓴다. 비어 있으면 번역 기본값/기본 OG 이미지.
+  const settings = await getSiteSettings()
+  const name = settings.siteName.trim() || "DevDeck"
+  const description = settings.siteDescription.trim() || t("meta.description")
+  const keywords = settings.siteKeywords.split(",").map((k) => k.trim()).filter(Boolean)
+  const image = settings.socialImage.trim()
   return {
     metadataBase: new URL(siteUrl()),
-    title: "DevDeck",
+    title: name,
     description,
-    openGraph: { title: "DevDeck", description, siteName: "DevDeck", type: "website", locale: "ko_KR" },
-    twitter: { card: "summary_large_image", title: "DevDeck", description },
+    keywords: keywords.length ? keywords : undefined,
+    // image가 없으면 이 필드를 빼서 app/opengraph-image(파일 규약)가 채우게 한다.
+    openGraph: { title: name, description, siteName: name, type: "website", locale: "ko_KR", ...(image ? { images: [image] } : {}) },
+    twitter: { card: "summary_large_image", title: name, description, ...(image ? { images: [image] } : {}) },
   }
 }
 
@@ -89,3 +96,4 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   )
 }
+

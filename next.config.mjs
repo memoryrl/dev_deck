@@ -15,6 +15,7 @@ const SECURITY_HEADERS = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
   transpilePackages: ["ckeditor5", "@ckeditor/ckeditor5-react", "marked"],
   images: {
     remotePatterns: [

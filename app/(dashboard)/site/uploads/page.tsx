@@ -8,9 +8,12 @@ import { isSupabaseConfigured } from "@/lib/utils"
 import { FileWorkspace } from "./file-workspace"
 import type { ManagedFile } from "./file-types"
 import { UploadToggle } from "./upload-toggle"
+import type { Metadata } from "next"
 
 // 트리에 한 번에 싣는 상한 — 이 이상이면 폴더(연·월)별 지연 로딩으로 바꿔야 한다.
 const FILE_LIMIT = 1000
+
+export const metadata: Metadata = { title: "업로드 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteFilesPage({ searchParams }: { searchParams?: Promise<{ fileId?: string }> }) {
   const fileId = (await searchParams)?.fileId ?? null

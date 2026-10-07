@@ -1050,3 +1050,13 @@
   padding: 0.2rem 0.35rem;
   font-size: 0.8rem;
 }
+
+/* 인쇄·전체 페이지 캡처·모션 줄이기: 스크롤 등장 애니메이션(AOS)이 아직 안 발동한 블록도 바로 보이게 한다. */
+@media print, (prefers-reduced-motion: reduce) {
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    pointer-events: auto !important;
+  }
+}

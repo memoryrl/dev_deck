@@ -13,6 +13,7 @@ import { formatBoardDateTime } from "@/lib/i18n/format"
 import { getT } from "@/lib/i18n/dictionary"
 import { cn } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
+import type { Metadata } from "next"
 
 async function refreshSystemStatus() {
   "use server"
@@ -26,6 +27,8 @@ const LEVEL_TEXT: Record<HealthLevel, { title: string; tone: string }> = {
   warn: { title: "주의가 필요합니다", tone: "text-amber-600 dark:text-amber-400" },
   error: { title: "장애가 감지되었습니다", tone: "text-red-600 dark:text-red-400" },
 }
+
+export const metadata: Metadata = { title: "시스템 상태 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SystemStatusPage() {
   await requireOwner()

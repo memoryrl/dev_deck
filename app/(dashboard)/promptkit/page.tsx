@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { PromptForm } from "./prompt-form"
 import { PostList } from "@/components/board/post-list"
 import { WriteForm, WritePanel, WriteToggle } from "@/components/board/write-panel"
-import { DatedCalendar } from "@/components/schedule/dated-calendar"
+import { DatedCalendarServer as DatedCalendar } from "@/components/schedule/dated-calendar-server"
 import { DateViewTabs, parseDateView } from "@/components/schedule/view-tabs"
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { ListSkeleton } from "@/components/layout/skeletons"
@@ -10,6 +10,9 @@ import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { listPromptsPage } from "@/lib/prompts/public"
 import { ensureProfile } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "PromptKit 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function PromptKitPage(
   props: {

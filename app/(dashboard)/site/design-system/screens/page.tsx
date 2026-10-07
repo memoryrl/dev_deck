@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { requireOwner } from "@/lib/auth/owner"
 import { PREVIEWS } from "./previews"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "디자인 시스템 · 화면 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function DesignSystemScreensPage() {
   await requireOwner()

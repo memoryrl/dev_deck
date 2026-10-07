@@ -2,10 +2,13 @@ import { OllamaChatPanel } from "@/app/(dashboard)/site/ollama-chat/ollama-chat-
 import { PageTitleBanner } from "@/components/layout/page-title-banner"
 import { requireOwner } from "@/lib/auth/owner"
 import { getOllamaConnection, listOllamaModels } from "@/lib/ollama/client"
+import type { Metadata } from "next"
 
 // 로컬에 설치된 두 모델을 기본값으로 보여 준다 — Ollama가 꺼져 있어도 화면은 뜨고,
 // 실제 호출은 안내 메시지로 실패한다(actions.ts -> chatWithOllama).
 const FALLBACK_MODELS = ["qwen2.5-coder:3b", "exaone3.5:2.4b"]
+
+export const metadata: Metadata = { title: "Ollama 채팅 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function OllamaChatPage() {
   await requireOwner()

@@ -51,7 +51,7 @@ export default async function WorkBoardPage(
             </Suspense>
           </WritePanel>
         ) : (
-          <Suspense fallback={<ListSkeleton />}>
+          <Suspense key={`${page}-${q}`} fallback={<ListSkeleton />}>
             <WorkPostList page={page} q={q} empty={t("list.emptyPublic")} />
           </Suspense>
         )}

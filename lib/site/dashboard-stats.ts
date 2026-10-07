@@ -1,3 +1,4 @@
+import { kstDateKey, kstDayStartIso } from "@/lib/calendar/kst"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
 import { isSupabaseConfigured } from "@/lib/utils"
@@ -32,12 +33,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient()
 
   const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30).toISOString()
+  // "오늘" 경계는 한국 시간 자정 — 서버가 UTC여도 어긋나지 않게 한다.
+  const todayStart = kstDayStartIso(kstDateKey(now))
+  const daysBefore = (days: number) => new Date(new Date(todayStart).getTime() - days * 86_400_000).toISOString()
+  const weekStart = daysBefore(7)
+  const monthStart = daysBefore(30)
 
   const [
-    postsResult,
+    boardPostsResult,
+    careerPostsResult,
     commentsResult,
     promptsResult,
     profilesResult,
@@ -46,7 +50,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     visitsMonthResult,
     uploadsResult,
   ] = await Promise.all([
-    supabase.from("posts").select("*", { count: "exact", head: true }),
+    // "게시글" = 게시판 글(공지·자유게시판 등) + 커리어 글. 예전엔 쓰지 않는 posts 테이블을 세서 늘 0이었다. 프롬프트는 별도 항목.
+    supabase.from("board_posts").select("*", { count: "exact", head: true }),
+    supabase.from("career_posts").select("*", { count: "exact", head: true }),
     // 관리자 대시보드 집계 — 댓글의 비공개 컬럼까지 세어야 해서 서비스 롤로 읽는다.
     createServiceClient().from("comments").select("id", { count: "exact", head: true }),
     supabase.from("prompts").select("*", { count: "exact", head: true }),
@@ -58,7 +64,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   ])
 
   return {
-    totalPosts: postsResult.count ?? 0,
+    totalPosts: (boardPostsResult.count ?? 0) + (careerPostsResult.count ?? 0),
     totalComments: commentsResult.count ?? 0,
     totalPrompts: promptsResult.count ?? 0,
     totalProfiles: profilesResult.count ?? 0,

@@ -21,6 +21,9 @@ import { CustomSelect } from "@/components/ui/custom-select"
 import { LayerDialogShowcase } from "@/components/ui/layer-dialog-showcase"
 import { ListPager } from "@/components/layout/list-pager"
 import { requireOwner } from "@/lib/auth/owner"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "디자인 시스템 · 공통 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function DesignSystemCommonPage() {
   await requireOwner()

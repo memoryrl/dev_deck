@@ -4,6 +4,9 @@ import { APP_ENV_KEYS, getAppEnv } from "@/lib/site/app-env"
 import { getSiteSettings } from "@/lib/site/settings"
 import { getT } from "@/lib/i18n/dictionary"
 import { SiteSettingsForm } from "./settings-form"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "사이트 설정 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteSettingsPage() {
   await requireOwner()

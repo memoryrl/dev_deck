@@ -10,6 +10,9 @@ import { getT } from "@/lib/i18n/dictionary"
 import { getTermsDocuments, parseTermsSlug, TERMS_SLUGS } from "@/lib/terms/documents"
 import { cn } from "@/lib/utils"
 import type { TermsSlug } from "@/types/terms"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "약관 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default async function SiteTermsPage(props: { searchParams?: Promise<{ doc?: string }> }) {
   const searchParams = await props.searchParams;

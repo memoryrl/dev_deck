@@ -6,6 +6,9 @@ import { listBoards } from "@/lib/boards/public"
 import { listAllMenus } from "@/lib/menus/public"
 import { ensureDefaultMenus } from "@/lib/menus/seed"
 import { ensureProfile } from "@/lib/supabase/server"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = { title: "메뉴 관리 · DevDeck", robots: { index: false, follow: false } }
 
 export default function SiteMenusPage() {
   return (
