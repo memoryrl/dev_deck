@@ -44,7 +44,7 @@ export default async function GamesTopPage() {
                   <SteamCover
                     src={steamCoverSources(entry.appId, entry.headerImageUrl)}
                     appId={entry.appId}
-                    alt=""
+                    alt={entry.name}
                     className="h-20 w-32 shrink-0 sm:h-24 sm:w-40"
                   />
                   <span className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2">

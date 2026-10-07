@@ -10,15 +10,13 @@ import { isInvalidRefreshError, isSupabaseAuthCookie } from "@/lib/supabase/auth
 // 다만 브라우저에 만료·폐기된 refresh token 쿠키가 남아 있으면 공개 페이지의
 // getUser()가 같은 400을 반복해서 찍으므로, 인증 쿠키가 있을 때만 여기서 한 번
 // 검증하고 잘못된 쿠키는 지운다.
+// startsWith("/site")는 /sitemap.xml까지 잡아서 로그인으로 보냈다 — 경로 경계(/)까지 맞춰 본다.
+const underPath = (path: string, base: string) => path === base || path.startsWith(`${base}/`)
+const isDashboardPath = (path: string) =>
+  ["/promptkit", "/career", "/steam", "/site"].some((base) => underPath(path, base))
+
 function needsAuthCheck(path: string) {
-  return (
-    path.startsWith("/promptkit") ||
-    path.startsWith("/career") ||
-    path.startsWith("/steam") ||
-    path.startsWith("/site") ||
-    path === "/account" ||
-    path === "/login"
-  )
+  return isDashboardPath(path) || path === "/account" || path === "/login"
 }
 
 function hasAuthCookies(request: NextRequest) {
@@ -93,11 +91,7 @@ export async function updateSession(request: NextRequest) {
     expireAuthCookies(request, response)
   }
 
-  const isDashboard =
-    path.startsWith("/promptkit") ||
-    path.startsWith("/career") ||
-    path.startsWith("/steam") ||
-    path.startsWith("/site")
+  const isDashboard = isDashboardPath(path)
 
   if (isDashboard && !user) {
     const login = request.nextUrl.clone()

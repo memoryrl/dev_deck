@@ -76,7 +76,7 @@ export function GameCatalog({
         <SteamCover
           src={steamHeroSources(appId, catalog?.header_image)}
           appId={appId}
-          alt=""
+          alt={title}
           className="aspect-[2.2/1] w-full rounded-xl"
         />
         <TwoWeekBadge minutes={game?.playtime_2weeks_minutes} />

@@ -10,6 +10,13 @@ import { listCareerPostsPage } from "@/lib/career/public"
 import { parseListPage, parseSearchQuery } from "@/lib/pagination"
 import { getT } from "@/lib/i18n/dictionary"
 import { formatPeriod } from "@/lib/i18n/format"
+import { pageMeta } from "@/lib/seo"
+import type { Metadata } from "next"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT()
+  return pageMeta({ title: t("work.title"), description: t("work.lede"), path: "/work" })
+}
 
 export default async function WorkBoardPage(
   props: {

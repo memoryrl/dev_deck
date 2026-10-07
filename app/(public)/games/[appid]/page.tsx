@@ -16,12 +16,29 @@ import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
 import { getPublicGameReview } from "@/lib/steam/reviews"
 import { ShareButton } from "@/components/share/share-button"
+import { excerpt, pageMeta } from "@/lib/seo"
+import type { Metadata } from "next"
 
 // 화면 뼈대(컨테이너·문서 흐름)는 즉시 스트리밍하고, 각 구간은 각자 데이터가 준비되는
 // 대로 따로 채워 넣는다. 예전엔 한 함수가 리뷰·게임데이터(외부 Steam API)·이웃글·로그인
 // 여부를 다 기다린 "다음에" 페이지 전체를 렌더링해서, Steam API가 느린 순간 화면
 // 전체가 그만큼 늦게 나타났다. 지금은 섹션별 Suspense라 느린 구간만 그 자리에서
 // 로딩 표시가 남고, 나머지는 먼저 보인다.
+export async function generateMetadata(props: { params: Promise<{ appid: string }> }): Promise<Metadata> {
+  const { appid } = await props.params
+  const appId = Number(appid)
+  if (!Number.isInteger(appId)) return {}
+  const { game, catalog } = await fetchGamePageData(appId)
+  const name = game?.name ?? catalog?.name
+  if (!name) return {}
+  return pageMeta({
+    title: name,
+    description: excerpt(catalog?.short_description),
+    path: `/games/${appId}`,
+    image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+  })
+}
+
 export default async function PublicGamePage(
   props: {
     params: Promise<{ appid: string }>

@@ -15,6 +15,7 @@ import { ThemeConfigProvider } from "@/components/theme/theme-config-provider"
 import { LayerDialogHost } from "@/components/ui/layer-dialog"
 import { getT } from "@/lib/i18n/dictionary"
 import { isAnalyticsLocalHost, parseGaMeasurementId } from "@/lib/site/analytics"
+import { siteUrl } from "@/lib/seo"
 import { getSiteSettings } from "@/lib/site/settings"
 import { canShowThemeRemote } from "@/lib/site/theme"
 import { parseTheme } from "@/lib/site/theme-config"
@@ -42,9 +43,13 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT()
+  const description = t("meta.description")
   return {
+    metadataBase: new URL(siteUrl()),
     title: "DevDeck",
-    description: t("meta.description"),
+    description,
+    openGraph: { title: "DevDeck", description, siteName: "DevDeck", type: "website", locale: "ko_KR" },
+    twitter: { card: "summary_large_image", title: "DevDeck", description },
   }
 }
 

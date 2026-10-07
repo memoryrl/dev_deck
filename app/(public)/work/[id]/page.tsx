@@ -17,6 +17,15 @@ import { getT } from "@/lib/i18n/dictionary"
 import { formatPeriod } from "@/lib/i18n/format"
 import type { CareerPost } from "@/types/career"
 import { ShareButton } from "@/components/share/share-button"
+import { excerpt, pageMeta } from "@/lib/seo"
+import type { Metadata } from "next"
+
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await props.params
+  const post = await getPublicCareerPostById(id)
+  if (!post) return {}
+  return pageMeta({ title: post.title, description: excerpt(post.content), path: `/work/${id}` })
+}
 
 export default async function PublicCareerPage(
   props: {

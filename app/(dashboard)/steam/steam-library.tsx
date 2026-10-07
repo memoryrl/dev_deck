@@ -139,7 +139,7 @@ async function LibraryHeader({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={profile.avatar_url}
-            alt=""
+            alt={profile.persona_name}
             className="h-12 w-12 rounded-full border object-cover"
           />
         ) : null}
@@ -199,7 +199,7 @@ async function GameItem({
           <SteamCover
             src={steamCoverSources(game.app_id, game.header_image_url)}
             appId={game.app_id}
-            alt=""
+            alt={game.name}
             className="h-48 w-full"
           />
           <TwoWeekBadge minutes={game.playtime_2weeks_minutes} />

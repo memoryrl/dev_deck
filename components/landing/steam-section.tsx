@@ -67,7 +67,7 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
           <SteamCover
             src={steamCoverSources(lead.app_id, lead.header_image_url)}
             appId={lead.app_id}
-            alt=""
+            alt={lead.name}
             className="h-96 w-full md:absolute md:inset-0 md:h-full"
           />
           <RankMark rank={1} className="h-10 w-10 text-sm font-extrabold" />
@@ -92,7 +92,7 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
               <SteamCover
                 src={steamCoverSources(game.app_id, game.header_image_url)}
                 appId={game.app_id}
-                alt=""
+                alt={game.name}
                 className="h-48 w-full"
               />
               <RankMark rank={index + 2} className="h-8 w-8 text-xs font-bold" />
@@ -136,7 +136,7 @@ function ReviewList({ reviews }: { reviews: GameReview[] }) {
             <SteamCover
               src={steamCoverSources(review.app_id)}
               appId={review.app_id}
-              alt=""
+              alt={review.game_title}
               className="h-[7.5rem] w-[13.5rem] shrink-0 rounded-lg"
             />
             <div className="min-w-0 flex-1">
@@ -188,7 +188,7 @@ export function SteamSection({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profile.avatar_url}
-              alt=""
+              alt={profile.persona_name}
               className="h-10 w-10 rounded-full border object-cover"
             />
           ) : null}

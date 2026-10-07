@@ -21,6 +21,15 @@ import { resolveResultEmbed } from "@/lib/embeds/result-preview"
 import { getPublicPromptById, listPublicPrompts } from "@/lib/prompts/public"
 import type { Prompt } from "@/types/prompt"
 import { ShareButton } from "@/components/share/share-button"
+import { excerpt, pageMeta } from "@/lib/seo"
+import type { Metadata } from "next"
+
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await props.params
+  const prompt = await getPublicPromptById(id)
+  if (!prompt) return {}
+  return pageMeta({ title: prompt.title, description: excerpt(prompt.content), path: `/p/${id}` })
+}
 
 export default async function PublicPromptPage(
   props: {

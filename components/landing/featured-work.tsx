@@ -41,7 +41,7 @@ export async function FeaturedWorkCard({ work }: { work: FeaturedWork | null }) 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={thumb}
-                alt=""
+                alt={work.title}
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
               />
             </ScrollReveal>

@@ -249,7 +249,7 @@ export async function PostList({
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={thumb}
-                              alt=""
+                              alt={item.title}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                             />
                           </div>
@@ -314,7 +314,7 @@ export async function PostList({
                     <div className="aspect-[16/10] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
                       {thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumb} alt="" className="h-full w-full object-cover" />
+                        <img src={thumb} alt={item.title} className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex flex-1 flex-col px-4 py-4">

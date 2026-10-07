@@ -50,7 +50,7 @@ export function ScreenshotGallery({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={item.thumbnail}
-              alt=""
+              alt={t("steam.screenshotZoom", { title, n: i + 1 })}
               className="h-36 w-full object-cover transition duration-300 group-hover:scale-[1.03] md:h-44"
             />
           </button>

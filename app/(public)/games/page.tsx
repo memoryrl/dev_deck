@@ -8,6 +8,13 @@ import { fetchOwnedGames } from "@/lib/steam/client"
 import { listPublicGameReviews } from "@/lib/steam/reviews"
 import { parseSteamLibrarySort } from "@/lib/steam/sort"
 import { getT } from "@/lib/i18n/dictionary"
+import { pageMeta } from "@/lib/seo"
+import type { Metadata } from "next"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT()
+  return pageMeta({ title: t("games.title"), description: t("games.lede"), path: "/games" })
+}
 
 export default async function PublicGamesPage(
   props: {
