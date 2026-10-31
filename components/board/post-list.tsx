@@ -222,15 +222,14 @@ export async function PostList({
         ) : (
           <div
             className={cn(
-              "grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-8",
+              "grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-8 sm:pb-14",
               displayCount || searchable ? "mt-5" : null
             )}
           >
-            {[0, 1].map((col) => (
-              <div key={col} className={cn("flex flex-col gap-6", col === 1 && "sm:mt-14")}>
-                {rows
+            {/* 한 그리드에 순서대로 놓는다(모바일 1열에서도 최신순 유지). 오른쪽 열만 아래로 내려 엇갈리게 */}
+            {(() => {
+                return rows
                   .map((item, index) => ({ item, index }))
-                  .filter((_, i) => i % 2 === col)
                   .map(({ item, index }) => {
                     const author = item.author?.trim() || authorName
                     const number = paged
@@ -242,7 +241,10 @@ export async function PostList({
                       <Link
                         key={`${item.href}-${index}`}
                         href={item.href}
-                        className="group block overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]"
+                        className={cn(
+                          "group block overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]",
+                          index % 2 === 1 && "sm:translate-y-14 sm:hover:translate-y-[3.25rem]"
+                        )}
                       >
                         {thumb ? (
                           <div className="aspect-[16/9] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
@@ -282,9 +284,8 @@ export async function PostList({
                         </div>
                       </Link>
                     )
-                  })}
-              </div>
-            ))}
+                  })
+            })()}
           </div>
         )
       ) : layout === "cards" ? (

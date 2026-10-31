@@ -98,6 +98,47 @@
   line-height: 1.85;
 }
 
+/* 본문 단락 리듬: 블록 사이 기본 간격을 em 으로 통일하고, 제목은 위를 넓게·아래(본문과)는 좁게 둔다. */
+.prose-deck.rich-content > * + * {
+  margin-top: 0.85em;
+}
+
+.prose-deck.rich-content > :is(h1, h2, h3, h4, h5, h6) {
+  margin-bottom: 0;
+}
+
+.prose-deck.rich-content > :is(h1, h2) {
+  margin-top: 1.9em;
+}
+
+.prose-deck.rich-content > :is(h3, h4, h5, h6) {
+  margin-top: 1.5em;
+}
+
+.prose-deck.rich-content > :is(h1, h2, h3, h4, h5, h6) + * {
+  margin-top: 0.6em;
+}
+
+.prose-deck.rich-content > :first-child {
+  margin-top: 0;
+}
+
+.prose-deck.rich-content :where(ul, ol) {
+  margin-block: 0;
+}
+
+.prose-deck.rich-content :where(li) {
+  margin-block: 0.3em;
+}
+
+.prose-deck.rich-content :where(li > ul, li > ol) {
+  margin-top: 0.3em;
+}
+
+.prose-deck.rich-content > :is(blockquote, pre, figure, table) {
+  margin-bottom: 0;
+}
+
 .prose-deck :where(h1, h2, h3, h4, h5, h6),
 .rich-editor .ck-content :where(h1, h2, h3, h4, h5, h6) {
   @apply font-display font-bold tracking-tight;
