@@ -344,7 +344,11 @@
     "category": "Type",
     "write": "Write",
     "closeWrite": "Close",
-    "boardCaption": "Post list"
+    "boardCaption": "Post list",
+    "overview": "Overview",
+    "readOverview": "Read the overview",
+    "coreAreas": "Core areas",
+    "readDetail": "Read more"
   },
   "comments": {
     "title": "Comments {{count}}",

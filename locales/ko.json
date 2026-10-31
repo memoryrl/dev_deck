@@ -344,7 +344,11 @@
     "category": "분류",
     "write": "글쓰기",
     "closeWrite": "접기",
-    "boardCaption": "게시글 목록"
+    "boardCaption": "게시글 목록",
+    "overview": "한눈에 보기",
+    "readOverview": "전체 요약 읽기",
+    "coreAreas": "핵심 역량",
+    "readDetail": "자세히 보기"
   },
   "comments": {
     "title": "댓글 {{count}}",

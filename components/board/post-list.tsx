@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { TimelineItem } from "@/components/board/timeline-item"
 import { BulletinList } from "@/components/board/bulletin-list"
 import type { PostListRow } from "@/components/board/types"
@@ -220,73 +220,17 @@ export async function PostList({
             {searchQuery.trim() ? t("list.emptySearch") : emptyText}
           </EmptyPlaceholder>
         ) : (
-          <div
-            className={cn(
-              "grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-8 sm:pb-14",
-              displayCount || searchable ? "mt-5" : null
-            )}
-          >
-            {/* 한 그리드에 순서대로 놓는다(모바일 1열에서도 최신순 유지). 오른쪽 열만 아래로 내려 엇갈리게 */}
-            {(() => {
-                return rows
-                  .map((item, index) => ({ item, index }))
-                  .map(({ item, index }) => {
-                    const author = item.author?.trim() || authorName
-                    const number = paged
-                      ? paged.total - ((paged.page - 1) * paged.pageSize + index)
-                      : rows.length - index
-                    const thumb = item.thumbnailUrl?.trim()
-                    const excerpt = item.excerpt?.trim()
-                    return (
-                      <Link
-                        key={`${item.href}-${index}`}
-                        href={item.href}
-                        className={cn(
-                          "group block overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]",
-                          index % 2 === 1 && "sm:translate-y-14 sm:hover:translate-y-[3.25rem]"
-                        )}
-                      >
-                        {thumb ? (
-                          <div className="aspect-[16/9] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={thumb}
-                              alt={item.title}
-                              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                            />
-                          </div>
-                        ) : null}
-                        <div className="p-5">
-                          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            <span className="font-display tabular-nums text-[hsl(var(--lux-cognac))]">
-                              {String(number).padStart(2, "0")}
-                            </span>
-                            {item.meta ? (
-                              <>
-                                <span className="text-foreground/20">·</span>
-                                <span className="truncate">{item.meta}</span>
-                              </>
-                            ) : null}
-                          </div>
-                          <h3 className="mt-2 font-display text-lg font-bold leading-snug tracking-tight group-hover:underline">
-                            {item.title}
-                          </h3>
-                          {excerpt ? (
-                            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-                              {excerpt}
-                            </p>
-                          ) : null}
-                          <p className="mt-4 text-xs text-muted-foreground">
-                            {author}
-                            <span className="mx-1.5 text-foreground/20">·</span>
-                            {formatBoardDateTime(item.createdAt, locale)}
-                          </p>
-                        </div>
-                      </Link>
-                    )
-                  })
-            })()}
-          </div>
+          <FeedLayout
+            rows={rows}
+            featured={!searchQuery.trim() && (paged?.page ?? 1) === 1}
+            className={displayCount || searchable ? "mt-5" : undefined}
+            labels={{
+              overview: t("list.overview"),
+              readOverview: t("list.readOverview"),
+              coreAreas: t("list.coreAreas"),
+              readDetail: t("list.readDetail"),
+            }}
+          />
         )
       ) : layout === "cards" ? (
         rows.length === 0 ? (
@@ -354,6 +298,123 @@ export async function PostList({
           variant={searchable || paged ? "board" : "teaser"}
         />
       )}
+    </div>
+  )
+}
+
+/** "분야 : 한 줄 설명" 형식 제목을 둘로 나눈다. 구분자가 없으면 제목 전체가 분야가 된다. */
+function splitTitle(title: string) {
+  const [head, ...tail] = title.split(/\s+:\s+/)
+  return { head, tagline: tail.join(" : ") }
+}
+
+/**
+ * 스킬 게시판 레이아웃. 첫 페이지의 최신 글(전체 요약)을 위에 크게 두고,
+ * 나머지는 "분야 + 한 줄 설명" 카드로 같은 크기의 격자에 놓는다.
+ */
+function FeedLayout({
+  rows,
+  featured,
+  className,
+  labels,
+}: {
+  rows: PostListRow[]
+  featured: boolean
+  className?: string
+  labels: { overview: string; readOverview: string; coreAreas: string; readDetail: string }
+}) {
+  const [first, ...others] = rows
+  const lead = featured ? first : null
+  // 역량 카드는 등록순(01부터)으로 번호를 붙여, 요약글의 "핵심 강점" 번호와 맞춘다.
+  // ponytail: 현재 페이지 안에서만 뒤집는다. 역량 글이 한 페이지(LIST_PAGE_SIZE)를 넘으면 서버 정렬로 옮길 것.
+  const grid = [...(featured ? others : rows)].reverse()
+
+  return (
+    <div className={cn("space-y-10", className)}>
+      {lead ? (
+        <Link
+          href={lead.href}
+          className="group block rounded-2xl bg-foreground p-6 text-background transition hover:shadow-[0_24px_48px_-28px_hsl(var(--foreground)/0.6)] sm:p-8"
+        >
+          <span className="inline-block rounded-full bg-[hsl(var(--lux-champagne))] px-2.5 py-1 text-[11px] font-bold tracking-wide text-[hsl(var(--lux-espresso))]">
+            {labels.overview}
+          </span>
+          <h3 className="mt-4 font-display text-xl font-bold leading-snug tracking-tight sm:text-2xl">
+            {lead.title.replace(/^\[[^\]]*\]\s*/, "")}
+          </h3>
+          {lead.excerpt?.trim() ? (
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-background/75 sm:text-base">
+              {lead.excerpt.trim()}
+            </p>
+          ) : null}
+          <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--lux-champagne))]">
+            {labels.readOverview}
+            <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden />
+          </span>
+        </Link>
+      ) : null}
+
+      {grid.length ? (
+        <section>
+          {lead ? (
+            <div className="mb-4 flex items-center gap-3">
+              <h2 className="shrink-0 font-display text-sm font-bold tracking-wide">
+                {labels.coreAreas}
+                <span className="ml-1.5 tabular-nums text-[hsl(var(--lux-cognac))]">{grid.length}</span>
+              </h2>
+              <span aria-hidden className="h-px flex-1 bg-border" />
+            </div>
+          ) : null}
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {grid.map((item, index) => {
+              const { head, tagline } = splitTitle(item.title)
+              const thumb = item.thumbnailUrl?.trim()
+              const excerpt = item.excerpt?.trim()
+              return (
+                <li key={`${item.href}-${index}`}>
+                  <Link
+                    href={item.href}
+                    className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)]"
+                  >
+                    {thumb ? (
+                      <div className="aspect-[16/9] w-full overflow-hidden bg-[hsl(var(--lux-sand)/0.55)]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={thumb}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-display text-2xl font-bold tabular-nums leading-none text-[hsl(var(--lux-champagne))]">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span aria-hidden className="h-px flex-1 bg-border" />
+                      </div>
+                      <h3 className="mt-3 font-display text-lg font-bold leading-snug tracking-tight">{head}</h3>
+                      {tagline ? (
+                        <p className="mt-1 text-sm font-medium leading-snug text-foreground/80">{tagline}</p>
+                      ) : null}
+                      {excerpt ? (
+                        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{excerpt}</p>
+                      ) : null}
+                      {item.meta ? (
+                        <p className="mt-3 text-[11px] font-semibold text-muted-foreground">{item.meta}</p>
+                      ) : null}
+                      <span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-semibold text-[hsl(var(--lux-cognac))]">
+                        {labels.readDetail}
+                        <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden />
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }
