@@ -131,7 +131,7 @@
   },
   "landing": {
     "kicker": "Personal Developer Hub",
-    "headline": "AI prompts, work info, and game reviews in one deck...",
+    "headline": "Vibe-coding prompts, career notes, and Steam reviews in one deck",
     "lede": "Vibe-coding templates, project history, and a Steam library as a public portfolio.",
     "viewCareer": "View career",
     "viewPrompts": "View prompts",
@@ -148,7 +148,7 @@
     "sendMail": "Send email",
     "role": "Tech Lead",
     "name": "Namcheol Kim",
-    "ctaTitle": "If you want to talk off the deck.",
+    "ctaTitle": "If you want to talk off the deck",
     "intro1": "I lead product and engineering teams, and keep vibe-coding prompts, project work, and Steam play records in one hub.",
     "intro2": "I work mainly with Next.js and Supabase, plus real-world setups for portable machines like UMPC and Steam Deck.",
     "featured": "Featured work",

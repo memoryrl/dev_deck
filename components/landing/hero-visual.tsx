@@ -12,27 +12,12 @@ const SLOTS = [
 ]
 
 export function HeroVisual() {
-  const { themes, themeIndex, theme, pageActive } = useHeroScene()
+  const { themes, themeIndex } = useHeroScene()
   const { t } = useI18n()
   const count = themes.length
 
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[18rem] md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-[min(52%,38rem)]">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center opacity-70 transition-[background-image] duration-700 ease-in-out dark:opacity-50 motion-reduce:transition-none"
-          style={{
-            backgroundImage: `${theme.glow}, radial-gradient(ellipse at 60% 90%, hsl(var(--lux-sand) / 0.85), transparent 55%)`,
-            WebkitMaskImage:
-              "linear-gradient(to left, black 28%, transparent 92%), linear-gradient(to top, black 35%, transparent 90%)",
-            maskImage:
-              "linear-gradient(to left, black 28%, transparent 92%), linear-gradient(to top, black 35%, transparent 90%)",
-            WebkitMaskComposite: "source-in",
-            maskComposite: "intersect",
-          }}
-        />
-      </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[18rem] md:inset-y-0 md:h-auto">
         <div className="relative mx-auto h-full max-w-6xl px-5">
           <div className="absolute bottom-6 right-5 h-48 w-[16.5rem] sm:w-[20rem] md:bottom-16 md:h-64">
@@ -42,7 +27,6 @@ export function HeroVisual() {
               const relative = (index - themeIndex + count) % count
               if (relative > 2) return null
               const slot = 2 - relative
-              const isFront = slot === 2
               return (
                 <div
                   key={card.id}
@@ -52,20 +36,13 @@ export function HeroVisual() {
                     SLOTS[slot]
                   )}
                 >
-                  <div className="relative z-10 flex h-full flex-col justify-between p-3.5">
-                    <Icon className="size-4 text-foreground/70" />
+                  <div className="relative z-10 flex h-full flex-col justify-between p-3">
+                    <Icon className="size-4 text-foreground/70" strokeWidth={1.5} aria-hidden />
                     <div>
-                      <p className="font-display text-xs font-bold tracking-tight">{card.brand}</p>
-                      <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">{t(card.labelKey)}</p>
+                      <p className="font-display text-xs font-semibold">{card.brand}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{t(card.labelKey)}</p>
                     </div>
                   </div>
-                  {isFront ? (
-                    <span
-                      aria-hidden
-                      data-paused={pageActive ? undefined : ""}
-                      className="hero-card-beam absolute inset-0 z-20 rounded-2xl motion-reduce:hidden"
-                    />
-                  ) : null}
                 </div>
               )
             })}

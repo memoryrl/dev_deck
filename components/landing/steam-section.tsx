@@ -24,7 +24,7 @@ function RankMark({ rank, className }: { rank: number; className?: string }) {
         className
       )}
     >
-      {String(rank).padStart(2, "0")}
+      {rank}
     </span>
   )
 }
@@ -70,12 +70,12 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
             alt={lead.name}
             className="h-96 w-full md:absolute md:inset-0 md:h-full"
           />
-          <RankMark rank={1} className="h-10 w-10 text-sm font-extrabold" />
+          <RankMark rank={1} className="h-10 w-10 text-sm font-semibold" />
           <TwoWeekBadge minutes={lead.playtime_2weeks_minutes} />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-4 pt-16 text-white">
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-display text-xl font-bold leading-tight">{lead.name}</h3>
+                <h3 className="font-display text-xl font-semibold leading-tight">{lead.name}</h3>
               </div>
               <GameMeta game={lead} kind={kind} />
             </div>
@@ -86,7 +86,7 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
         <ScrollReveal key={game.app_id} variant="up" delay={index * 90} duration={550}>
           <Link
             href={`/games/${game.app_id}`}
-            className="group block overflow-hidden rounded-2xl border bg-card shadow-sm"
+            className="group block overflow-hidden rounded-2xl border border-foreground/10 bg-card transition-colors hover:border-foreground/20"
           >
             <div className="relative">
               <SteamCover
@@ -95,12 +95,12 @@ function ShowcaseGrid({ games, kind }: { games: FeaturedGame[]; kind: "rank" | "
                 alt={game.name}
                 className="h-48 w-full"
               />
-              <RankMark rank={index + 2} className="h-8 w-8 text-xs font-bold" />
+              <RankMark rank={index + 2} className="h-8 w-8 text-xs font-semibold" />
               <TwoWeekBadge minutes={game.playtime_2weeks_minutes} />
             </div>
             <div className="flex items-end justify-between gap-3 p-3">
               <div className="min-w-0">
-                <h3 className="truncate font-display text-sm font-bold">{game.name}</h3>
+                <h3 className="truncate font-display text-sm font-medium">{game.name}</h3>
               </div>
               {kind === "recent" ? (
                 <span className="shrink-0 text-xs text-muted-foreground">
@@ -131,7 +131,7 @@ function ReviewList({ reviews }: { reviews: GameReview[] }) {
         <ScrollReveal key={review.id} variant="up" delay={Math.min(index, 4) * 80} duration={550}>
           <Link
             href={`/games/${review.app_id}`}
-            className="flex gap-4 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm transition hover:bg-muted/40"
+            className="flex gap-4 overflow-hidden rounded-2xl border border-foreground/10 bg-card p-3 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <SteamCover
               src={steamCoverSources(review.app_id)}
@@ -141,8 +141,8 @@ function ReviewList({ reviews }: { reviews: GameReview[] }) {
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="truncate font-display text-base font-bold">{review.game_title}</h3>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <h3 className="truncate font-display text-base font-medium">{review.game_title}</h3>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {review.updated_at.slice(0, 10).replaceAll("-", ".")}
                 </span>
               </div>
@@ -192,9 +192,9 @@ export function SteamSection({
               className="h-10 w-10 rounded-full border object-cover"
             />
           ) : null}
-          <h2 className="font-display text-3xl font-extrabold">{t("steam.title")}</h2>
+          <h2 className="font-display text-2xl font-semibold md:text-3xl">{t("steam.title")}</h2>
         </div>
-        <Link href="/games" className="text-sm font-semibold underline">
+        <Link href="/games" className="text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline">
           {t("common.more")}
         </Link>
       </div>
@@ -202,12 +202,12 @@ export function SteamSection({
       <div
         role="tablist"
         aria-label={t("steam.tablist")}
-        className="relative mt-5 grid w-full grid-cols-2 rounded-full bg-secondary p-1"
+        className="relative mt-5 grid w-full grid-cols-2 rounded-xl bg-secondary p-1"
       >
         <span
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/2)] rounded-full bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
+            "pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/2)] rounded-lg bg-background shadow-sm transition-transform duration-300 ease-out motion-reduce:transition-none",
             tab === "rank" && "translate-x-full"
           )}
         />
@@ -223,7 +223,7 @@ export function SteamSection({
             role="tab"
             aria-selected={tab === key}
             className={cn(
-              "relative z-10 rounded-full px-2 py-2.5 text-sm font-semibold transition-colors duration-300 md:px-4",
+              "relative z-10 rounded-lg px-2 py-2 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:px-4",
               tab === key ? "text-foreground" : "text-muted-foreground"
             )}
             onClick={() => setTab(key)}
@@ -255,7 +255,7 @@ export function SteamSection({
       </div>
 
       <div className="mt-12">
-        <h3 className="font-display text-xl font-extrabold md:text-2xl">{t("steam.latestReviews")}</h3>
+        <h3 className="font-display text-xl font-semibold md:text-2xl">{t("steam.latestReviews")}</h3>
         <div className="mt-5">
           <ReviewList reviews={reviews} />
         </div>

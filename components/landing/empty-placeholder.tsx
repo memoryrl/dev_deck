@@ -23,16 +23,16 @@ export function EmptyPlaceholder({
       className={cn(
         "flex flex-col items-center justify-center gap-3 px-5 text-center",
         variant === "card"
-          ? "min-h-44 rounded-2xl border border-foreground/10 bg-gradient-to-br from-[hsl(var(--lux-champagne)/0.14)] via-card/40 to-[hsl(var(--lux-cognac)/0.06)] py-10 shadow-sm"
+          ? "min-h-44 rounded-2xl border border-foreground/10 bg-card py-10"
           : "py-10",
         className
       )}
     >
       <span
         aria-hidden
-        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground shadow-sm ring-1 ring-foreground/10"
+        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted/70 text-muted-foreground"
       >
-        <Icon className="size-5" />
+        <Icon className="size-[18px]" strokeWidth={1.5} />
       </span>
       <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{children}</p>
     </div>

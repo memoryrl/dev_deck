@@ -12,23 +12,23 @@ export async function FeaturedWorkCard({ work }: { work: FeaturedWork | null }) 
 
   return (
     <section className="mx-auto max-w-6xl px-5 pb-4 pt-4">
-      <p className="text-sm font-semibold text-muted-foreground">{t("landing.featured")}</p>
+      <p className="text-sm font-medium text-muted-foreground">{t("landing.featured")}</p>
       <Link
         href={work.href}
-        className="group mt-4 block overflow-hidden rounded-2xl border bg-gradient-to-br from-[hsl(var(--lux-champagne)/0.16)] to-card shadow-sm transition hover:-translate-y-0.5"
+        className="group mt-4 block overflow-hidden rounded-2xl border border-foreground/10 bg-card transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex flex-col-reverse md:flex-row">
           <ScrollReveal variant="up" delay={160} className="min-w-0 flex-1">
             <div className="p-6 md:p-8">
               <Badge>{work.badge}</Badge>
-              <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight md:text-4xl">{work.title}</h2>
+              <h2 className="mt-4 font-display text-3xl font-semibold md:text-4xl">{work.title}</h2>
               {work.meta ? <p className="mt-2 text-sm text-muted-foreground">{work.meta}</p> : null}
               {work.excerpt ? (
                 <p className="mt-4 max-w-3xl text-base leading-relaxed text-muted-foreground">{work.excerpt}</p>
               ) : null}
-              <p className="mt-6 inline-flex items-center gap-1 text-sm font-semibold">
+              <p className="mt-6 inline-flex items-center gap-1 text-sm font-medium">
                 {t("landing.readMore")}
-                <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <ArrowUpRight className="size-4" strokeWidth={1.5} aria-hidden />
               </p>
             </div>
           </ScrollReveal>
@@ -42,7 +42,7 @@ export async function FeaturedWorkCard({ work }: { work: FeaturedWork | null }) 
               <img
                 src={thumb}
                 alt={work.title}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                className="h-full w-full object-cover"
               />
             </ScrollReveal>
           ) : null}

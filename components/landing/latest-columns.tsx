@@ -19,8 +19,7 @@ export async function LatestColumns({
       <div className="grid gap-10 md:grid-cols-2">
         <ScrollReveal variant="left" duration={600}>
           <div id="prompts">
-            <h2 className="font-display text-2xl font-extrabold md:text-3xl">{t("mega.prompt.label")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t("landing.latestPosts")}</p>
+            <h2 className="font-display text-2xl font-semibold md:text-3xl">{t("mega.prompt.label")}</h2>
             {prompts.length === 0 ? (
               <EmptyPlaceholder className="mt-5">{t("landing.emptyPrompts")}</EmptyPlaceholder>
             ) : (
@@ -40,12 +39,11 @@ export async function LatestColumns({
         <ScrollReveal variant="right" delay={100} duration={600}>
           <div id="career">
             <div className="flex items-end justify-between gap-3">
-              <h2 className="font-display text-2xl font-extrabold md:text-3xl">{t("landing.devWork")}</h2>
-              <Link href="/work" className="text-sm font-semibold underline">
+              <h2 className="font-display text-2xl font-semibold md:text-3xl">{t("landing.devWork")}</h2>
+              <Link href="/work" className="text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline">
                 {t("common.more")}
               </Link>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">{t("landing.latestPosts")}</p>
             {posts.length === 0 ? (
               <EmptyPlaceholder className="mt-5">{t("landing.emptyPosts")}</EmptyPlaceholder>
             ) : (

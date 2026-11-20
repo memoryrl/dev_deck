@@ -16,7 +16,6 @@ import { SteamSection } from "@/components/landing/steam-section"
 import { UmpcActivity } from "@/components/landing/umpc-activity"
 import { HomeLandingSkeleton } from "@/components/layout/skeletons"
 import { Button } from "@/components/ui/button"
-import { currentViewer } from "@/lib/boards/access"
 import { getHomeLandingData } from "@/lib/landing/home"
 import { getT } from "@/lib/i18n/dictionary"
 import { pickHeroSceneIndex } from "@/lib/landing/hero-themes"
@@ -72,8 +71,8 @@ async function ClassicHeroCopy() {
   const { t } = await getT()
   return (
     <>
-      <p className="text-sm font-semibold text-muted-foreground">{t("landing.kicker")}</p>
-      <h1 className="mt-4 max-w-2xl bg-gradient-to-br from-foreground via-foreground to-foreground/55 bg-clip-text font-display text-5xl font-extrabold leading-tight text-transparent md:text-6xl">
+      <p className="text-sm font-medium text-muted-foreground">{t("landing.kicker")}</p>
+      <h1 className="mt-4 max-w-3xl break-keep font-display text-5xl font-semibold leading-tight text-foreground md:text-6xl">
         {t("landing.headline")}
       </h1>
       <p className="mt-5 max-w-xl text-lg text-muted-foreground">{t("landing.lede")}</p>
@@ -84,12 +83,6 @@ async function ClassicHeroCopy() {
         <Button asChild variant="outline">
           <Link href="/#prompts">{t("landing.viewPrompts")}</Link>
         </Button>
-        <Button asChild variant="outline">
-          <Link href="/games">{t("landing.viewGames")}</Link>
-        </Button>
-        <Suspense>
-          <HeroLoginLink />
-        </Suspense>
       </div>
     </>
   )
@@ -144,15 +137,4 @@ async function HomeLanding() {
 function takeLatest<T>(items: T[], featuredHref: string | undefined, hrefOf: (item: T) => string) {
   const rest = featuredHref ? items.filter((item) => hrefOf(item) !== featuredHref) : items
   return (rest.length > 0 ? rest : items).slice(0, 4)
-}
-
-async function HeroLoginLink() {
-  const viewer = await currentViewer()
-  const { t } = await getT()
-  if (viewer.user) return null
-  return (
-    <Button asChild variant="ghost">
-      <Link href="/login">{t("common.login")}</Link>
-    </Button>
-  )
 }

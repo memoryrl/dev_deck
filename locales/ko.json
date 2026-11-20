@@ -131,7 +131,7 @@
   },
   "landing": {
     "kicker": "퍼스널 개발자 허브",
-    "headline": "AI 프롬프트, 업무정보, 게임리뷰를 하나의 덱에서...",
+    "headline": "바이브 코딩 프롬프트, 커리어, Steam 리뷰를 한 덱에",
     "lede": "AI 바이브 코딩 템플릿, 회사 참여 이력, Steam 라이브러리를 공개 포트폴리오로 보여 줍니다.",
     "viewCareer": "커리어 보기",
     "viewPrompts": "프롬프트 보기",
@@ -148,7 +148,7 @@
     "sendMail": "메일 보내기",
     "role": "Tech Lead",
     "name": "김남철",
-    "ctaTitle": "덱 밖에서 이야기할 일이 있다면.",
+    "ctaTitle": "덱 밖에서 이야기할 일이 있다면",
     "intro1": "프로덕트와 개발 조직을 이끌며, 바이브 코딩 프롬프트·참여 프로젝트·Steam 플레이 기록을 한 허브에 남깁니다.",
     "intro2": "관심 스택은 Next.js와 Supabase, 그리고 UMPC·Steam Deck 같은 휴대 환경에서의 실사용 세팅입니다.",
     "featured": "대표 작업",

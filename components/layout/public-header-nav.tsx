@@ -73,7 +73,7 @@ function PhotoSkin({ src, scene }: { src?: string; scene: SceneId }) {
           backgroundImage: src ? `url("${src}")` : undefined,
         }}
       />
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-2xl dark:bg-background/55" />
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-2xl dark:bg-background/80" />
       <div className={cn("absolute inset-0 transition-colors duration-500", SCENE_TINT[scene])} />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
     </div>

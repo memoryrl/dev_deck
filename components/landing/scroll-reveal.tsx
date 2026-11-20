@@ -5,12 +5,14 @@ import { cn } from "@/lib/utils"
 
 type RevealVariant = "up" | "scale" | "fade" | "left" | "right"
 
+// 등장은 한 가지 — 짧게 페이드하며 4px 남짓 떠오른다. 방향별 variant는 호출부 호환용으로만 남긴다.
+const RISE = "opacity-0 translate-y-4"
 const VARIANT_HIDDEN: Record<RevealVariant, string> = {
-  up: "opacity-0 translate-y-12",
-  scale: "opacity-0 scale-[0.96] translate-y-8",
+  up: RISE,
+  scale: RISE,
   fade: "opacity-0",
-  left: "opacity-0 -translate-x-8",
-  right: "opacity-0 translate-x-8",
+  left: RISE,
+  right: RISE,
 }
 
 // Apple 제품 페이지류의 "스크롤로 들어오면 살짝 떠오르며 나타난다" 연출을
@@ -62,11 +64,11 @@ export function ScrollReveal({
     <div
       ref={ref}
       className={cn(
-        "transition-[opacity,transform] ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+        "transition-[opacity,transform] ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
         visible ? "translate-x-0 translate-y-0 scale-100 opacity-100" : VARIANT_HIDDEN[variant],
         className
       )}
-      style={{ transitionDelay: `${delay}ms`, transitionDuration: `${duration}ms` }}
+      style={{ transitionDelay: `${delay}ms`, transitionDuration: `${Math.min(duration, 500)}ms` }}
     >
       {children}
     </div>
