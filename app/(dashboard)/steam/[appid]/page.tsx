@@ -5,6 +5,7 @@ import { ArticleSkeleton, CommentSectionSkeleton, EditorFormSkeleton, PagerSkele
 import { GameCatalog } from "@/components/steam/game-catalog"
 import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
+import { isPlaceholderGameTitle, placeholderGameTitle, resolveGameTitle } from "@/lib/steam/titles"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
@@ -54,19 +55,22 @@ async function GameCatalogSection({ appId }: { appId: number }) {
   const { game, catalog, achievements } = Number.isFinite(appId)
     ? await fetchGamePageData(appId)
     : { game: null, catalog: null, achievements: null }
-  const title = game?.name ?? catalog?.name ?? `App ${appId}`
+  const title = game?.name ?? catalog?.name ?? placeholderGameTitle(appId)
   return <GameCatalog appId={appId} title={title} game={game} catalog={catalog} achievements={achievements} />
 }
 
 async function ReviewFormSection({ appId }: { appId: number }) {
-  const { data } =
+  const [{ data }, page] = await Promise.all([
     isSupabaseConfigured() && appId
-      ? await (await createClient()).from("game_reviews").select("*").eq("app_id", appId).maybeSingle()
-      : { data: null }
+      ? (await createClient()).from("game_reviews").select("*").eq("app_id", appId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    Number.isFinite(appId) ? fetchGamePageData(appId) : Promise.resolve({ game: null, catalog: null, achievements: null }),
+  ])
   const review = (data as GameReview | null) ?? null
-  // GameCatalogSection과 독립적으로 스트리밍되므로 실제 카탈로그 이름은 아직 모를 수
-  // 있다 — 리뷰에 저장된 제목이나 앱ID로 대신한다(폼 라벨용, 페이지 본문 제목이 아니다).
-  const title = review?.game_title ?? `App ${appId}`
+  // 저장된 제목이 "App 123" 자리표시면 소유 목록·스토어 이름으로 바꿔 폼에 넘긴다. 그대로 저장되면 홈 최신 리뷰에 App ID만 남는다.
+  const title = isPlaceholderGameTitle(review?.game_title, appId)
+    ? await resolveGameTitle(appId, page.game?.name ?? page.catalog?.name)
+    : review?.game_title ?? page.game?.name ?? page.catalog?.name ?? placeholderGameTitle(appId)
   return (
     <div className="space-y-4">
       {review ? (

@@ -8,6 +8,7 @@ import {
   LIST_PAGE_SIZE,
   type PagedResult,
 } from "@/lib/pagination"
+import { withResolvedGameTitles } from "@/lib/steam/titles"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/utils"
 import type { GameReview } from "@/types/steam"
@@ -30,7 +31,9 @@ export const listPublicGameReviews = cache(async (): Promise<GameReview[]> => {
       .from("game_reviews")
       .select(REVIEW_CARD_SELECT)
       .order("updated_at", { ascending: false })
-    return ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard)
+    const rows = ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard)
+    // DB에 "App 123" 자리표시가 남아 있어도 목록에서는 실제 이름으로 보여 준다.
+    return withResolvedGameTitles(rows)
   })
 })
 
@@ -53,8 +56,9 @@ export async function listGameReviewsPage({
     if (needle) query = query.ilike("game_title", ilikeContains(needle))
     const { data, error, count } = await query.range(from, to)
     if (error) return null
+    const rows = ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard)
     return {
-      rows: ((data as Omit<GameReview, "user_id" | "review_text">[]) ?? []).map(asReviewCard),
+      rows: await withResolvedGameTitles(rows),
       total: count ?? 0,
     }
   })
@@ -71,7 +75,8 @@ export const listLatestPublicGameReviews = cache(async (limit = 6): Promise<Game
       .select(REVIEW_TEASER_SELECT)
       .order("updated_at", { ascending: false })
       .limit(limit)
-    return ((data as Omit<GameReview, "user_id">[]) ?? []).map(asReviewCard)
+    const rows = ((data as Omit<GameReview, "user_id">[]) ?? []).map(asReviewCard)
+    return withResolvedGameTitles(rows)
   })
 })
 
@@ -100,7 +105,9 @@ export const getLatestUmpcReview = cache(async (): Promise<GameReview | null> =>
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-    return data ? asReviewCard(data as Omit<GameReview, "user_id" | "review_text">) : null
+    const review = data ? asReviewCard(data as Omit<GameReview, "user_id" | "review_text">) : null
+    if (!review) return null
+    return (await withResolvedGameTitles([review]))[0] ?? review
   })
 })
 
@@ -113,5 +120,7 @@ export async function getPublicGameReview(appId: number): Promise<GameReview | n
     .select("*")
     .eq("app_id", appId)
     .maybeSingle()
-  return (data as GameReview | null) ?? null
+  const review = (data as GameReview | null) ?? null
+  if (!review) return null
+  return (await withResolvedGameTitles([review]))[0] ?? review
 }

@@ -15,6 +15,7 @@ import { currentViewer } from "@/lib/boards/access"
 import { fetchGamePageData } from "@/lib/steam/client"
 import { ownedGameNeighbors } from "@/lib/steam/neighbors"
 import { getPublicGameReview } from "@/lib/steam/reviews"
+import { isPlaceholderGameTitle, placeholderGameTitle, resolveGameTitle } from "@/lib/steam/titles"
 import { ShareButton } from "@/components/share/share-button"
 import { excerpt, notFoundMeta, pageMeta } from "@/lib/seo"
 import type { Metadata } from "next"
@@ -81,7 +82,7 @@ async function GameCatalogSection({ appId }: { appId: number }) {
   const { game, catalog, achievements } = Number.isFinite(appId)
     ? await fetchGamePageData(appId)
     : { game: null, catalog: null, achievements: null }
-  const title = game?.name ?? catalog?.name ?? `App ${appId}`
+  const title = game?.name ?? catalog?.name ?? placeholderGameTitle(appId)
   return <GameCatalog appId={appId} title={title} game={game} catalog={catalog} achievements={achievements} />
 }
 
@@ -100,10 +101,10 @@ async function ReviewSection({ appId }: { appId: number }) {
     currentViewer(),
   ])
   const { isOwner } = viewer
-  // GameCatalogSection과 독립적으로 스트리밍되므로 실제 카탈로그 이름은 아직 모를 수
-  // 있다 — 리뷰에 저장된 제목이나 앱ID로 대신한다(편집 폼 라벨용, 페이지 본문 제목이
-  // 아니다).
-  const title = review?.game_title ?? `App ${appId}`
+  // 저장된 제목이 자리표시면 소유·스토어 이름으로 바꾼다. 폼에 App ID를 넘기면 다시 그 값이 저장된다.
+  const title = isPlaceholderGameTitle(review?.game_title, appId)
+    ? await resolveGameTitle(appId, review?.game_title)
+    : review?.game_title ?? placeholderGameTitle(appId)
 
   const reviewView = review ? (
     <div className="space-y-4">
