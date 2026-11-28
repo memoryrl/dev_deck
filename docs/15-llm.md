@@ -1,11 +1,11 @@
 # 15. 로컬 LLM (Ollama)
 
-이 맥에 설치한 Ollama 모델로 세 가지를 한다. 외부 LLM API 키는 쓰지 않는다.
+이 맥에 설치한 Ollama 모델로 세 가지를 한다. 포트폴리오 안내원만 Gemini 무료 등급을 먼저 쓰고 Ollama를 대체로 쓴다.
 
 | 기능 | 누가 쓰나 | 경로 |
 | --- | --- | --- |
 | 모델 테스트 채팅 | 관리자 | `/site/ollama-chat` |
-| 포트폴리오 안내원 (우하단 위젯) | 로그인한 회원 | 모든 공개 페이지 |
+| 포트폴리오 안내원 (우하단 위젯) | 누구나 (횟수 제한) | 모든 공개 페이지 |
 | 게시판 글쓰기 AI 템플릿 | 그 게시판에 쓸 수 있는 사람 | 게시판 글쓰기 폼 |
 
 모델은 두 개다. 한국어 일반 대화·양식은 `exaone3.5:2.4b`, 코드·프롬프트 질문은 `qwen2.5-coder:3b`. 둘 다 3B 미만이라 **지어내기를 전제로** 만든다(아래 "왜 이렇게 만들었나").
@@ -16,10 +16,26 @@
 
 - **로컬 개발**: 항상 `http://127.0.0.1:11434`.
 - **Vercel**: 서버리스 함수는 이 맥의 localhost에 닿지 못한다. `app_env` 테이블의 `OLLAMA_BASE_URL`(Cloudflare 터널 주소)이 우선이고, 없으면 환경 변수 `OLLAMA_BASE_URL`. loopback 주소를 넣으면 막는다.
-- 터널 주소는 관리자 **사이트 설정 > Ollama 주소**에서 넣는다. `app_env`는 RLS로 관리자만 읽고 쓴다(`supabase/patch-app-env.sql`).
-- 터널이 `Host` 헤더 때문에 403/530이면 `cloudflared`를 `--http-host-header 127.0.0.1`로 다시 켠다.
+- 터널 주소는 맥미니가 스스로 등록한다(아래 "맥미니 상시 실행"). 사이트 설정 > Ollama 주소에서 손으로 넣어도 된다. `app_env`는 RLS로 관리자만 쓰고, 읽기는 서버에서 서비스 롤로 한다(비회원 질문도 터널 주소가 필요해서).
+- Vercel은 모든 Ollama 요청에 `X-DevDeck-Key: $OLLAMA_PROXY_KEY` 헤더를 붙인다.
 
-> **실제 터널 주소를 SQL·코드·문서에 적지 않는다.** 이 저장소는 공개이고, Ollama API에는 인증이 없다. 주소를 아는 사람은 레이트리밋도 근거 자료 제한도 거치지 않고 이 맥의 모델에 바로 붙는다. `trycloudflare.com` 임시 주소는 `cloudflared`를 다시 켜면 바뀌므로, 오래 쓸 거면 Named Tunnel + Access를 권한다.
+> **실제 터널 주소와 키를 SQL·코드·문서에 적지 않는다.** 이 저장소는 공개다.
+
+## 맥미니 상시 실행 (재부팅해도 손댈 것 없음)
+
+```
+Vercel ──X-DevDeck-Key──▶ trycloudflare 임시 터널 ──▶ Caddy 127.0.0.1:11435 ──▶ Ollama 127.0.0.1:11434
+```
+
+- **Caddy 문지기**: 키가 맞는 `/api/chat`, `/api/tags`만 통과시킨다. 모델 받기·삭제·생성 등 나머지는 404. Host 헤더도 Caddy가 `127.0.0.1:11434`로 바꿔 주므로 `OLLAMA_ORIGINS`나 `--http-host-header`는 필요 없다.
+- **자동 등록**: cloudflared가 새 주소를 받으면 스크립트가 `POST /api/ollama-tunnel`(Bearer `OLLAMA_PROXY_KEY`, `https://*.trycloudflare.com`만 허용)로 `app_env`를 갱신한다. 실패하면 60초마다 다시 시도한다.
+- 파일 (맥미니, 저장소 밖):
+  - `~/.config/devdeck-ollama/` — `key`(600), `Caddyfile`(600, 키 포함), `tunnel.sh`
+  - `~/Library/LaunchAgents/com.devdeck.ollama.plist` — 로그인 시 `OLLAMA_KEEP_ALIVE=-1` 설정 후 Ollama.app 실행
+  - `~/Library/LaunchAgents/com.devdeck.caddy.plist`, `com.devdeck.ollama-tunnel.plist` — 죽으면 launchd가 다시 켠다
+  - 로그: `~/Library/Logs/devdeck-caddy.log`, `devdeck-ollama-tunnel.log`
+- **키 교체**: `openssl rand -hex 32 > ~/.config/devdeck-ollama/key` → Caddyfile의 키 값 교체 → Vercel `OLLAMA_PROXY_KEY` 교체·재배포 → `launchctl kickstart -k gui/$(id -u)/com.devdeck.caddy` 와 `com.devdeck.ollama-tunnel`.
+- LaunchAgent는 로그인해야 돈다. 재부팅 후 자동으로 돌게 하려면 macOS 자동 로그인을 켠다.
 
 ## 관리자 테스트 채팅
 
@@ -29,7 +45,8 @@
 
 `lib/portfolio-assistant/`. 방문자가 이 사이트의 커리어·스킬·프롬프트에 대해 묻는다.
 
-- **로그인 필요.** 비회원은 위젯에서 로그인으로 안내된다. 사용자당 5분 10회(`checkRateLimitPersistent`).
+- **횟수 제한**(`checkRateLimitPersistent`, 하루는 KST 기준): 관리자는 없음. 회원은 5분 10회 + 하루 20회. 비회원은 IP당 하루 3회 + 비회원 전체 하루 300회. 비회원 대화는 `portfolio_asks`에 남기지 않는다.
+- **제공자**(`llm.ts`): Gemini 무료 등급(`lib/gemini/client.ts`)이 먼저, 실패하거나 무료 한도가 차면 맥미니 Ollama.
 - **근거 자료**(`context.ts`): 공개된 커리어 글·스킬·프롬프트를 통째로 압축해 매번 시스템 프롬프트에 넣는다. 검색은 하지 않는다 — 콘텐츠가 수십 건이면 전량 주입이 더 단순하고 빠뜨리지 않는다. 섹션이 비었으면 "(아직 공개된 항목이 없습니다.)"를 적어 준다.
 - **모델 선택**: 질문에 코드·함수·버그·프롬프트 등이 있으면 qwen, 아니면 exaone. `temperature 0.2`.
 - **지어낸 링크 차단**: 답에 `http(s)://`가 있거나 자료에 없는 `/work/…`·`/p/…`가 있으면 답 전체를 버리고 안내 문구로 바꾼다.

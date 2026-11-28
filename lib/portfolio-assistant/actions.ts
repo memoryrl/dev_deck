@@ -10,17 +10,18 @@ import {
   type AskHistoryCursor,
   type PortfolioAskCycle,
 } from "@/lib/portfolio-assistant/history"
-import { chatWithOllama, type OllamaChatMessage } from "@/lib/ollama/client"
+import { type OllamaChatMessage } from "@/lib/ollama/client"
+import { generatePortfolioAnswer } from "@/lib/portfolio-assistant/llm"
+import { isOwnerUser } from "@/lib/auth/roles"
+import { clientIpFromHeaders } from "@/lib/comments/ip"
 import { getAuthUser } from "@/lib/supabase/server"
 import { checkRateLimitPersistent } from "@/lib/uploads/rate-limit"
 
 const CONTENT_MAX = 1_000
+const GUEST_DAILY_LIMIT = 3
+const GUEST_POOL_DAILY_LIMIT = 300
+const MEMBER_DAILY_LIMIT = 20
 const HISTORY_MAX = 12
-// 두 모델 중 코드/프롬프트 관련 질문은 코딩 특화 모델로 보낸다.
-const CODE_HINT = /```|코드|함수|버그|에러|타입스크립트|리액트|프롬프트.*(어떻게|뭐)|구현|리팩터/i
-
-const GENERAL_MODEL = "exaone3.5:2.4b"
-const CODE_MODEL = "qwen2.5-coder:3b"
 
 export type AskPortfolioResult =
   | { ok: true; content: string; model: string; durationMs: number }
@@ -47,14 +48,6 @@ function systemPrompt(brief: string) {
   ].join("\n")
 }
 
-function pickModel(latestUserMessage: string) {
-  return CODE_HINT.test(latestUserMessage) ? CODE_MODEL : GENERAL_MODEL
-}
-
-function publicOllamaErrorMessage(): string {
-  return "지금은 로컬 AI 모델이 잠들어 있는 것 같아요. 잠시 후 다시 시도해 주시거나, 커리어로그/프롬프트 페이지를 직접 둘러봐 주세요."
-}
-
 const HALLUCINATION_FALLBACK =
   "죄송해요, 방금 답변이 확실한 자료 없이 나온 것 같아 다시 정리할게요. 이 질문은 자료에서 명확히 확인되지 않아요 — 커리어로그나 프롬프트 목록을 직접 살펴봐 주시면 더 정확해요."
 
@@ -70,10 +63,7 @@ function containsHallucinatedLink(content: string, validLinks: string[]): boolea
 
 export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPortfolioResult> {
   const user = await getAuthUser()
-  if (!user) {
-    return { ok: false, error: "로그인한 회원만 질문할 수 있습니다.", loginRequired: true }
-  }
-  if (!(await checkRateLimitPersistent(`portfolio-ask:${user.id}`, 10, 5 * 60 * 1000))) {
+  if (user && !isOwnerUser(user) && !(await checkRateLimitPersistent(`portfolio-ask:${user.id}`, 10, 5 * 60 * 1000))) {
     return { ok: false, error: "질문을 너무 자주 보냈습니다. 잠시 후 다시 시도해주세요." }
   }
 
@@ -91,26 +81,54 @@ export async function askPortfolio(messages: OllamaChatMessage[]): Promise<AskPo
     }
   }
 
+  // 하루(KST) 한도. 입력 검증을 통과한 질문만 센다. 관리자는 제한 없음.
+  //  - 회원: 한 명당 하루 MEMBER_DAILY_LIMIT번 (한 명이 Gemini 무료 한도를 다 쓰지 못하게)
+  //  - 비회원: IP당 GUEST_DAILY_LIMIT번 + 비회원 전체가 함께 GUEST_POOL_DAILY_LIMIT번
+  //    (비회원이 몰려도 나머지 무료 한도는 회원 몫으로 남긴다)
+  // ponytail: 같은 IP를 쓰는 사무실·통신사 NAT 사용자는 3번을 나눠 쓴다. 더 정확히 막으려면 쿠키를 함께 키로 쓴다.
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })
+  if (user && !isOwnerUser(user)) {
+    if (!(await checkRateLimitPersistent(`portfolio-ask-day:${user.id}:${today}`, MEMBER_DAILY_LIMIT, 86_400_000))) {
+      return { ok: false, error: `회원은 하루 ${MEMBER_DAILY_LIMIT}번까지 질문할 수 있어요. 내일 다시 이용해 주세요.` }
+    }
+  }
+  if (!user) {
+    const ip = await clientIpFromHeaders()
+    if (!(await checkRateLimitPersistent(`portfolio-ask-guest:${ip}:${today}`, GUEST_DAILY_LIMIT, 86_400_000))) {
+      return {
+        ok: false,
+        error: `비회원은 하루 ${GUEST_DAILY_LIMIT}번까지 질문할 수 있어요. 로그인하면 계속 질문할 수 있어요.`,
+        loginRequired: true,
+      }
+    }
+    // IP 한도를 통과한 질문만 공동 한도에서 차감한다.
+    if (!(await checkRateLimitPersistent(`portfolio-ask-guest-all:${today}`, GUEST_POOL_DAILY_LIMIT, 86_400_000))) {
+      return {
+        ok: false,
+        error: "오늘 비회원 질문이 모두 마감됐어요. 로그인하면 계속 질문할 수 있어요.",
+        loginRequired: true,
+      }
+    }
+  }
+
   const lastUser = [...messages].reverse().find((m) => m.role === "user")
-  const model = pickModel(lastUser?.content ?? "")
   const brief = await buildPortfolioBrief()
 
-  const result = await chatWithOllama(
-    model,
-    [{ role: "system", content: systemPrompt(brief.text) }, ...messages],
-    { temperature: 0.2 }
-  )
-  if (!result.ok) return { ok: false, error: publicOllamaErrorMessage() }
-  const content = containsHallucinatedLink(result.data.content, brief.validLinks)
+  const result = await generatePortfolioAnswer(systemPrompt(brief.text), messages, lastUser?.content ?? "")
+  if (!result.ok) return { ok: false, error: result.error }
+  const model = result.model
+  const content = containsHallucinatedLink(result.content, brief.validLinks)
     ? HALLUCINATION_FALLBACK
-    : result.data.content
-  void recordPortfolioAsk({
-    userId: user.id,
-    question: lastUser?.content ?? "",
-    answer: content,
-    model,
-  })
-  return { ok: true, content, model, durationMs: result.data.durationMs }
+    : result.content
+  if (user) {
+    void recordPortfolioAsk({
+      userId: user.id,
+      question: lastUser?.content ?? "",
+      answer: content,
+      model,
+    })
+  }
+  return { ok: true, content, model, durationMs: result.durationMs }
 }
 
 export type LoadPortfolioAskHistoryResult =

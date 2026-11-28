@@ -110,7 +110,7 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
 
   async function send(content: string) {
     const text = content.trim()
-    if (!text || pending || !signedIn) return
+    if (!text || pending) return
 
     pinToBottom.current = true
     const askedAt = new Date().toISOString()
@@ -160,7 +160,8 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
   }
 
   const samples = [t("portfolioAsk.sample1"), t("portfolioAsk.sample2"), t("portfolioAsk.sample3")]
-  const showGreeting = historyReady && messages.length === 0 && !loadingHistory
+  // 비회원은 불러올 이전 대화가 없으니 바로 인사말을 보여 준다.
+  const showGreeting = (historyReady || !signedIn) && messages.length === 0 && !loadingHistory
 
   return (
     <div className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4.25rem))] right-[max(1.25rem,env(safe-area-inset-right))] z-40">
@@ -221,45 +222,30 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
                 <div className="flex items-start gap-2">
                   <BubbleIcon role="assistant" />
                   <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-foreground">
-                    {signedIn ? t("portfolioAsk.greeting") : t("portfolioAsk.memberOnly")}
+                    {t("portfolioAsk.greeting")}
+                    {signedIn ? null : <p className="mt-1 text-xs text-muted-foreground">{t("portfolioAsk.guestLimit")}</p>}
                   </div>
                 </div>
-                {signedIn ? (
-                  <div className="flex flex-wrap gap-1.5 pl-9">
-                    {samples.map((sample) => (
-                      <button
-                        key={sample}
-                        type="button"
-                        onClick={() => void send(sample)}
-                        className="rounded-full border border-input px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
-                      >
-                        {sample}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="pl-9">
-                    <Button asChild size="sm" className="rounded-full">
-                      <Link href="/login">{t("portfolioAsk.loginToAsk")}</Link>
-                    </Button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-1.5 pl-9">
+                  {samples.map((sample) => (
+                    <button
+                      key={sample}
+                      type="button"
+                      onClick={() => void send(sample)}
+                      className="rounded-full border border-input px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {sample}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
 
-            {!signedIn ? (
-              <div className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <BubbleIcon role="assistant" />
-                  <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2 text-sm text-foreground">
-                    {t("portfolioAsk.memberOnly")}
-                  </div>
-                </div>
-                <div className="pl-9">
-                  <Button asChild size="sm" className="rounded-full">
-                    <Link href="/login">{t("portfolioAsk.loginToAsk")}</Link>
-                  </Button>
-                </div>
+            {!signedIn && error ? (
+              <div className="pl-9">
+                <Button asChild size="sm" className="rounded-full">
+                  <Link href="/login">{t("portfolioAsk.loginToAsk")}</Link>
+                </Button>
               </div>
             ) : null}
 
@@ -278,17 +264,17 @@ export function PortfolioAskWidget({ signedIn }: { signedIn: boolean }) {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={signedIn ? t("portfolioAsk.placeholder") : t("portfolioAsk.memberOnly")}
+                placeholder={t("portfolioAsk.placeholder")}
                 rows={1}
                 className="min-h-9 resize-none py-2 text-sm"
-                disabled={pending || !signedIn}
+                disabled={pending}
               />
               <Button
                 type="button"
                 size="icon"
                 aria-label={t("portfolioAsk.send")}
                 onClick={() => void send(draft)}
-                disabled={pending || !signedIn || !draft.trim()}
+                disabled={pending || !draft.trim()}
               >
                 <Send className="size-4" />
               </Button>

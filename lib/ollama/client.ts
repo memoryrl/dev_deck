@@ -59,6 +59,9 @@ async function ollamaFetch(path: string, init?: RequestInit): Promise<OllamaResu
       headers.set("User-Agent", "DevDeck-Ollama/1.0")
     }
     if (!headers.has("Accept")) headers.set("Accept", "application/json")
+    // 맥미니의 Caddy 문지기가 이 키가 맞는 요청만 Ollama로 통과시킨다(docs/15-llm.md).
+    const proxyKey = process.env.OLLAMA_PROXY_KEY?.trim()
+    if (proxyKey) headers.set("X-DevDeck-Key", proxyKey)
     const res = await fetch(`${host}${path}`, {
       ...init,
       headers,

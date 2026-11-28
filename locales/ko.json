@@ -318,8 +318,8 @@
     "clear": "대화 지우기",
     "loadMore": "이전 대화 더보기",
     "loadingHistory": "이전 대화를 불러오는 중…",
-    "disclaimer": "로컬 AI 모델(exaone·qwen)이 답합니다. 공개된 정보만 근거로 답해요.",
-    "memberOnly": "로그인한 회원만 질문할 수 있어요.",
+    "disclaimer": "AI 모델이 답합니다. 공개된 정보만 근거로 답해요.",
+    "guestLimit": "비회원은 하루 3번까지 질문할 수 있어요.",
     "loginToAsk": "로그인하고 질문하기"
   },
   "rating": {

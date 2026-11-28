@@ -1,5 +1,6 @@
 import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 import { isSupabaseConfigured } from "@/lib/utils"
 
 export const APP_ENV_KEYS = {
@@ -37,9 +38,16 @@ function formatDbError(error: { message: string; code?: string; details?: string
   return error.code ? `[${error.code}] ${body}` : body
 }
 
+// app_env 는 RLS 로 관리자만 읽을 수 있다. 하지만 비회원 질문도 Vercel 에서 Ollama 터널 주소가
+// 필요하므로 읽기는 서비스 롤로 한다. 값은 서버 안에서만 쓰고 화면에 내보내는 곳은 관리자 화면뿐이다.
 export const getAppEnvMap = cache(async (): Promise<Record<string, string>> => {
   if (!isSupabaseConfigured()) return {}
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = createServiceClient()
+  } catch {
+    return {}
+  }
   const { data, error } = await supabase.from("app_env").select("key, value")
   if (error || !data) return {}
   return Object.fromEntries((data as { key: string; value: string }[]).map((row) => [row.key, row.value]))

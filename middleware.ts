@@ -28,7 +28,7 @@ function buildCsp(nonce: string) {
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-  if (path === "/api/health" || path.startsWith("/api/cron/")) {
+  if (path === "/api/health" || path === "/api/ollama-tunnel" || path.startsWith("/api/cron/")) {
     return NextResponse.next()
   }
 
